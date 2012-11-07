@@ -134,7 +134,7 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
           //wf = 1.5915494309189533576e0 / (h * h);
         }
         
-        rho[i] = imass * wf;
+        rho[i] = wf;
       } // ii loop
 
       // add density at each atom via kernel function overlap
@@ -187,10 +187,11 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
               //wf = 1.5915494309189533576e0 * wf * ihsq;
             }
 
-            rho[i] += mass[jtype] * wf;
+            rho[i] += wf;
           }
 
         } // jj loop
+	rho[i] *= imass;
       } // ii loop
     }
   }
