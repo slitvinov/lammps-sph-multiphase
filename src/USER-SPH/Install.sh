@@ -8,6 +8,7 @@ if (test $1 = 1) then
   cp -p pair_sph_idealgas.cpp ..
   cp -p pair_sph_lj.cpp ..
   cp -p pair_sph_rhosum.cpp ..
+  cp -p pair_sph_rhosum_multiphase.cpp ..
   cp -p pair_sph_taitwater.cpp ..
   cp -p pair_sph_taitwater_morris.cpp ..
   cp -p pair_sph_surfacetension.cpp ..
@@ -24,6 +25,7 @@ if (test $1 = 1) then
   cp -p pair_sph_idealgas.h ..
   cp -p pair_sph_lj.h ..
   cp -p pair_sph_rhosum.h ..
+  cp -p pair_sph_rhosum_multiphase.h ..
   cp -p pair_sph_taitwater.h ..
   cp -p pair_sph_taitwater_morris.h ..
   cp -p pair_sph_surfacetension.h ..
@@ -41,6 +43,7 @@ elif (test $1 = 0) then
   rm -f ../pair_sph_idealgas.cpp
   rm -f ../pair_sph_lj.cpp
   rm -f ../pair_sph_rhosum.cpp
+  rm -f ../pair_sph_rhosum_multiphase.cpp
   rm -f ../pair_sph_taitwater.cpp
   rm -f ../pair_sph_taitwater_morris.cpp
   rm -f ../pair_sph_surfacetension.cpp
@@ -57,6 +60,7 @@ elif (test $1 = 0) then
   rm -f ../pair_sph_idealgas.h
   rm -f ../pair_sph_lj.h
   rm -f ../pair_sph_rhosum.h
+  rm -f ../pair_sph_rhosum_multiphase.h
   rm -f ../pair_sph_taitwater.h
   rm -f ../pair_sph_taitwater_morris.h
   rm -f ../pair_sph_surfacetension.h

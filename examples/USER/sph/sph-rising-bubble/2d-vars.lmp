@@ -15,7 +15,4 @@ variable          Nfreq equal 1000
 variable          Nfreqimage equal 1000
 variable          sph_mass equal ${dx}*${dx}*${sph_rho}
 variable          alpha equal 0.02
-
-variable            gx equal 0.0
-
 variable            cyl_r equal 10*${dx}
