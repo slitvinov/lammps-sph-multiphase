@@ -39,7 +39,6 @@ PairSPHSurfaceTension::~PairSPHSurfaceTension() {
     memory->destroy(setflag);
     memory->destroy(cutsq);
     memory->destroy(cut);
-    memory->destroy(alpha_surface);
   }
 }
 
@@ -221,7 +220,6 @@ void PairSPHSurfaceTension::allocate() {
 
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
   memory->create(cut, n + 1, n + 1, "pair:cut");
-  memory->create(alpha_surface, n + 1, n + 1, "pair:alpha_surface");
 }
 
 /* ----------------------------------------------------------------------
@@ -239,7 +237,7 @@ void PairSPHSurfaceTension::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSPHSurfaceTension::coeff(int narg, char **arg) {
-  if (narg != 4)
+  if (narg != 3)
     error->all(FLERR,"Incorrect number of args for pair_style sph/surfacetension coefficients");
   if (!allocated)
     allocate();
@@ -248,15 +246,13 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double alpha_surface_one = force->numeric(arg[2]);
-  double cut_one   = force->numeric(arg[3]);
+  double cut_one   = force->numeric(arg[2]);
  
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
-      alpha_surface[i][j] = alpha_surface_one;
       setflag[i][j] = 1;
       count++;
     }
@@ -277,8 +273,6 @@ double PairSPHSurfaceTension::init_one(int i, int j) {
   }
 
   cut[j][i] = cut[i][j];
-  alpha_surface[j][i] = alpha_surface[i][j];
-
   return cut[i][j];
 }
 
