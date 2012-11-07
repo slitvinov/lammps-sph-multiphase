@@ -72,7 +72,6 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
-
   // check consistency of pair coefficients
 
   if (first) {
