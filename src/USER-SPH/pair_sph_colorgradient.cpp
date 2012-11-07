@@ -178,17 +178,12 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    }
 	    double rij = sqrt(rsq);	    
 	    double Fij = - wfd / rij;
-	    assert(rho[i]>0);
-	    assert(mass[itype]>0);
 	    double Vi = mass[itype]/rho[i]; 
-	    assert(rho[j]>0);
-	    assert(mass[jtype]>0);
 	    double Vj = mass[jtype]/rho[j];
 	    double rVi = 1.0/Vi; 
 	    double rVj = 1.0/Vj;
 	    double Vi2 = Vi*Vi;
 	    double Vj2 = Vj*Vj;
-
 	    double dphi = Fij*rij*alpha[itype][jtype];
 	    
 	    colorgradient[i][0] += dphi*rVi*Vj2*eij[0];
