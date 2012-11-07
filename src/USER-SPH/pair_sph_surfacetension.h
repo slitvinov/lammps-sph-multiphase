@@ -35,7 +35,7 @@ class PairSPHSurfaceTension : public Pair {
   virtual double single(int, int, int, int, double, double, double, double &);
 
  protected:
-  double **cut;
+  double **cut, **alpha_surface;
   void allocate();
 };
 

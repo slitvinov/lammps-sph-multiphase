@@ -39,6 +39,7 @@ PairSPHSurfaceTension::~PairSPHSurfaceTension() {
     memory->destroy(setflag);
     memory->destroy(cutsq);
     memory->destroy(cut);
+    memory->destroy(alpha_surface);
   }
 }
 
@@ -92,6 +93,11 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
     double epsilon = 1e-20;
+    // if (abscgi > epsilon) {
+    //   std::cout << "colorgradient: "
+    // 		<< xtmp << ' ' << ytmp << ' ' << ztmp << ' '
+    // 		<< cg[i][0] << ' ' << cg[i][1] << ' ' << cg[i][2] << '\n';
+    // }
 
 
     for (jj = 0; jj < jnum; jj++) {
@@ -215,6 +221,7 @@ void PairSPHSurfaceTension::allocate() {
 
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
   memory->create(cut, n + 1, n + 1, "pair:cut");
+  memory->create(alpha_surface, n + 1, n + 1, "pair:alpha_surface");
 }
 
 /* ----------------------------------------------------------------------
@@ -232,7 +239,7 @@ void PairSPHSurfaceTension::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSPHSurfaceTension::coeff(int narg, char **arg) {
-  if (narg != 3)
+  if (narg != 4)
     error->all(FLERR,"Incorrect number of args for pair_style sph/surfacetension coefficients");
   if (!allocated)
     allocate();
@@ -241,13 +248,15 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double cut_one   = force->numeric(arg[2]);
+  double alpha_surface_one = force->numeric(arg[2]);
+  double cut_one   = force->numeric(arg[3]);
  
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
+      alpha_surface[i][j] = alpha_surface_one;
       setflag[i][j] = 1;
       count++;
     }
@@ -268,6 +277,7 @@ double PairSPHSurfaceTension::init_one(int i, int j) {
   }
 
   cut[j][i] = cut[i][j];
+  alpha_surface[j][i] = alpha_surface[i][j];
 
   return cut[i][j];
 }
@@ -283,7 +293,7 @@ double PairSPHSurfaceTension::single(int i, int j, int itype, int jtype,
 
 /* calculate phase stress base on phase gradient */
 void get_phase_stress(double* v, double* del_phi) {
-  double epsilon = 1e-20;
+  double epsilon = 1e-19;
   double interm0 = 1.0/ ( sqrt(v[0]*v[0] + v[1]*v[1]) + epsilon );
   double interm1 = 0.5 * (v[0]*v[0] - v[1]*v[1]);
   double interm2 = v[0]*v[1];
