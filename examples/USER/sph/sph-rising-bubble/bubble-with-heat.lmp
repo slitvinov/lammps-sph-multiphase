@@ -1,0 +1,95 @@
+log                ${dname}/log.lammps
+echo               both
+dimension          3
+units              si
+atom_style         meso
+boundary          p f p
+include           3d-wall.lmp
+# create simulation box
+variable           Lywall equal ${Ly}+6*${dx}
+region             box block 0.0 ${Lx}  0.0 ${Lywall} 0.0 ${Lz} units box
+create_box         2 box
+
+# create fluid particles
+lattice            sc ${dx}
+create_atoms       1 region box
+
+variable           ylow equal 3*${dx}
+variable           yhi  equal ${Ly}+3*${dx}
+region	     rl block INF INF 0 ${ylow} INF INF units box
+group	     lower region rl
+region	     ru block INF INF ${yhi} INF INF INF units box
+group	     upper region ru
+group	     boundary union lower upper
+group	     flow subtract all boundary
+
+
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+variable           zcenter equal 0.5*${Lz}
+
+variable           xmin    equal ${xcenter}-${cyl_r}
+variable           ymin    equal ${ycenter}-${cyl_r}
+variable           zmin    equal ${zcenter}-${cyl_r}
+
+variable           xmax    equal ${xcenter}+${cyl_r}
+variable           ymax    equal ${ycenter}+${cyl_r}
+variable           zmax    equal ${zcenter}+${cyl_r}
+
+region             rbubble block ${xmin} ${xmax} ${ymin} ${ymax} ${zmin} ${zmax} units box
+group	           gbubble region rbubble
+
+# all bubble atoms
+set	           group gbubble type 2
+
+# all solvent atoms
+group              gsolvent_tmp type 1
+group              gsolvent subtract gsolvent_tmp boundary
+
+mass               1 ${sph_mass}
+mass               2 ${sph_mass}
+set                group all meso_rho ${sph_rho}
+
+set                group all  meso_e 1.0
+set                group all  meso_cv 1.0
+
+# use Tait's EOS in combination with Morris' laminar viscosity.
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
+# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
+pair_style         hybrid/overlay sph/rhosum 1 sph/colorgradient 1 sph/taitwater/morris sph/surfacetension
+pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         1 1 sph/colorgradient ${h} 0
+pair_coeff         1 2 sph/colorgradient ${h} 5e-12
+pair_coeff         2 2 sph/colorgradient ${h} 0
+pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
+pair_coeff         * * sph/surfacetension ${alpha} ${h}
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+
+# do full time integration for shear driver and fluid, but keep walls stationary
+fix                integrate_fix_full flow meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz &
+c_rho_peratom c_colorgradient_peratom
+
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+thermo_modify      norm no
+thermo             1000
+
+include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta}/${sph_rho}
+include            settimestep.lmp
+
+neighbor           3.0e-6 bin
+neigh_modify       delay 0 every 1
+
+timestep           ${dt}
+communicate        single vel yes
+
+fix          wallim boundary setforce 0 0 0
+
+run                500000
+#run                100000
