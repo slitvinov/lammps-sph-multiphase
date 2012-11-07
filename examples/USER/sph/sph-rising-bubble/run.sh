@@ -1,6 +1,6 @@
 #! /bin/bash
 
-dname=data-wall
+dname=data
 mkdir -p ${dname}
-mpirun -np 8  ../../../../src/lmp_linux -in bubble-with-heat.lmp -var dname ${dname}
+mpirun -np 4  ../../../../src/lmp_linux -in bubble.lmp -var dname ${dname}
 
