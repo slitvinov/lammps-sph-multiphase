@@ -36,16 +36,24 @@ set                group all meso_rho ${sph_rho}
 pair_style         hybrid/overlay sph/rhosum 1 sph/colorgradient 1 sph/taitwater/morris sph/surfacetension
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         1 1 sph/colorgradient ${h} 0
-pair_coeff         1 2 sph/colorgradient ${h} ${alpha}
+pair_coeff         1 2 sph/colorgradient ${h} 1e-12
 pair_coeff         2 2 sph/colorgradient ${h} 0
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
-pair_coeff         * * sph/surfacetension ${h}
+pair_coeff         * * sph/surfacetension ${alpha} ${h}
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
+
+# force on the buble atoms
+variable            var_gx_bubble atom ${gx}*${sph_mass}
+fix                 fb_gx gbubble addforce v_var_gx_bubble 0 0
+
+# force on the solvent atoms
+variable            var_gx_solvent atom -${gx}*${sph_mass}*count(gbubble)/count(gsolvent)
+fix                 fs_gx gsolvent addforce v_var_gx_solvent 0 0
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
 dump_modify        dump_id first yes
