@@ -112,10 +112,8 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
-    // compute pressure of atom i with Tait EOS
-    tmp = rho[i] / rho0[itype];
-    fi = tmp * tmp * tmp;
-    fi = B[itype] * (fi * fi * tmp - 1.0) / (rho[i] * rho[i]);
+    double pi = sph_pressure(B[itype], rho0[itype], rho[i]);
+    fi = pi / (rho[i] * rho[i]);
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -148,9 +146,9 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
         }
 
         // compute pressure  of atom j with Tait EOS
-        tmp = rho[j] / rho0[jtype];
-        fj = tmp * tmp * tmp;
-        fj = B[jtype] * (fj * fj * tmp - 1.0) / (rho[j] * rho[j]);
+	double pj = sph_pressure(B[jtype], rho0[jtype], rho[j]);
+	//printf("rho[j], B[jtype], rho0[jtype], pj: %f %f %f %f\n", rho[j], B[jtype], rho0[jtype], pj);
+	fj = pj / (rho[j] * rho[j]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -249,7 +247,7 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   double soundspeed_one = force->numeric(arg[3]);
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
-  double B_one = soundspeed_one * soundspeed_one * rho0_one / 7.0;
+  double B_one = soundspeed_one * soundspeed_one * rho0_one;
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
@@ -258,7 +256,6 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
     B[i] = B_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
-      //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
 
       setflag[i][j] = 1;
@@ -293,4 +290,8 @@ double PairSPHTaitwaterMorris::single(int i, int j, int itype, int jtype,
   fforce = 0.0;
 
   return 0.0;
+}
+
+double sph_pressure(double B, double rho0, double rho) {
+  return B*rho/rho0;
 }

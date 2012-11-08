@@ -67,7 +67,7 @@ void PairSPHRhoSumMultiphase::init_style() {
 void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
-  double r, rsq, imass, h, ih, ihsq;
+  double r, rsq, h, ih, ihsq;
   int *jlist;
   double wf;
   // neighbor list variables
@@ -117,7 +117,6 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
       for (ii = 0; ii < inum; ii++) {
         i = ilist[ii];
         itype = type[i];
-        imass = mass[itype];
 
         h = cut[itype][itype];
         if (domain->dimension == 3) {
@@ -144,6 +143,7 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
         ytmp = x[i][1];
         ztmp = x[i][2];
         itype = type[i];
+        double imass = mass[itype];
         jlist = firstneigh[i];
         jnum = numneigh[i];
 

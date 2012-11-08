@@ -1,0 +1,8 @@
+gamma: 7;
+p: c^2*rho0/gamma*( (rho/rho0)^gamma - 1);
+dp: diff(p, rho);
+
+ev(p, [rho=1.122340, rho0=1.0, c=20.0]);
+ev(p, [rho=0.0011, rho0=0.001000, c=20.0]);
+
+ev(dp, rho=rho0);

@@ -43,6 +43,8 @@ class PairSPHTaitwaterMorris : public Pair {
 };
 
 }
+  double sph_pressure(double B, double rho0, double rho);
+
 
 #endif
 #endif
