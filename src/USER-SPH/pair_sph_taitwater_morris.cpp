@@ -164,7 +164,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
         fvisc *= imass * jmass * wfd;
 
         // total pair force & thermal energy increment
-        fpair = -imass * jmass * (fi + fj) * wfd;
+        fpair = - (imass*imass*fi + jmass*jmass*fj) * wfd;
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
 
        // printf("testvar= %f, %f \n", delx, dely);
@@ -247,7 +247,7 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   double soundspeed_one = force->numeric(arg[3]);
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
-  double B_one = soundspeed_one * soundspeed_one * rho0_one;
+  double B_one = soundspeed_one * soundspeed_one;
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {

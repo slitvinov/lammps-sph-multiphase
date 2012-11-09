@@ -5,8 +5,8 @@ if "${alpha}>0" then &
 else &
 "variable dt_alpha equal 1e19"
 
-if "${sph_c}>0.0" then &
-"variable dt_c equal 1/4.0*${dx}/${sph_c}" &
+if "${sph_c_d}>0.0" then &
+"variable dt_c equal 1/4.0*${dx}/${sph_c_d}" &
 else &
 "variable dt_c equal 1e19"
 

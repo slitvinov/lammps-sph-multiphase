@@ -34,7 +34,6 @@ variable     xhi  equal ${Lx}+2.5*${dx}
 region	     rflow block ${xlow} ${xhi} ${ylow} ${yhi} INF INF units box
 group	     flow region rflow
 group	     boundary subtract all flow
-# fix wall   particles
 fix          wallim boundary setforce 0 0 0
 
 # set mass of the particles
@@ -49,9 +48,9 @@ pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
 
 # harmonic mean of viscosities
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
-pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c} ${sph_eta_gd} ${h}
-pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c} ${sph_eta_d} ${h}
-pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c} ${sph_eta_g} ${h}
+pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} ${h}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${h}
 
 pair_coeff         * * sph/surfacetension ${h}
 
@@ -75,18 +74,19 @@ include            settimestep.lmp
 neighbor           3.0e-2 bin
 neigh_modify       delay 0 every 1
 
-timestep           ${dt}
+#timestep           ${dt}
+timestep           0.00004
 communicate        single vel yes
 
 # redistribute particles randomly (TODO: use more clear way)
-#variable     Nflow  equal count(flow)
-#shell        echo "create_atoms 1 random"  ${Nflow} "123456 rflow" > create.lmp
-#delete_atoms region  rflow
-#include      create.lmp
+variable     Nflow  equal count(flow)
+shell        echo "create_atoms 1 random"  ${Nflow} "123456 rflow" > create.lmp
+delete_atoms region  rflow
+include      create.lmp
 group	     flow region rflow
 
 set                group all meso_rho ${sph_rho_g}
-#run                0
+run                1000
 
 # create droplet
 region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
@@ -105,4 +105,5 @@ velocity flow       set v_vx v_vy 0.0
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
 
-run               10
+timestep           0.00004
+run               10000

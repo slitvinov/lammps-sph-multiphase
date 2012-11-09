@@ -8,22 +8,22 @@ variable          Ly   equal  1.0
 variable          dx   equal  ${Lx}/${nx}
 
 # density of droplet
-variable          sph_rho_d equal 1.0
+variable          sph_rho_d equal 1000.0
 # density of gas phase
-variable          sph_rho_g equal 1e-3
+variable          sph_rho_g equal 1.0
 
 # sound speed 
-variable          sph_c equal 20.0
-
+variable          sph_c_d equal 200.0
+variable          sph_c_g equal 200.0
 
 # viscosity of droplet 
 variable          sph_eta_d equal 5e-2
 # viscosity of gas
-variable          sph_eta_g equal 5e-4
+variable          sph_eta_g equal 5e-2
 
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 1
-variable          Nfreqimage equal 1
+variable          Nfreq equal 100
+variable          Nfreqimage equal 100
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}*${dx}*${sph_rho_d}
@@ -32,7 +32,7 @@ variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
 
 # surface tension
 #variable          alpha equal ${sph_mass_g}
-variable          alpha equal 0.0
+variable          alpha equal 1.0
 
 # radios of the droplet
 variable          cyl_r equal 0.2
