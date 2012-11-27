@@ -36,9 +36,7 @@
 #define MAX_GROUP 32
 #define PI (4.0*atan(1.0))
 
-// these must match settings in src/lmptype.h
-// depending on whether you built LAMMPS with
-// -DLAMMPS_SMALLBIG (the default), -DLAMMPS_BIGBIG, or -DLAMMPS_SMALLSMALL
+// these should match settings in src/lmptype.h
 
 #include "stdint.h"
 #define __STDC_FORMAT_MACROS
@@ -47,16 +45,6 @@
 typedef int tagint;
 typedef int64_t bigint;
 #define BIGINT_FORMAT "%" PRId64
-
-#define IMGMASK 1023
-#define IMGMAX 512
-#define IMGBITS 10
-#define IMG2BITS 20
-
-//#define IMGMASK 2097151
-//#define IMGMAX 1048576
-//#define IMGBITS 21
-//#define IMG2BITS 42
 
 // same as write_restart.cpp
 
@@ -79,8 +67,6 @@ enum{PAIR,BOND,ANGLE,DIHEDRAL,IMPROPER};
 static const char * const cg_type_list[] =
   {"none", "lj9_6", "lj12_4", "lj12_6"};
 
-int swapflag;
-
 // ---------------------------------------------------------------------
 // Data class to hold problem
 // ---------------------------------------------------------------------
@@ -100,12 +86,12 @@ class Data {
   int newton_pair,newton_bond;
   int xperiodic,yperiodic,zperiodic;
   int boundary[3][2];
-
+  
   char *atom_style;
   int style_angle,style_atomic,style_bond,style_charge,style_dipole;
-  int style_ellipsoid,style_full,style_line,style_meso;
-  int style_molecular,style_peri,style_sphere;
-  int style_tri,style_wavepacket,style_hybrid;
+  int style_meso;
+  int style_ellipsoid,style_full;
+  int style_hybrid,style_molecular,style_peri,style_sphere;
 
   bigint natoms;
   bigint nellipsoids;
@@ -118,8 +104,7 @@ class Data {
   double special_lj[4],special_coul[4];
 
   double cut_lj_global,cut_coul_global,kappa;
-  int offset_flag,mix_flag,tail_flag,ncoultablebits;
-  double tabinner;
+  int offset_flag,mix_flag;
 
   // force fields
 
@@ -138,7 +123,6 @@ class Data {
   double *pair_gb_epsilon,*pair_gb_sigma;
   double *pair_gb_epsa,*pair_gb_epsb,*pair_gb_epsc;
   double *pair_lj_epsilon,*pair_lj_sigma;
-  double *pair_gauss_hgauss,*pair_gauss_rmh,*pair_gauss_sigmah;
   double **pair_cg_epsilon,**pair_cg_sigma;
   int **pair_cg_cmm_type, **pair_setflag;
   double **pair_cut_coul, **pair_cut_lj;
@@ -221,7 +205,7 @@ class Data {
 
   // atom quantities
 
-  bigint iatoms,ibonds,iangles,idihedrals,iimpropers;
+  int iatoms,ibonds,iangles,idihedrals,iimpropers;
 
   double *mass;
   double *x,*y,*z,*vx,*vy,*vz;
@@ -229,7 +213,8 @@ class Data {
   tagint *tag;
   int *type,*mask,*image;
   int *molecule;
-  double *q,*mux,*muy,*muz,*mul,*radius,*density,*vfrac,*rmass;
+  double *rho, *e, *cv, *vestx, *vesty, *vestz;
+  double *q,*mux,*muy,*muz,*radius,*density,*vfrac,*rmass;
   double *s0,*x0x,*x0y,*x0z;
   double *shapex,*shapey,*shapez;
   double *quatw,*quati,*quatj,*quatk,*angmomx,*angmomy,*angmomz;
@@ -244,67 +229,55 @@ class Data {
 
   Data();
   void stats();
-  void write(FILE *, FILE *, int, int);
+  void write(FILE *fp, FILE *fp2=NULL);
 
   void write_atom_angle(FILE *, int, int, int, int);
   void write_atom_atomic(FILE *, int, int, int, int);
   void write_atom_bond(FILE *, int, int, int, int);
   void write_atom_charge(FILE *, int, int, int, int);
+  void write_atom_meso(FILE *, int, int, int, int);
   void write_atom_dipole(FILE *, int, int, int, int);
   void write_atom_ellipsoid(FILE *, int, int, int, int);
   void write_atom_full(FILE *, int, int, int, int);
-  void write_atom_line(FILE *, int, int, int, int);
-  void write_atom_meso(FILE *, int, int, int, int);
   void write_atom_molecular(FILE *, int, int, int, int);
   void write_atom_peri(FILE *, int, int, int, int);
   void write_atom_sphere(FILE *, int, int, int, int);
-  void write_atom_tri(FILE *, int, int, int, int);
-  void write_atom_wavepacket(FILE *, int, int, int, int);
 
   void write_atom_angle_extra(FILE *, int);
   void write_atom_atomic_extra(FILE *, int);
   void write_atom_bond_extra(FILE *, int);
   void write_atom_charge_extra(FILE *, int);
+  void write_atom_meso_extra(FILE *, int);
   void write_atom_dipole_extra(FILE *, int);
   void write_atom_ellipsoid_extra(FILE *, int);
   void write_atom_full_extra(FILE *, int);
-  void write_atom_line_extra(FILE *, int);
-  void write_atom_meso_extra(FILE *, int);
   void write_atom_molecular_extra(FILE *, int);
   void write_atom_peri_extra(FILE *, int);
   void write_atom_sphere_extra(FILE *, int);
-  void write_atom_tri_extra(FILE *, int);
-  void write_atom_wavepacket_extra(FILE *, int);
 
   void write_vel_angle(FILE *, int);
   void write_vel_atomic(FILE *, int);
   void write_vel_bond(FILE *, int);
   void write_vel_charge(FILE *, int);
+  void write_vel_meso(FILE *, int);
   void write_vel_dipole(FILE *, int);
   void write_vel_ellipsoid(FILE *, int);
   void write_vel_full(FILE *, int);
-  void write_vel_line(FILE *, int);
-  void write_vel_meso(FILE *, int);
   void write_vel_molecular(FILE *, int);
   void write_vel_peri(FILE *, int);
   void write_vel_sphere(FILE *, int);
-  void write_vel_tri(FILE *, int);
-  void write_vel_wavepacket(FILE *, int);
 
   void write_vel_angle_extra(FILE *, int);
   void write_vel_atomic_extra(FILE *, int);
   void write_vel_bond_extra(FILE *, int);
   void write_vel_charge_extra(FILE *, int);
+  void write_vel_meso_extra(FILE *, int);
   void write_vel_dipole_extra(FILE *, int);
   void write_vel_ellipsoid_extra(FILE *, int);
   void write_vel_full_extra(FILE *, int);
-  void write_vel_line_extra(FILE *, int);
-  void write_vel_meso_extra(FILE *, int);
   void write_vel_molecular_extra(FILE *, int);
   void write_vel_peri_extra(FILE *, int);
   void write_vel_sphere_extra(FILE *, int);
-  void write_vel_tri_extra(FILE *, int);
-  void write_vel_wavepacket_extra(FILE *, int);
 };
 
 // ---------------------------------------------------------------------
@@ -328,58 +301,32 @@ void allocate_angle(Data &data);
 void allocate_atomic(Data &data);
 void allocate_bond(Data &data);
 void allocate_charge(Data &data);
+void allocate_meso(Data &data);
 void allocate_dipole(Data &data);
 void allocate_ellipsoid(Data &data);
 void allocate_full(Data &data);
-void allocate_line(Data &data);
-void allocate_meso(Data &data);
 void allocate_molecular(Data &data);
 void allocate_peri(Data &data);
 void allocate_sphere(Data &data);
-void allocate_tri(Data &data);
-void allocate_wavepacket(Data &data);
 
 int atom_angle(double *, Data &, int);
 int atom_atomic(double *, Data &, int);
 int atom_bond(double *, Data &, int);
 int atom_charge(double *, Data &, int);
+int atom_meso(double *, Data &, int);
 int atom_dipole(double *, Data &, int);
 int atom_ellipsoid(double *, Data &, int);
 int atom_full(double *, Data &, int);
-int atom_line(double *, Data &, int);
-int atom_meso(double *, Data &, int);
 int atom_molecular(double *, Data &, int);
 int atom_peri(double *, Data &, int);
 int atom_sphere(double *, Data &, int);
-int atom_tri(double *, Data &, int);
-int atom_wavepacket(double *, Data &, int);
 
 void strip_suffix(char *);
 
-void nread_int(int *buf, int n, FILE *fp);
-void nread_double(double *buf, int n, FILE *fp);
 int read_int(FILE *fp);
 double read_double(FILE *fp);
 char *read_char(FILE *fp);
 bigint read_bigint(FILE *fp);
-
-int autodetect(FILE **, char *);
-
-static void helpmsg(int exitval) 
-{
-  printf("Syntax: restart2data (switch1 switch2 ...) "
-	 "restart-file data-file (input-file)\n");
-  printf("  'restart-file' and 'data-file' are mandatory\n");
-  printf("  'input-file' is optional\n");
-  printf("    If specified, it will contain LAMMPS input script\n");
-  printf("    commands for mass and force field info.\n");
-  printf("    Only a few force field styles support this option.\n");
-  printf("  Switches are optional. Supported switches:\n");
-  printf("    -h   print this message\n");
-  printf("    -nc  don't write out coefficients\n");
-  printf("    -nv  don't write out velocities\n");
-  exit(exitval);
-}
 
 // ---------------------------------------------------------------------
 // main program
@@ -389,35 +336,32 @@ int main (int narg, char **arg)
 {
   // process command-line args
 
-  if (narg < 2) helpmsg(1);
-
-  int iarg,write_coeffs,write_vels;
-  char *restartfile, *datafile, *inputfile;
-  write_coeffs = write_vels = 1;
-  restartfile = datafile = inputfile = NULL;
-
-  for (iarg = 1; iarg < narg; ++iarg) {
-    if (strcmp(arg[iarg],"-h") == 0) {
-      helpmsg(0);
-    } else if (strcmp(arg[iarg],"-nc") == 0) {
-      write_coeffs = 0;
-    } else if (strcmp(arg[iarg],"-nv") == 0) {
-      write_vels = 0;
-    } else if (!restartfile) {
-      restartfile = arg[iarg];
-    } else if (!datafile) {
-      datafile = arg[iarg];
-    } else if (!inputfile) {
-      inputfile = arg[iarg];
-    }
+  int iarg = 1;
+  if (strcmp(arg[iarg],"-h") == 0) {
+    printf("Syntax: restart2data switch arg ... "
+	   "restart-file data-file (input-file)\n");
+    printf("  restart-file and data-file are mandatory");
+    printf("  input-file is optional");
+    printf("    if specified it will contain LAMMPS input script commands");
+    printf("    for mass and force field info");
+    printf("    only a few force field styles support this option");
+    return 0;
   }
 
-  if (!restartfile || !datafile) helpmsg(2);
+  if ((narg-iarg != 2) && (narg-iarg != 3)) {
+    printf("Syntax: restart2data switch arg ... "
+	   "restart-file data-file (input-file)\n");
+    return 1;
+  }
+
+  char *restartfile = arg[iarg];
+  char *datafile = arg[iarg+1];
+  char *inputfile = NULL;
+  if (narg-iarg == 3) inputfile = arg[iarg+2];
 
   // if restart file contains '%', file = filename with % replaced by "base"
   // else file = single file
   // open single restart file or base file for multiproc case
-  // auto-detect whether byte swapping needs to be done as file is read
 
   printf("Reading restart file ...\n");
 
@@ -435,14 +379,12 @@ int main (int narg, char **arg)
       printf("ERROR: Cannot open restart file %s\n",basefile);
       return 1;
     }
-    swapflag = autodetect(&fp,basefile);
   } else {
     fp = fopen(restartfile,"rb");
     if (fp == NULL) {
       printf("ERROR: Cannot open restart file %s\n",restartfile);
       return 1;
     }
-    swapflag = autodetect(&fp,restartfile);
   }
 
   // read beginning of restart file
@@ -483,6 +425,7 @@ int main (int narg, char **arg)
       }
     }
     n = read_int(fp);
+    printf("DEBUG :n: %d\n", n);
 
     if (n > maxbuf) {
       maxbuf = n;
@@ -490,7 +433,7 @@ int main (int narg, char **arg)
       buf = new double[maxbuf];
     }
 
-    nread_double(buf,n,fp);
+    fread(buf,sizeof(double),n,fp);
 
     m = 0;
     while (m < n) m += atom(&buf[m],data);
@@ -511,7 +454,7 @@ int main (int narg, char **arg)
       printf("ERROR: Cannot open data file %s\n",datafile);
       return 1;
     }
-    data.write(fp,NULL,write_coeffs,write_vels);
+    data.write(fp);
     fclose(fp);
 
   // write out data file and input file
@@ -530,7 +473,7 @@ int main (int narg, char **arg)
       return 1;
     }
 
-    data.write(fp,fp2,write_coeffs,write_vels);
+    data.write(fp,fp2);
     fclose(fp);
     fclose(fp2);
   }
@@ -544,7 +487,7 @@ int main (int narg, char **arg)
 
 void header(FILE *fp, Data &data)
 {
-  const char *version = "17 May 2012";
+  char *version = "19 Aug 2011";
 
   data.triclinic = 0;
 
@@ -556,8 +499,7 @@ void header(FILE *fp, Data &data)
     if (flag == VERSION) {
       data.version = read_char(fp);
       if (strcmp(version,data.version) != 0) {
-	const char *str = 
-	  "Restart file version does not match restart2data version";
+	char *str = "Restart file version does not match restart2data version";
 	printf("WARNING %s\n",str);
 	printf("  restart2data version = %s\n",version);
       }
@@ -591,10 +533,9 @@ void header(FILE *fp, Data &data)
 
     else if (flag == ATOM_STYLE) {
       data.style_angle = data.style_atomic = data.style_bond =
-	data.style_charge = data.style_dipole =	data.style_ellipsoid =
-	data.style_full = data.style_line = data.style_meso =
-	data.style_molecular = data.style_peri = data.style_sphere =
-	data.style_tri = data.style_wavepacket = data.style_hybrid = 0;
+	data.style_charge = data.style_dipole =	data.style_meso =
+	data.style_ellipsoid = data.style_full = data.style_hybrid = 
+	data.style_molecular = data.style_peri = data.style_sphere = 0;
 
       data.atom_style = read_char(fp);
       strip_suffix(data.atom_style);
@@ -666,17 +607,14 @@ void set_style(char *name, Data &data, int flag)
   else if (strcmp(name,"atomic") == 0) data.style_atomic = flag;
   else if (strcmp(name,"bond") == 0) data.style_bond = flag;
   else if (strcmp(name,"charge") == 0) data.style_charge = flag;
+  else if (strcmp(name,"meso") == 0) data.style_meso = flag;
   else if (strcmp(name,"dipole") == 0) data.style_dipole = flag;
   else if (strcmp(name,"ellipsoid") == 0) data.style_ellipsoid = flag;
   else if (strcmp(name,"full") == 0) data.style_full = flag;
-  else if (strcmp(name,"line") == 0) data.style_line = flag;
-  else if (strcmp(name,"meso") == 0) data.style_meso = flag;
+  else if (strcmp(name,"hybrid") == 0) data.style_hybrid = flag;
   else if (strcmp(name,"molecular") == 0) data.style_molecular = flag;
   else if (strcmp(name,"peri") == 0) data.style_peri = flag;
   else if (strcmp(name,"sphere") == 0) data.style_sphere = flag;
-  else if (strcmp(name,"tri") == 0) data.style_tri = flag;
-  else if (strcmp(name,"wavepacket") == 0) data.style_wavepacket = flag;
-  else if (strcmp(name,"hybrid") == 0) data.style_hybrid = flag;
   else {
     printf("ERROR: Unknown atom style %s\n",name);
     exit(1);
@@ -720,7 +658,7 @@ void type_arrays(FILE *fp, Data &data)
 
     if (flag == MASS) {
       data.mass = new double[data.ntypes+1];
-      nread_double(&data.mass[1],data.ntypes,fp);
+      fread(&data.mass[1],sizeof(double),data.ntypes,fp);
     } else {
       printf("ERROR: Invalid flag in type arrays section of restart file %d\n",
 	     flag);
@@ -839,16 +777,13 @@ int atom(double *buf, Data &data)
     if (data.style_atomic) allocate_atomic(data);
     if (data.style_bond) allocate_bond(data);
     if (data.style_charge) allocate_charge(data);
+    if (data.style_meso) allocate_meso(data);
     if (data.style_dipole) allocate_dipole(data);
     if (data.style_ellipsoid) allocate_ellipsoid(data);
     if (data.style_full) allocate_full(data);
-    if (data.style_line) allocate_line(data);
-    if (data.style_meso) allocate_meso(data);
     if (data.style_molecular) allocate_molecular(data);
     if (data.style_peri) allocate_peri(data);
     if (data.style_sphere) allocate_sphere(data);
-    if (data.style_tri) allocate_tri(data);
-    if (data.style_wavepacket) allocate_wavepacket(data);
   }
 
   // read atom quantities from buf
@@ -865,16 +800,13 @@ int atom(double *buf, Data &data)
     if (k == data.style_atomic) m += atom_atomic(&buf[m],data,iatoms);
     if (k == data.style_bond) m += atom_bond(&buf[m],data,iatoms);
     if (k == data.style_charge) m += atom_charge(&buf[m],data,iatoms);
+    if (k == data.style_meso) m += atom_meso(&buf[m],data,iatoms);
     if (k == data.style_dipole) m += atom_dipole(&buf[m],data,iatoms);
     if (k == data.style_ellipsoid) m += atom_ellipsoid(&buf[m],data,iatoms);
     if (k == data.style_full) m += atom_full(&buf[m],data,iatoms);
-    if (k == data.style_line) m += atom_line(&buf[m],data,iatoms);
-    if (k == data.style_meso) m += atom_meso(&buf[m],data,iatoms);
     if (k == data.style_molecular) m += atom_molecular(&buf[m],data,iatoms);
     if (k == data.style_peri) m += atom_peri(&buf[m],data,iatoms);
     if (k == data.style_sphere) m += atom_sphere(&buf[m],data,iatoms);
-    if (k == data.style_tri) m += atom_tri(&buf[m],data,iatoms);
-    if (k == data.style_wavepacket) m += atom_wavepacket(&buf[m],data,iatoms);
   }
 
   data.iatoms++;
@@ -885,7 +817,6 @@ int atom(double *buf, Data &data)
 // ---------------------------------------------------------------------
 // read one atom's info from buffer
 // one routine per atom style
-// skip broken bonds, angles, etc
 // ---------------------------------------------------------------------
 
 int atom_angle(double *buf, Data &data, int iatoms)
@@ -899,7 +830,7 @@ int atom_angle(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -910,7 +841,7 @@ int atom_angle(double *buf, Data &data, int iatoms)
   for (int k = 0; k < n; k++) {
     type = static_cast<int> (buf[m++]);
     atom1 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] < atom1))) {
+    if (data.newton_bond || data.tag[iatoms] < atom1 ) {
       data.bond_type[data.ibonds] = type;
       data.bond_atom1[data.ibonds] = data.tag[iatoms];
       data.bond_atom2[data.ibonds] = atom1;
@@ -924,12 +855,12 @@ int atom_angle(double *buf, Data &data, int iatoms)
     atom1 = static_cast<int> (buf[m++]);
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.angle_type[data.iangles] = type;
       data.angle_atom1[data.iangles] = atom1;
       data.angle_atom2[data.iangles] = atom2;
       data.angle_atom3[data.iangles] = atom3;
-      data.iangles++;
+	  data.iangles++;
     }
   }
 
@@ -945,7 +876,7 @@ int atom_atomic(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -964,7 +895,7 @@ int atom_bond(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -975,7 +906,7 @@ int atom_bond(double *buf, Data &data, int iatoms)
   for (int k = 0; k < n; k++) {
     type = static_cast<int> (buf[m++]);
     atom1 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] < atom1))) {
+    if (data.newton_bond || data.tag[iatoms] < atom1) {
       data.bond_type[data.ibonds] = type;
       data.bond_atom1[data.ibonds] = data.tag[iatoms];
       data.bond_atom2[data.ibonds] = atom1;
@@ -995,7 +926,7 @@ int atom_charge(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -1004,6 +935,31 @@ int atom_charge(double *buf, Data &data, int iatoms)
 
   return m;
 }
+
+int atom_meso(double *buf, Data &data, int iatoms)
+{
+  int m = 1;
+  data.x[iatoms] = buf[m++];
+  data.y[iatoms] = buf[m++];
+  data.z[iatoms] = buf[m++];
+  data.tag[iatoms] = static_cast<int> (buf[m++]);
+  data.type[iatoms] = static_cast<int> (buf[m++]);
+  data.mask[iatoms] = static_cast<int> (buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
+  data.vx[iatoms] = buf[m++];
+  data.vy[iatoms] = buf[m++];
+  data.vz[iatoms] = buf[m++];
+
+  data.rho[iatoms]=buf[m++];
+  data.e[iatoms]=buf[m++];
+  data.cv[iatoms]=buf[m++];
+  data.vestx[iatoms]=buf[m++];
+  data.vesty[iatoms]=buf[m++];
+  data.vestz[iatoms]=buf[m++];
+
+  return m;
+}
+
 
 int atom_dipole(double *buf, Data &data, int iatoms)
 {
@@ -1014,7 +970,7 @@ int atom_dipole(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -1023,7 +979,7 @@ int atom_dipole(double *buf, Data &data, int iatoms)
   data.mux[iatoms] = buf[m++];
   data.muy[iatoms] = buf[m++];
   data.muz[iatoms] = buf[m++];
-  data.mul[iatoms] = buf[m++];
+
   return m;
 }
 
@@ -1036,7 +992,7 @@ int atom_ellipsoid(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -1064,6 +1020,34 @@ int atom_ellipsoid(double *buf, Data &data, int iatoms)
   return m;
 }
 
+int atom_sphere(double *buf, Data &data, int iatoms)
+{
+  int m = 1;
+  data.x[iatoms] = buf[m++];
+  data.y[iatoms] = buf[m++];
+  data.z[iatoms] = buf[m++];
+  data.tag[iatoms] = static_cast<int> (buf[m++]);
+  data.type[iatoms] = static_cast<int> (buf[m++]);
+  data.mask[iatoms] = static_cast<int> (buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
+  data.vx[iatoms] = buf[m++];
+  data.vy[iatoms] = buf[m++];
+  data.vz[iatoms] = buf[m++];
+
+  data.radius[iatoms] = buf[m++];
+  data.rmass[iatoms] = buf[m++];
+  if (data.radius[iatoms] == 0.0) data.density[iatoms] = data.rmass[iatoms];
+  else 
+    data.density[iatoms] = data.rmass[iatoms] / 
+      (4.0*PI/3.0 * 
+       data.radius[iatoms]*data.radius[iatoms]*data.radius[iatoms]);
+  data.omegax[iatoms] = buf[m++];
+  data.omegay[iatoms] = buf[m++];
+  data.omegaz[iatoms] = buf[m++];
+
+  return m;
+}
+
 int atom_full(double *buf, Data &data, int iatoms)
 {
   int type,atom1,atom2,atom3,atom4;
@@ -1075,7 +1059,7 @@ int atom_full(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -1087,7 +1071,7 @@ int atom_full(double *buf, Data &data, int iatoms)
   for (int k = 0; k < n; k++) {
     type = static_cast<int> (buf[m++]);
     atom1 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] < atom1))) {
+    if (data.newton_bond || data.tag[iatoms] < atom1) {
       data.bond_type[data.ibonds] = type;
       data.bond_atom1[data.ibonds] = data.tag[iatoms];
       data.bond_atom2[data.ibonds] = atom1;
@@ -1101,7 +1085,7 @@ int atom_full(double *buf, Data &data, int iatoms)
     atom1 = static_cast<int> (buf[m++]);
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.angle_type[data.iangles] = type;
       data.angle_atom1[data.iangles] = atom1;
       data.angle_atom2[data.iangles] = atom2;
@@ -1117,7 +1101,7 @@ int atom_full(double *buf, Data &data, int iatoms)
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
     atom4 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.dihedral_type[data.idihedrals] = type;
       data.dihedral_atom1[data.idihedrals] = atom1;
       data.dihedral_atom2[data.idihedrals] = atom2;
@@ -1134,7 +1118,7 @@ int atom_full(double *buf, Data &data, int iatoms)
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
     atom4 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.improper_type[data.iimpropers] = type;
       data.improper_atom1[data.iimpropers] = atom1;
       data.improper_atom2[data.iimpropers] = atom2;
@@ -1145,18 +1129,6 @@ int atom_full(double *buf, Data &data, int iatoms)
   }
 
   return m;
-}
-
-int atom_line(double *buf, Data &data, int iatoms)
-{
-  fprintf(stderr,"Support for atom style line is not fully implemented\n");
-  exit(1);
-}
-
-int atom_meso(double *buf, Data &data, int iatoms)
-{
-  fprintf(stderr,"Support for atom style meso is not fully implemented\n");
-  exit(1);
 }
 
 int atom_molecular(double *buf, Data &data, int iatoms)
@@ -1170,7 +1142,7 @@ int atom_molecular(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -1181,7 +1153,7 @@ int atom_molecular(double *buf, Data &data, int iatoms)
   for (int k = 0; k < n; k++) {
     type = static_cast<int> (buf[m++]);
     atom1 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] < atom1))) {
+    if (data.newton_bond || data.tag[iatoms] < atom1) {
       data.bond_type[data.ibonds] = type;
       data.bond_atom1[data.ibonds] = data.tag[iatoms];
       data.bond_atom2[data.ibonds] = atom1;
@@ -1195,7 +1167,7 @@ int atom_molecular(double *buf, Data &data, int iatoms)
     atom1 = static_cast<int> (buf[m++]);
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.angle_type[data.iangles] = type;
       data.angle_atom1[data.iangles] = atom1;
       data.angle_atom2[data.iangles] = atom2;
@@ -1211,7 +1183,7 @@ int atom_molecular(double *buf, Data &data, int iatoms)
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
     atom4 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.dihedral_type[data.idihedrals] = type;
       data.dihedral_atom1[data.idihedrals] = atom1;
       data.dihedral_atom2[data.idihedrals] = atom2;
@@ -1228,7 +1200,7 @@ int atom_molecular(double *buf, Data &data, int iatoms)
     atom2 = static_cast<int> (buf[m++]);
     atom3 = static_cast<int> (buf[m++]);
     atom4 = static_cast<int> (buf[m++]);
-    if ((type != 0) && (data.newton_bond || (data.tag[iatoms] == atom2))) {
+    if (data.newton_bond || data.tag[iatoms] == atom2) {
       data.improper_type[data.iimpropers] = type;
       data.improper_atom1[data.iimpropers] = atom1;
       data.improper_atom2[data.iimpropers] = atom2;
@@ -1250,7 +1222,7 @@ int atom_peri(double *buf, Data &data, int iatoms)
   data.tag[iatoms] = static_cast<int> (buf[m++]);
   data.type[iatoms] = static_cast<int> (buf[m++]);
   data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
@@ -1263,47 +1235,6 @@ int atom_peri(double *buf, Data &data, int iatoms)
   data.x0z[iatoms] = buf[m++];
 
   return m;
-}
-
-int atom_sphere(double *buf, Data &data, int iatoms)
-{
-  int m = 1;
-  data.x[iatoms] = buf[m++];
-  data.y[iatoms] = buf[m++];
-  data.z[iatoms] = buf[m++];
-  data.tag[iatoms] = static_cast<int> (buf[m++]);
-  data.type[iatoms] = static_cast<int> (buf[m++]);
-  data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = *((tagint *) &buf[m++]);
-  data.vx[iatoms] = buf[m++];
-  data.vy[iatoms] = buf[m++];
-  data.vz[iatoms] = buf[m++];
-
-  data.radius[iatoms] = buf[m++];
-  data.rmass[iatoms] = buf[m++];
-  if (data.radius[iatoms] == 0.0) data.density[iatoms] = data.rmass[iatoms];
-  else 
-    data.density[iatoms] = data.rmass[iatoms] / 
-      (4.0*PI/3.0 * 
-       data.radius[iatoms]*data.radius[iatoms]*data.radius[iatoms]);
-  data.omegax[iatoms] = buf[m++];
-  data.omegay[iatoms] = buf[m++];
-  data.omegaz[iatoms] = buf[m++];
-
-  return m;
-}
-
-int atom_tri(double *buf, Data &data, int iatoms)
-{
-  fprintf(stderr,"Support for atom style tri is not fully implemented\n");
-  exit(1);
-}
-
-int atom_wavepacket(double *buf, Data &data, int iatoms)
-{
-  fprintf(stderr,"Support for atom style wavepacket is not "
-          "fully implemented\n");
-  exit(1);
 }
 
 // ---------------------------------------------------------------------
@@ -1338,13 +1269,23 @@ void allocate_charge(Data &data)
   data.q = new double[data.natoms];
 }
 
+void allocate_meso(Data &data)
+{
+  data.rho = new double[data.natoms];
+  data.e = new double[data.natoms];
+  data.cv = new double[data.natoms];
+  data.vestx = new double[data.natoms];
+  data.vesty = new double[data.natoms];
+  data.vestz = new double[data.natoms];
+}
+
+
 void allocate_dipole(Data &data)
 {
   data.q = new double[data.natoms];
   data.mux = new double[data.natoms];
   data.muy = new double[data.natoms];
   data.muz = new double[data.natoms];
-  data.mul = new double[data.natoms];
 }
 
 void allocate_full(Data &data)
@@ -1429,30 +1370,6 @@ void allocate_peri(Data &data)
   data.x0z = new double[data.natoms];
 }
 
-void allocate_line(Data &data)
-{
-  fprintf(stderr,"support for atom style line is not fully implemented\n");
-  exit(1);
-}
-
-void allocate_meso(Data &data)
-{
-  fprintf(stderr,"support for atom style meso is not fully implemented\n");
-  exit(1);
-}
-
-void allocate_tri(Data &data)
-{
-  fprintf(stderr,"support for atom style tri is not fully implemented\n");
-  exit(1);
-}
-
-void allocate_wavepacket(Data &data)
-{
-  fprintf(stderr,"support for atom style wavepacket is not fully implemented\n");
-  exit(1);
-}
-
 // ---------------------------------------------------------------------
 // pair coeffs
 // one section for each pair style
@@ -1467,8 +1384,10 @@ void pair(FILE *fp, Data &data, char *style, int flag)
   double rtmp;
 
   if (strcmp(style,"none") == 0) {
-
-  } else if (strcmp(style,"adp") == 0) {
+  } else if (strcmp(style,"sph/rhosum_multiphase") == 0) {
+  } else if (strcmp(style,"sph/colorgradient") == 0) {
+  } else if (strcmp(style,"sph/taitwater/morris") == 0) {
+  } else if (strcmp(style,"sph/surfacetension") == 0) {
   } else if (strcmp(style,"airebo") == 0) {
 
   } else if (strcmp(style,"born/coul/long") == 0) {
@@ -1476,7 +1395,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     double cut_coul = read_double(fp);
     int offset_flag = read_int(fp);
     int mix_flag = read_int(fp);
-    int tail_flag = read_int(fp);
 
     if (!flag) return;
 
@@ -1545,36 +1463,31 @@ void pair(FILE *fp, Data &data, char *style, int flag)
   } else if ((strcmp(style,"buck") == 0)  ||
 	     (strcmp(style,"buck/coul/cut") == 0) ||
 	     (strcmp(style,"buck/coul/long") == 0) ||
-	     (strcmp(style,"buck/long/coul/long") == 0)) {
+	     (strcmp(style,"buck/coul") == 0)) {
 
     if (strcmp(style,"buck") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"buck/coul/cut") == 0) {
       m = 1;
       double cut_lj_global = read_double(fp);
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"buck/coul/long") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
-    } else if (strcmp(style,"buck/long/coul/long") == 0) {
+    } else if (strcmp(style,"buck/coul") == 0) {
       m = 0;
       double cut_buck_global = read_double(fp);
       double cut_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
       int ewald_order = read_int(fp);
     }
 
@@ -1645,37 +1558,9 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	}
       }
 
-  } else if (strcmp(style,"comb") == 0) {
-
-  } else if (strcmp(style,"coul/diel") == 0) {
-    m = 1;
-    double cut_coul = read_double(fp);
-    int offset_flag = read_int(fp);
-    int mix_flag = read_int(fp);
-    if (!flag) return;
-
-    for (i = 1; i <= data.ntypes; i++)
-      for (j = i; j <= data.ntypes; j++) {
-	itmp = read_int(fp);
-	if (i == j && itmp == 0) {
-	  printf("ERROR: Pair coeff %d,%d is not in restart file\n",i,j);
-	  exit(1);
-	}
-	if (itmp) {
-	  if (i == j) {
-	    double diel_rme = read_double(fp);
-	    double diel_sigmae = read_double(fp);
-	    double cut_coul = read_double(fp);
-	  } else {
-	    double diel_rme = read_double(fp);
-	    double diel_sigmae = read_double(fp);
-	    double cut_coul = read_double(fp);
-	  }
-	}
-      }
-
   } else if ((strcmp(style,"coul/cut") == 0) ||
-	     (strcmp(style,"coul/debye") == 0)) {
+	     (strcmp(style,"coul/debye") == 0) ||
+	     (strcmp(style,"coul/long") == 0)) {
 
     if (strcmp(style,"coul/cut") == 0) {
       double cut_coul = read_double(fp);
@@ -1685,6 +1570,10 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       m = 1;
       double cut_coul = read_double(fp);
       double kappa = read_double(fp);
+      int offset_flag = read_int(fp);
+      int mix_flag = read_int(fp);
+    } else if (strcmp(style,"coul/long") == 0) {
+      double cut_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
     }
@@ -1707,54 +1596,11 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	}
       }
 
-  } else if (strcmp(style,"coul/long") == 0) {
-
-    double cut_coul = read_double(fp);
-    int offset_flag = read_int(fp);
-    int mix_flag = read_int(fp);
-    int ncoultablebits = read_int(fp);
-    double tabinner = read_double(fp);
-
-    if (!flag) return;
-
   } else if (strcmp(style,"dipole/cut") == 0) {
 
     double cut_lj_global = read_double(fp);
     double cut_coul_global = read_double(fp);
     int offset_flag = read_int(fp);
-    int mix_flag = read_int(fp);
-
-    if (!flag) return;
-
-    data.pair_dipole_epsilon = new double[data.ntypes+1];
-    data.pair_dipole_sigma = new double[data.ntypes+1];
-
-    for (i = 1; i <= data.ntypes; i++)
-      for (j = i; j <= data.ntypes; j++) {
-	itmp = read_int(fp);
-	if (i == j && itmp == 0) {
-	  printf("ERROR: Pair coeff %d,%d is not in restart file\n",i,j);
-	  exit(1);
-	}
-	if (itmp) {
-	  if (i == j) {
-	    data.pair_dipole_epsilon[i] = read_double(fp);
-	    data.pair_dipole_sigma[i] = read_double(fp);
-	    double cut_lj = read_double(fp);
-	    double cut_coul = read_double(fp);
-	  } else {
-	    double dipole_epsilon = read_double(fp);
-	    double dipole_sigma = read_double(fp);
-	    double cut_lj = read_double(fp);
-	    double cut_coul = read_double(fp);
-	  }
-	}
-      }
-
-  } else if (strcmp(style,"dipole/sf") == 0) {
-
-    double cut_lj_global = read_double(fp);
-    double cut_coul_global = read_double(fp);
     int mix_flag = read_int(fp);
 
     if (!flag) return;
@@ -1928,69 +1774,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       }
     }
 
-  } else if (strcmp(style,"gauss") == 0) {
-
-    double cut_lj_global = read_double(fp);
-    int offset_flag = read_int(fp);
-    int mix_flag = read_int(fp);
-
-    if (!flag) return;
-
-    data.pair_gauss_hgauss = new double[data.ntypes+1];
-    data.pair_gauss_rmh = new double[data.ntypes+1];
-
-    for (i = 1; i <= data.ntypes; i++)
-      for (j = i; j <= data.ntypes; j++) {
-	itmp = read_int(fp);
-	if (i == j && itmp == 0) {
-	  printf("ERROR: Pair coeff %d,%d is not in restart file\n",i,j);
-	  exit(1);
-	}
-	if (itmp) {
-	  if (i == j) {
-	    data.pair_gauss_hgauss[i] = read_double(fp);
-	    data.pair_gauss_rmh[i] = read_double(fp);
-	    double cut_lj = read_double(fp);
-	  } else {
-	    double dipole_hgauss = read_double(fp);
-	    double dipole_rmh = read_double(fp);
-	    double cut_lj = read_double(fp);
-	  }
-	}
-      }
-  } else if (strcmp(style,"gauss/cut") == 0) {
-
-    double cut_lj_global = read_double(fp);
-    int offset_flag = read_int(fp);
-    int mix_flag = read_int(fp);
-
-    if (!flag) return;
-
-    data.pair_gauss_hgauss = new double[data.ntypes+1];
-    data.pair_gauss_rmh = new double[data.ntypes+1];
-    data.pair_gauss_sigmah = new double[data.ntypes+1];
-
-    for (i = 1; i <= data.ntypes; i++)
-      for (j = i; j <= data.ntypes; j++) {
-	itmp = read_int(fp);
-	if (i == j && itmp == 0) {
-	  printf("ERROR: Pair coeff %d,%d is not in restart file\n",i,j);
-	  exit(1);
-	}
-	if (itmp) {
-	  if (i == j) {
-	    data.pair_gauss_hgauss[i] = read_double(fp);
-	    data.pair_gauss_rmh[i] = read_double(fp);
-	    data.pair_gauss_sigmah[i] = read_double(fp);
-	    double cut_lj = read_double(fp);
-	  } else {
-	    double dipole_hgauss = read_double(fp);
-	    double dipole_rmh = read_double(fp);
-	    double dipole_sigmah = read_double(fp);
-	    double cut_lj = read_double(fp);
-	  }
-	}
-      }
   } else if ((strcmp(style,"gran/hooke") == 0) ||
 	   (strcmp(style,"gran/hooke/history") == 0) ||
 	   (strcmp(style,"gran/hertz/history") == 0)) {
@@ -2016,7 +1799,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 
   } else if ((strcmp(style,"lj/charmm/coul/charmm") == 0) ||
 	     (strcmp(style,"lj/charmm/coul/charmm/implicit") == 0) ||
-	     (strcmp(style,"lj/charmm/coul/long/proxy") == 0) ||
 	     (strcmp(style,"lj/charmm/coul/long") == 0)) {
       
     if (strcmp(style,"lj/charmm/coul/charmm") == 0) {
@@ -2033,22 +1815,12 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       double cut_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-    } else if (strcmp(style,"lj/charmm/coul/long/proxy") == 0) {
-      double cut_lj_inner = read_double(fp);
-      double cut_lj = read_double(fp);
-      double cut_coul = read_double(fp);
-      int offset_flag = read_int(fp);
-      int mix_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
     } else if (strcmp(style,"lj/charmm/coul/long") == 0) {
       double cut_lj_inner = read_double(fp);
       double cut_lj = read_double(fp);
       double cut_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
     }
 
     if (!flag) return;
@@ -2082,7 +1854,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 
   } else if ((strcmp(style,"lj/class2") == 0) ||
 	   (strcmp(style,"lj/class2/coul/cut") == 0) ||
-	   (strcmp(style,"lj/class2/coul/long/proxy") == 0) ||
 	     (strcmp(style,"lj/class2/coul/long") == 0)) {
 
     if (strcmp(style,"lj/class2") == 0) {
@@ -2090,28 +1861,18 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       double cut_lj_global = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"lj/class2/coul/cut") == 0) {
       m = 1;
       double cut_lj_global = read_double(fp);
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
-    } else if (strcmp(style,"lj/class2/coul/long/proxy") == 0) {
-      m = 0;
-      double cut_lj_global = read_double(fp);
-      double cut_lj_coul = read_double(fp);
-      int offset_flag = read_int(fp);
-      int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"lj/class2/coul/long") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     }
 
     if (!flag) return;
@@ -2146,29 +1907,25 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	     (strcmp(style,"lj/cut/coul/cut") == 0) ||
 	     (strcmp(style,"lj/cut/coul/debye") == 0) ||
 	     (strcmp(style,"lj/cut/coul/long") == 0) ||
-	     (strcmp(style,"lj/cut/coul/long/proxy") == 0) ||
-	     (strcmp(style,"lj/cut/tip4p/long") == 0) ||
-	     (strcmp(style,"lj/long/coullong") == 0)) {
+	     (strcmp(style,"lj/cut/coul/long/tip4p") == 0) ||
+	     (strcmp(style,"lj/coul") == 0)) {
 
     if (strcmp(style,"lj/cut") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"lj96/cut") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"lj/cut/coul/cut") == 0) {
       m = 1;
       double cut_lj_global = read_double(fp);
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"lj/cut/coul/debye") == 0) {
       m = 1;
       double cut_lj_global = read_double(fp);
@@ -2176,26 +1933,13 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       double kappa = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
     } else if (strcmp(style,"lj/cut/coul/long") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
-    } else if (strcmp(style,"lj/cut/coul/long/proxy") == 0) {
-      m = 0;
-      double cut_lj_global = read_double(fp);
-      double cut_lj_coul = read_double(fp);
-      int offset_flag = read_int(fp);
-      int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
-    } else if (strcmp(style,"lj/cut/tip4p/long") == 0) {
+    } else if (strcmp(style,"lj/cut/coul/long/tip4p") == 0) {
       m = 0;
       int typeO = read_int(fp);
       int typeH = read_int(fp);
@@ -2206,17 +1950,12 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       double cut_lj_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int tail_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
-    } else if (strcmp(style,"lj/long/coul/long") == 0) {
+    } else if (strcmp(style,"lj/coul") == 0) {
       m = 0;
       double cut_lj_global = read_double(fp);
       double cut_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-      int ncoultablebits = read_int(fp);
-      double tabinner = read_double(fp);
       int ewald_order = read_int(fp);
     }
 
@@ -2252,7 +1991,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     double cut_global = read_double(fp);
     int offset_flag = read_int(fp);
     int mix_flag = read_int(fp);
-    int tail_flag = read_int(fp);
 
     if (!flag) return;
 
@@ -2395,9 +2133,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	}
       }
 
-  } else if ((strcmp(style,"meam") == 0) || 
-	     (strcmp(style,"meam/spline") == 0)) {
-      
+  } else if (strcmp(style,"meam") == 0) {
+
   } else if (strcmp(style,"morse") == 0) {
 
     double cut_global = read_double(fp);
@@ -2470,7 +2207,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     int n = read_int(fp);
 
   } else if (strcmp(style,"tersoff") == 0) {
-  } else if (strcmp(style,"tersoff/table") == 0) {
   } else if (strcmp(style,"tersoff/zbl") == 0) {
 
   } else if ((strcmp(style,"yukawa") == 0) || 
@@ -2504,61 +2240,9 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       }
 
   } else if ((strcmp(style,"cg/cmm") == 0) ||
-             (strcmp(style,"cg/cmm/coul/long") == 0) ||
-	     (strcmp(style,"lj/sdk") == 0) ||
-             (strcmp(style,"lj/sdk/coul/long") == 0)) {
+             (strcmp(style,"cg/cmm/coul/cut") == 0) ||
+             (strcmp(style,"cg/cmm/coul/long") == 0)) {
 
-    m = 0;
-    data.cut_lj_global = read_double(fp);
-    if ((strcmp(style,"cg/cmm/coul/long") == 0) ||
-	(strcmp(style,"lj/sdk/coul/long") == 0)) {
-      data.cut_coul_global = read_double(fp);
-    }
-    data.offset_flag = read_int(fp);
-    data.mix_flag = read_int(fp);
-    data.tail_flag = read_int(fp);
-    if ((strcmp(style,"cg/cmm/coul/long") == 0) ||
-	(strcmp(style,"lj/sdk/coul/long") == 0)) {
-      data.ncoultablebits = read_int(fp);
-      data.tabinner = read_double(fp);
-    }
-
-    if (!flag) return;
-
-    const int numtyp=data.ntypes+1;
-    data.pair_cg_cmm_type = new int*[numtyp];
-    data.pair_setflag = new int*[numtyp];
-    data.pair_cg_epsilon = new double*[numtyp];
-    data.pair_cg_sigma = new double*[numtyp];
-    data.pair_cut_lj = new double*[numtyp];
-    data.pair_cut_coul = NULL;
-    m=0;
-
-    for (i = 1; i <= data.ntypes; i++) {
-      data.pair_cg_cmm_type[i] = new int[numtyp];
-      data.pair_setflag[i] = new int[numtyp];
-      data.pair_cg_epsilon[i] = new double[numtyp];
-      data.pair_cg_sigma[i] = new double[numtyp];
-      data.pair_cut_lj[i] = new double[numtyp];
-
-      for (j = i; j <= data.ntypes; j++) {
-        itmp = read_int(fp);
-        data.pair_setflag[i][j] = itmp;
-        if (i == j && itmp == 0) {
-          printf("ERROR: Pair coeff %d,%d is not in restart file\n",i,j);
-          exit(1);
-        }
-        if (itmp) {
-          data.pair_cg_cmm_type[i][j] = read_int(fp);
-          data.pair_cg_epsilon[i][j] = read_double(fp);
-          data.pair_cg_sigma[i][j] = read_double(fp);
-          data.pair_cut_lj[i][j] = read_double(fp);
-        }
-      }
-    }
-  } else if ((strcmp(style,"cg/cmm/old") == 0) ||
-             (strcmp(style,"cg/cmm/coul/cut/old") == 0) ||
-             (strcmp(style,"cg/cmm/coul/long/old") == 0)) {
     m = 0;
     data.cut_lj_global = read_double(fp);
     data.cut_coul_global = read_double(fp);
@@ -2574,8 +2258,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     data.pair_cg_epsilon = new double*[numtyp];
     data.pair_cg_sigma = new double*[numtyp];
     data.pair_cut_lj = new double*[numtyp];
-    if ((strcmp(style,"cg/cmm/coul/cut/old") == 0) ||
-	(strcmp(style,"cg/cmm/coul/long/old") == 0)) {
+    if ((strcmp(style,"cg/cmm/coul/cut") == 0) ||
+	(strcmp(style,"cg/cmm/coul/long") == 0)) {
       data.pair_cut_coul = new double*[numtyp];
       m=1;
     } else {
@@ -2589,8 +2273,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       data.pair_cg_epsilon[i] = new double[numtyp];
       data.pair_cg_sigma[i] = new double[numtyp];
       data.pair_cut_lj[i] = new double[numtyp];
-      if ((strcmp(style,"cg/cmm/coul/cut/old") == 0) ||
-          (strcmp(style,"cg/cmm/coul/long/old") == 0)) {
+      if ((strcmp(style,"cg/cmm/coul/cut") == 0) ||
+          (strcmp(style,"cg/cmm/coul/long") == 0)) {
         data.pair_cut_coul[i] = new double[numtyp];
       }
 
@@ -2613,6 +2297,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
         }
       }
     }
+
   } else if ((strcmp(style,"hybrid") == 0) ||
 	     (strcmp(style,"hybrid/overlay") == 0)) {
 
@@ -2647,10 +2332,10 @@ void bond(FILE *fp, Data &data)
     data.bond_class2_k2 = new double[data.nbondtypes+1];
     data.bond_class2_k3 = new double[data.nbondtypes+1];
     data.bond_class2_k4 = new double[data.nbondtypes+1];
-    nread_double(&data.bond_class2_r0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_class2_k2[1],data.nbondtypes,fp);
-    nread_double(&data.bond_class2_k3[1],data.nbondtypes,fp);
-    nread_double(&data.bond_class2_k4[1],data.nbondtypes,fp);
+    fread(&data.bond_class2_r0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_class2_k2[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_class2_k3[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_class2_k4[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"fene") == 0) {
 
@@ -2658,10 +2343,10 @@ void bond(FILE *fp, Data &data)
     data.bond_fene_r0 = new double[data.nbondtypes+1];
     data.bond_fene_epsilon = new double[data.nbondtypes+1];
     data.bond_fene_sigma = new double[data.nbondtypes+1];
-    nread_double(&data.bond_fene_k[1],data.nbondtypes,fp);
-    nread_double(&data.bond_fene_r0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_fene_epsilon[1],data.nbondtypes,fp);
-    nread_double(&data.bond_fene_sigma[1],data.nbondtypes,fp);
+    fread(&data.bond_fene_k[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_fene_r0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_fene_epsilon[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_fene_sigma[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"fene/expand") == 0) {
 
@@ -2670,54 +2355,55 @@ void bond(FILE *fp, Data &data)
     data.bond_feneexpand_epsilon = new double[data.nbondtypes+1];
     data.bond_feneexpand_sigma = new double[data.nbondtypes+1];
     data.bond_feneexpand_shift = new double[data.nbondtypes+1];
-    nread_double(&data.bond_feneexpand_k[1],data.nbondtypes,fp);
-    nread_double(&data.bond_feneexpand_r0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_feneexpand_epsilon[1],data.nbondtypes,fp);
-    nread_double(&data.bond_feneexpand_sigma[1],data.nbondtypes,fp);
-    nread_double(&data.bond_feneexpand_shift[1],data.nbondtypes,fp);
+    fread(&data.bond_feneexpand_k[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_feneexpand_r0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_feneexpand_epsilon[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_feneexpand_sigma[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_feneexpand_shift[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"harmonic") == 0) {
 
     data.bond_harmonic_k = new double[data.nbondtypes+1];
     data.bond_harmonic_r0 = new double[data.nbondtypes+1];
-    nread_double(&data.bond_harmonic_k[1],data.nbondtypes,fp);
-    nread_double(&data.bond_harmonic_r0[1],data.nbondtypes,fp);
+    fread(&data.bond_harmonic_k[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_harmonic_r0[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"harmonicshift") == 0) {
 
     data.bond_harmonicshift_umin = new double[data.nbondtypes+1];
     data.bond_harmonicshift_r0 = new double[data.nbondtypes+1];
     data.bond_harmonicshift_rc = new double[data.nbondtypes+1];
-    nread_double(&data.bond_harmonicshift_umin[1],data.nbondtypes,fp);
-    nread_double(&data.bond_harmonicshift_r0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_harmonicshift_rc[1],data.nbondtypes,fp);
+    fread(&data.bond_harmonicshift_umin[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_harmonicshift_r0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_harmonicshift_rc[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"harmonicshiftcut") == 0) {
 
     data.bond_harmonicshiftcut_umin = new double[data.nbondtypes+1];
     data.bond_harmonicshiftcut_r0 = new double[data.nbondtypes+1];
     data.bond_harmonicshiftcut_rc = new double[data.nbondtypes+1];
-    nread_double(&data.bond_harmonicshiftcut_umin[1],data.nbondtypes,fp);
-    nread_double(&data.bond_harmonicshiftcut_r0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_harmonicshiftcut_rc[1],data.nbondtypes,fp);
+    fread(&data.bond_harmonicshiftcut_umin[1],sizeof(double),
+	  data.nbondtypes,fp);
+    fread(&data.bond_harmonicshiftcut_r0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_harmonicshiftcut_rc[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"morse") == 0) {
 
     data.bond_morse_d0 = new double[data.nbondtypes+1];
     data.bond_morse_alpha = new double[data.nbondtypes+1];
     data.bond_morse_r0 = new double[data.nbondtypes+1];
-    nread_double(&data.bond_morse_d0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_morse_alpha[1],data.nbondtypes,fp);
-    nread_double(&data.bond_morse_r0[1],data.nbondtypes,fp);
+    fread(&data.bond_morse_d0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_morse_alpha[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_morse_r0[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"nonlinear") == 0) {
 
     data.bond_nonlinear_epsilon = new double[data.nbondtypes+1];
     data.bond_nonlinear_r0 = new double[data.nbondtypes+1];
     data.bond_nonlinear_lamda = new double[data.nbondtypes+1];
-    nread_double(&data.bond_nonlinear_epsilon[1],data.nbondtypes,fp);
-    nread_double(&data.bond_nonlinear_r0[1],data.nbondtypes,fp);
-    nread_double(&data.bond_nonlinear_lamda[1],data.nbondtypes,fp);
+    fread(&data.bond_nonlinear_epsilon[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_nonlinear_r0[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_nonlinear_lamda[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"quartic") == 0) {
 
@@ -2726,11 +2412,11 @@ void bond(FILE *fp, Data &data)
     data.bond_quartic_b2 = new double[data.nbondtypes+1];
     data.bond_quartic_rc = new double[data.nbondtypes+1];
     data.bond_quartic_u0 = new double[data.nbondtypes+1];
-    nread_double(&data.bond_quartic_k[1],data.nbondtypes,fp);
-    nread_double(&data.bond_quartic_b1[1],data.nbondtypes,fp);
-    nread_double(&data.bond_quartic_b2[1],data.nbondtypes,fp);
-    nread_double(&data.bond_quartic_rc[1],data.nbondtypes,fp);
-    nread_double(&data.bond_quartic_u0[1],data.nbondtypes,fp);
+    fread(&data.bond_quartic_k[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_quartic_b1[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_quartic_b2[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_quartic_rc[1],sizeof(double),data.nbondtypes,fp);
+    fread(&data.bond_quartic_u0[1],sizeof(double),data.nbondtypes,fp);
 
   } else if (strcmp(data.bond_style,"table") == 0) {
 
@@ -2758,18 +2444,7 @@ void angle(FILE *fp, Data &data)
 {
   if (strcmp(data.angle_style,"none") == 0) {
 
-  } else if ((strcmp(data.angle_style,"cg/cmm") == 0) ||
-	     (strcmp(data.angle_style,"sdk") == 0)) {
-
-    data.angle_harmonic_k = new double[data.nangletypes+1];
-    data.angle_harmonic_theta0 = new double[data.nangletypes+1];
-    data.angle_cg_cmm_epsilon = new double[data.nangletypes+1];
-
-    nread_double(&data.angle_harmonic_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_harmonic_theta0[1],data.nangletypes,fp);
-    nread_double(&data.angle_cg_cmm_epsilon[1],data.nangletypes,fp);
-
-  } else if (strcmp(data.angle_style,"cg/cmm/old") == 0) {
+  } else if (strcmp(data.angle_style,"cg/cmm") == 0) {
 
     data.angle_harmonic_k = new double[data.nangletypes+1];
     data.angle_harmonic_theta0 = new double[data.nangletypes+1];
@@ -2778,12 +2453,12 @@ void angle(FILE *fp, Data &data)
     double *angle_cg_cmm_rcut = new double[data.nangletypes+1];
     data.angle_cg_cmm_type = new int[data.nangletypes+1];
 
-    nread_double(&data.angle_harmonic_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_harmonic_theta0[1],data.nangletypes,fp);
-    nread_double(&data.angle_cg_cmm_epsilon[1],data.nangletypes,fp);
-    nread_double(&data.angle_cg_cmm_sigma[1],data.nangletypes,fp);
-    nread_double(angle_cg_cmm_rcut,data.nangletypes,fp);
-    nread_int(&data.angle_cg_cmm_type[1],data.nangletypes,fp);
+    fread(&data.angle_harmonic_k[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_harmonic_theta0[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_cg_cmm_epsilon[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_cg_cmm_sigma[1],sizeof(double),data.nangletypes,fp);
+    fread(angle_cg_cmm_rcut,sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_cg_cmm_type[1],sizeof(int),data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"charmm") == 0) {
 
@@ -2791,11 +2466,10 @@ void angle(FILE *fp, Data &data)
     data.angle_charmm_theta0 = new double[data.nangletypes+1];
     data.angle_charmm_k_ub = new double[data.nangletypes+1];
     data.angle_charmm_r_ub = new double[data.nangletypes+1];
-
-    nread_double(&data.angle_charmm_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_charmm_theta0[1],data.nangletypes,fp);
-    nread_double(&data.angle_charmm_k_ub[1],data.nangletypes,fp);
-    nread_double(&data.angle_charmm_r_ub[1],data.nangletypes,fp);
+    fread(&data.angle_charmm_k[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_charmm_theta0[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_charmm_k_ub[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_charmm_r_ub[1],sizeof(double),data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"class2") == 0) {
 
@@ -2813,70 +2487,68 @@ void angle(FILE *fp, Data &data)
     data.angle_class2_ba_r1 = new double[data.nangletypes+1];
     data.angle_class2_ba_r2 = new double[data.nangletypes+1];
 
-    nread_double(&data.angle_class2_theta0[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_k2[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_k3[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_k4[1],data.nangletypes,fp);
+    fread(&data.angle_class2_theta0[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_k2[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_k3[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_k4[1],sizeof(double),data.nangletypes,fp);
 
-    nread_double(&data.angle_class2_bb_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_bb_r1[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_bb_r2[1],data.nangletypes,fp);
+    fread(&data.angle_class2_bb_k[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_bb_r1[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_bb_r2[1],sizeof(double),data.nangletypes,fp);
 
-    nread_double(&data.angle_class2_ba_k1[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_ba_k2[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_ba_r1[1],data.nangletypes,fp);
-    nread_double(&data.angle_class2_ba_r2[1],data.nangletypes,fp);
+    fread(&data.angle_class2_ba_k1[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_ba_k2[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_ba_r1[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_class2_ba_r2[1],sizeof(double),data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"cosineshift") == 0) {
 
     data.angle_cosineshift_umin = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshift_umin[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshift_umin[1],sizeof(double),data.nangletypes,fp);
     data.angle_cosineshift_cost = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshift_cost[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshift_cost[1],sizeof(double),data.nangletypes,fp);
     data.angle_cosineshift_sint = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshift_sint[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshift_sint[1],sizeof(double),data.nangletypes,fp);
     data.angle_cosineshift_theta0 = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshift_theta0[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshift_theta0[1],sizeof(double),data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"cosineshiftexp") == 0) {
 
     data.angle_cosineshiftexp_umin = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshiftexp_umin[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshiftexp_umin[1],sizeof(double),
+	  data.nangletypes,fp);
     data.angle_cosineshiftexp_a = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshiftexp_a[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshiftexp_a[1],sizeof(double),data.nangletypes,fp);
     data.angle_cosineshiftexp_cost = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshiftexp_cost[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshiftexp_cost[1],sizeof(double),
+	  data.nangletypes,fp);
     data.angle_cosineshiftexp_sint = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshiftexp_sint[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshiftexp_sint[1],sizeof(double),
+	  data.nangletypes,fp);
     data.angle_cosineshiftexp_theta0 = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosineshiftexp_theta0[1],data.nangletypes,fp);
+    fread(&data.angle_cosineshiftexp_theta0[1],sizeof(double),
+	  data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"cosine") == 0) {
 
     data.angle_cosine_k = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosine_k[1],data.nangletypes,fp);
+    fread(&data.angle_cosine_k[1],sizeof(double),data.nangletypes,fp);
 
   } else if ((strcmp(data.angle_style,"cosine/squared") == 0) ||
              (strcmp(data.angle_style,"cosine/delta") == 0)) {
 
     data.angle_cosine_squared_k = new double[data.nangletypes+1];
     data.angle_cosine_squared_theta0 = new double[data.nangletypes+1];
-    nread_double(&data.angle_cosine_squared_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_cosine_squared_theta0[1],data.nangletypes,fp);
-
-  } else if (strcmp(data.angle_style,"dipole") == 0) {
-
-    data.angle_harmonic_k = new double[data.nangletypes+1];
-    data.angle_harmonic_theta0 = new double[data.nangletypes+1];
-    nread_double(&data.angle_harmonic_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_harmonic_theta0[1],data.nangletypes,fp);
+    fread(&data.angle_cosine_squared_k[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_cosine_squared_theta0[1],
+	  sizeof(double),data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"harmonic") == 0) {
 
     data.angle_harmonic_k = new double[data.nangletypes+1];
     data.angle_harmonic_theta0 = new double[data.nangletypes+1];
-    nread_double(&data.angle_harmonic_k[1],data.nangletypes,fp);
-    nread_double(&data.angle_harmonic_theta0[1],data.nangletypes,fp);
+    fread(&data.angle_harmonic_k[1],sizeof(double),data.nangletypes,fp);
+    fread(&data.angle_harmonic_theta0[1],sizeof(double),data.nangletypes,fp);
 
   } else if (strcmp(data.angle_style,"table") == 0) {
 
@@ -2910,10 +2582,12 @@ void dihedral(FILE *fp, Data &data)
     data.dihedral_charmm_multiplicity = new int[data.ndihedraltypes+1];
     data.dihedral_charmm_sign = new int[data.ndihedraltypes+1];
     data.dihedral_charmm_weight = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_charmm_k[1],data.ndihedraltypes,fp);
-    nread_int(&data.dihedral_charmm_multiplicity[1],data.ndihedraltypes,fp);
-    nread_int(&data.dihedral_charmm_sign[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_charmm_weight[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_charmm_k[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_charmm_multiplicity[1],sizeof(int),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_charmm_sign[1],sizeof(int),data.ndihedraltypes,fp);
+    fread(&data.dihedral_charmm_weight[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
   } else if (strcmp(data.dihedral_style,"class2") == 0) {
 
@@ -2957,63 +2631,90 @@ void dihedral(FILE *fp, Data &data)
     data.dihedral_class2_bb13_r10 = new double[data.ndihedraltypes+1];
     data.dihedral_class2_bb13_r30 = new double[data.ndihedraltypes+1];
 
-    nread_double(&data.dihedral_class2_k1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_k2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_k3[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_phi1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_phi2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_phi3[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_k1[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_k2[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_k3[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_phi1[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_phi2[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_phi3[1],sizeof(double),data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_mbt_f1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_mbt_f2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_mbt_f3[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_mbt_r0[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_mbt_f1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_mbt_f2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_mbt_f3[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_mbt_r0[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_ebt_f1_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_ebt_f2_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_ebt_f3_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_ebt_r0_1[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_f1_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_f2_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_f3_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_r0_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_ebt_f1_2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_ebt_f2_2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_ebt_f3_2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_ebt_r0_2[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_f1_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_f2_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_f3_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_ebt_r0_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_at_f1_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_at_f2_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_at_f3_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_at_theta0_1[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_f1_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_f2_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_f3_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_theta0_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_at_f1_2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_at_f2_2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_at_f3_2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_at_theta0_2[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_f1_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_f2_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_f3_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_at_theta0_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_aat_k[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_aat_theta0_1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_aat_theta0_2[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_aat_k[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_aat_theta0_1[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_aat_theta0_2[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
-    nread_double(&data.dihedral_class2_bb13_k[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_bb13_r10[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_class2_bb13_r30[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_bb13_k[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_bb13_r10[1],sizeof(double),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_class2_bb13_r30[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
   } else if (strcmp(data.dihedral_style,"harmonic") == 0) {
 
     data.dihedral_harmonic_k = new double[data.ndihedraltypes+1];
     data.dihedral_harmonic_multiplicity = new int[data.ndihedraltypes+1];
     data.dihedral_harmonic_sign = new int[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_harmonic_k[1],data.ndihedraltypes,fp);
-    nread_int(&data.dihedral_harmonic_multiplicity[1],data.ndihedraltypes,fp);
-    nread_int(&data.dihedral_harmonic_sign[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_harmonic_k[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_harmonic_multiplicity[1],sizeof(int),
+	  data.ndihedraltypes,fp);
+    fread(&data.dihedral_harmonic_sign[1],sizeof(int),data.ndihedraltypes,fp);
 
   } else if (strcmp(data.dihedral_style,"helix") == 0) {
 
     data.dihedral_helix_aphi = new double[data.ndihedraltypes+1];
     data.dihedral_helix_bphi = new double[data.ndihedraltypes+1];
     data.dihedral_helix_cphi = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_helix_aphi[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_helix_bphi[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_helix_cphi[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_helix_aphi[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_helix_bphi[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_helix_cphi[1],sizeof(double),data.ndihedraltypes,fp);
 
   } else if (strcmp(data.dihedral_style,"multi/harmonic") == 0) {
 
@@ -3022,11 +2723,11 @@ void dihedral(FILE *fp, Data &data)
     data.dihedral_multi_a3 = new double[data.ndihedraltypes+1];
     data.dihedral_multi_a4 = new double[data.ndihedraltypes+1];
     data.dihedral_multi_a5 = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_multi_a1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_multi_a2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_multi_a3[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_multi_a4[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_multi_a5[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_multi_a1[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_multi_a2[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_multi_a3[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_multi_a4[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_multi_a5[1],sizeof(double),data.ndihedraltypes,fp);
 
   } else if (strcmp(data.dihedral_style,"opls") == 0) {
 
@@ -3034,23 +2735,28 @@ void dihedral(FILE *fp, Data &data)
     data.dihedral_opls_k2 = new double[data.ndihedraltypes+1];
     data.dihedral_opls_k3 = new double[data.ndihedraltypes+1];
     data.dihedral_opls_k4 = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_opls_k1[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_opls_k2[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_opls_k3[1],data.ndihedraltypes,fp);
-    nread_double(&data.dihedral_opls_k4[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_opls_k1[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_opls_k2[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_opls_k3[1],sizeof(double),data.ndihedraltypes,fp);
+    fread(&data.dihedral_opls_k4[1],sizeof(double),data.ndihedraltypes,fp);
   
   } else if (strcmp(data.dihedral_style,"cosineshiftexp") == 0) {
 
     data.dihedral_cosineshiftexp_umin = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_cosineshiftexp_umin[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_cosineshiftexp_umin[1],sizeof(double),
+	  data.ndihedraltypes,fp);
     data.dihedral_cosineshiftexp_a = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_cosineshiftexp_a[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_cosineshiftexp_a[1],sizeof(double),
+	  data.ndihedraltypes,fp);
     data.dihedral_cosineshiftexp_cost = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_cosineshiftexp_cost[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_cosineshiftexp_cost[1],sizeof(double),
+	  data.ndihedraltypes,fp);
     data.dihedral_cosineshiftexp_sint = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_cosineshiftexp_sint[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_cosineshiftexp_sint[1],sizeof(double),
+	  data.ndihedraltypes,fp);
     data.dihedral_cosineshiftexp_theta = new double[data.ndihedraltypes+1];
-    nread_double(&data.dihedral_cosineshiftexp_theta[1],data.ndihedraltypes,fp);
+    fread(&data.dihedral_cosineshiftexp_theta[1],sizeof(double),
+	  data.ndihedraltypes,fp);
 
   } else if (strcmp(data.dihedral_style,"table") == 0) {
 
@@ -3090,31 +2796,41 @@ void improper(FILE *fp, Data &data)
     data.improper_class2_aa_theta0_2 = new double[data.nimpropertypes+1];
     data.improper_class2_aa_theta0_3 = new double[data.nimpropertypes+1];
 
-    nread_double(&data.improper_class2_k0[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_class2_chi0[1],data.nimpropertypes,fp);
+    fread(&data.improper_class2_k0[1],sizeof(double),
+	  data.nimpropertypes,fp);
+    fread(&data.improper_class2_chi0[1],sizeof(double),
+	  data.nimpropertypes,fp);
 
-    nread_double(&data.improper_class2_aa_k1[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_class2_aa_k2[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_class2_aa_k3[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_class2_aa_theta0_1[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_class2_aa_theta0_2[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_class2_aa_theta0_3[1],data.nimpropertypes,fp);
+    fread(&data.improper_class2_aa_k1[1],sizeof(double),
+	  data.nimpropertypes,fp);
+    fread(&data.improper_class2_aa_k2[1],sizeof(double),
+	  data.nimpropertypes,fp);
+    fread(&data.improper_class2_aa_k3[1],sizeof(double),
+	  data.nimpropertypes,fp);
+    fread(&data.improper_class2_aa_theta0_1[1],sizeof(double),
+	  data.nimpropertypes,fp);
+    fread(&data.improper_class2_aa_theta0_2[1],sizeof(double),
+	  data.nimpropertypes,fp);
+    fread(&data.improper_class2_aa_theta0_3[1],sizeof(double),
+	  data.nimpropertypes,fp);
 
   } else if (strcmp(data.improper_style,"cvff") == 0) {
 
     data.improper_cvff_k = new double[data.nimpropertypes+1];
     data.improper_cvff_sign = new int[data.nimpropertypes+1];
     data.improper_cvff_multiplicity = new int[data.nimpropertypes+1];
-    nread_double(&data.improper_cvff_k[1],data.nimpropertypes,fp);
-    nread_int(&data.improper_cvff_sign[1],data.nimpropertypes,fp);
-    nread_int(&data.improper_cvff_multiplicity[1],data.nimpropertypes,fp);
+    fread(&data.improper_cvff_k[1],sizeof(double),data.nimpropertypes,fp);
+    fread(&data.improper_cvff_sign[1],sizeof(int),data.nimpropertypes,fp);
+    fread(&data.improper_cvff_multiplicity[1],sizeof(int),
+	  data.nimpropertypes,fp);
 
   } else if (strcmp(data.improper_style,"harmonic") == 0) {
 
     data.improper_harmonic_k = new double[data.nimpropertypes+1];
     data.improper_harmonic_chi = new double[data.nimpropertypes+1];
-    nread_double(&data.improper_harmonic_k[1],data.nimpropertypes,fp);
-    nread_double(&data.improper_harmonic_chi[1],data.nimpropertypes,fp);
+    fread(&data.improper_harmonic_k[1],sizeof(double),data.nimpropertypes,fp);
+    fread(&data.improper_harmonic_chi[1],sizeof(double),
+	  data.nimpropertypes,fp);
 
   } else if (strcmp(data.improper_style,"hybrid") == 0) {
 
@@ -3152,28 +2868,18 @@ void Data::stats()
 
   if (nellipsoids) printf("  Nellipsoids = " BIGINT_FORMAT "\n",nellipsoids);
 
-  if (ibonds) printf("  Nbonds = " BIGINT_FORMAT "\n",ibonds);
-  if (ibonds != nbonds) 
-    printf("  Skipping " BIGINT_FORMAT " broken bonds\n",nbonds-ibonds);
-  if (iangles) printf("  Nangles = " BIGINT_FORMAT "\n",iangles);
-  if (iangles != nangles) 
-    printf("  Skipping " BIGINT_FORMAT " broken angles\n",nangles-iangles);
-  if (idihedrals) printf("  Ndihedrals = " BIGINT_FORMAT "\n",idihedrals);
-  if (idihedrals != ndihedrals) 
-    printf("  Skipping " BIGINT_FORMAT " broken dihedrals\n",
-	   ndihedrals-idihedrals);
-  if (iimpropers) printf("  Nimpropers = " BIGINT_FORMAT "\n",iimpropers);
-  if (iimpropers != nimpropers) 
-    printf("  Skipping " BIGINT_FORMAT " broken impropers\n",
-	   nimpropers-iimpropers);
+  printf("  Nbonds = " BIGINT_FORMAT "\n",nbonds);
+  printf("  Nangles = " BIGINT_FORMAT "\n",nangles);
+  printf("  Ndihedrals = " BIGINT_FORMAT "\n",ndihedrals);
+  printf("  Nimpropers = " BIGINT_FORMAT "\n",nimpropers);
 
   printf("  Unit style = %s\n",unit_style);
   printf("  Atom style = %s\n",atom_style);
-  if (pair_style) printf("  Pair style = %s\n",pair_style);
-  if (bond_style) printf("  Bond style = %s\n",bond_style);
-  if (angle_style) printf("  Angle style = %s\n",angle_style);
-  if (dihedral_style) printf("  Dihedral style = %s\n",dihedral_style);
-  if (improper_style) printf("  Improper style = %s\n",improper_style);
+  printf("  Pair style = %s\n",pair_style);
+  printf("  Bond style = %s\n",bond_style);
+  printf("  Angle style = %s\n",angle_style);
+  printf("  Dihedral style = %s\n",dihedral_style);
+  printf("  Improper style = %s\n",improper_style);
 
   printf("  Xlo xhi = %g %g\n",xlo,xhi);
   printf("  Ylo yhi = %g %g\n",ylo,yhi);
@@ -3188,17 +2894,17 @@ void Data::stats()
 // write the data file and input file
 // ---------------------------------------------------------------------
 
-void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
+void Data::write(FILE *fp, FILE *fp2)
 {
   fprintf(fp,"LAMMPS data file from restart file: timestep = "
 	  BIGINT_FORMAT ", procs = %d\n\n",ntimestep,nprocs);
 
   fprintf(fp,BIGINT_FORMAT " atoms\n",natoms);
   if (nellipsoids) fprintf(fp,BIGINT_FORMAT " ellipsoids\n",nellipsoids);
-  if (ibonds) fprintf(fp,BIGINT_FORMAT " bonds\n",ibonds);
-  if (iangles) fprintf(fp,BIGINT_FORMAT " angles\n",iangles);
-  if (idihedrals) fprintf(fp,BIGINT_FORMAT " dihedrals\n",idihedrals);
-  if (iimpropers) fprintf(fp,BIGINT_FORMAT " impropers\n",iimpropers);
+  if (nbonds) fprintf(fp,BIGINT_FORMAT " bonds\n",nbonds);
+  if (nangles) fprintf(fp,BIGINT_FORMAT " angles\n",nangles);
+  if (ndihedrals) fprintf(fp,BIGINT_FORMAT " dihedrals\n",ndihedrals);
+  if (nimpropers) fprintf(fp,BIGINT_FORMAT " impropers\n",nimpropers);
 
   fprintf(fp,"\n");
 
@@ -3226,57 +2932,51 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
     if (angle_style) fprintf(fp2,"angle_style %s\n",angle_style);
     if (dihedral_style) fprintf(fp2,"dihedral_style %s\n",dihedral_style);
     if (improper_style) fprintf(fp2,"improper_style %s\n",improper_style);
-    fprintf(fp2,"special_bonds lj %g %g %g coul %g %g %g\n",
+    fprintf(fp2,"special_bonds %g %g %g %g %g %g\n",
             special_lj[1],special_lj[2],special_lj[3],
             special_lj[1],special_coul[2],special_coul[3]);
     fprintf(fp2,"\n");
   }
 
-  // mass to both data file and input file for convenience
+  // mass to either data file or input file
 
   if (mass) {
     if (fp2) {
       fprintf(fp2,"\n");
       for (int i = 1; i <= ntypes; i++) fprintf(fp2,"mass %d %g\n",i,mass[i]);
       fprintf(fp2,"\n");
+    } else {
+      fprintf(fp,"\nMasses\n\n");
+      for (int i = 1; i <= ntypes; i++) fprintf(fp,"%d %g\n",i,mass[i]);
     }
-    fprintf(fp,"\nMasses\n\n");
-    for (int i = 1; i <= ntypes; i++) fprintf(fp,"%d %g\n",i,mass[i]);
   }
 
   // pair coeffs to data file
 
-  if (write_coeffs && pair_style && fp2 == NULL) {
+  if (pair_style && fp2 == NULL) {
     if ((strcmp(pair_style,"none") != 0) &&
 	(strcmp(pair_style,"adp") != 0) &&
 	(strcmp(pair_style,"airebo") != 0) &&
 	(strcmp(pair_style,"brownian") != 0) &&
-	(strcmp(pair_style,"comb") != 0) &&
 	(strcmp(pair_style,"coul/cut") != 0) &&
 	(strcmp(pair_style,"coul/debye") != 0) &&
-	(strcmp(pair_style,"coul/diel") != 0) &&
 	(strcmp(pair_style,"coul/long") != 0) &&
 	(strcmp(pair_style,"eam") != 0) &&
 	(strcmp(pair_style,"eam/alloy") != 0) &&
 	(strcmp(pair_style,"eam/fs") != 0) &&
 	(strcmp(pair_style,"eim") != 0) &&
 	(strcmp(pair_style,"eff/cut") != 0) &&
-	(strcmp(pair_style,"gauss") != 0) &&
-	(strcmp(pair_style,"gauss/cut") != 0) &&
 	(strcmp(pair_style,"gran/history") != 0) &&
 	(strcmp(pair_style,"gran/no_history") != 0) &&
 	(strcmp(pair_style,"gran/hertzian") != 0) &&
 	(strcmp(pair_style,"lubricate2") != 0) &&
 	(strcmp(pair_style,"lubricateU") != 0) &&
 	(strcmp(pair_style,"meam") != 0) &&
-	(strcmp(pair_style,"meam/spline") != 0) &&
-	(strcmp(pair_style,"rebo") != 0) &&
 	(strcmp(pair_style,"reax") != 0) &&
 	(strcmp(pair_style,"reax/c") != 0) &&
 	(strcmp(pair_style,"sw") != 0) &&
 	(strcmp(pair_style,"table") != 0) &&
 	(strcmp(pair_style,"tersoff") != 0) &&
-	(strcmp(pair_style,"tersoff/table") != 0) &&
 	(strcmp(pair_style,"tersoff/zbl") != 0) &&
 	(strcmp(pair_style,"hybrid") != 0) &&
 	(strcmp(pair_style,"hybrid/overlay") != 0))
@@ -3302,8 +3002,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 		pair_colloid_A12[i],pair_colloid_sigma[i],
 		pair_colloid_d2[i],pair_colloid_d2[i]);
 
-    } else if ((strcmp(pair_style,"dipole/cut") == 0) ||
-	       (strcmp(pair_style,"dipole/sf") == 0)) {
+    } else if (strcmp(pair_style,"dipole/cut") == 0) {
       for (int i = 1; i <= ntypes; i++)
 	fprintf(fp,"%d %g %g\n",i,
 		pair_dipole_epsilon[i],pair_dipole_sigma[i]);
@@ -3327,7 +3026,6 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 
     } else if ((strcmp(pair_style,"lj/charmm/coul/charmm") == 0) ||
 	       (strcmp(pair_style,"lj/charmm/coul/charmm/implicit") == 0) ||
-	       (strcmp(pair_style,"lj/charmm/coul/long/proxy") == 0) ||
 	       (strcmp(pair_style,"lj/charmm/coul/long") == 0)) {
       for (int i = 1; i <= ntypes; i++)
 	fprintf(fp,"%d %g %g %g %g\n",i,
@@ -3336,7 +3034,6 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 
     } else if ((strcmp(pair_style,"lj/class2") == 0) ||
 	       (strcmp(pair_style,"lj/class2/coul/cut") == 0) ||
-	       (strcmp(pair_style,"lj/class2/coul/long/proxy") == 0) ||
 	       (strcmp(pair_style,"lj/class2/coul/long") == 0)) {
       for (int i = 1; i <= ntypes; i++)
 	fprintf(fp,"%d %g %g\n",i,
@@ -3347,9 +3044,8 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 	       (strcmp(pair_style,"lj/cut/coul/cut") == 0) ||
 	       (strcmp(pair_style,"lj/cut/coul/debye") == 0) ||
 	       (strcmp(pair_style,"lj/cut/coul/long") == 0) ||
-	       (strcmp(pair_style,"lj/cut/coul/long/proxy") == 0) ||
-	       (strcmp(pair_style,"lj/cut/tip4p/long") == 0) ||
-	       (strcmp(pair_style,"lj/long/coul/long") == 0)) {
+	       (strcmp(pair_style,"lj/cut/coul/long/tip4p") == 0) ||
+	       (strcmp(pair_style,"lj/coul") == 0)) {
       for (int i = 1; i <= ntypes; i++)
 	fprintf(fp,"%d %g %g\n",i,
 		pair_lj_epsilon[i],pair_lj_sigma[i]);
@@ -3389,26 +3085,20 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 
     } else if ((strcmp(pair_style,"cg/cmm") == 0) ||
                (strcmp(pair_style,"cg/cmm/coul/cut") == 0) ||
-               (strcmp(pair_style,"cg/cmm/coul/long") == 0) ||
-               (strcmp(pair_style,"lj/sdk") == 0) ||
-               (strcmp(pair_style,"lj/sdk/coul/long") == 0)) {
-      printf("ERROR: Cannot write pair_style %s to data file alone. please provide an input file, too.\n",
+               (strcmp(pair_style,"cg/cmm/coul/long") == 0)) {
+      printf("ERROR: Cannot write pair_style %s to data file\n",
 	     pair_style);
       exit(1);
     }
   }
 
   // pair coeffs to input file
-  // only supported styles = lj/sdk and cg/cmm
+  // only supported styles = cg/cmm
 
-  if (write_coeffs && pair_style && fp2) {
-    if ((strcmp(pair_style,"lj/sdk") == 0) ||
-	(strcmp(pair_style,"lj/sdk/coul/long") == 0) ||
-	(strcmp(pair_style,"cg/cmm") == 0) ||
+  if (pair_style && fp2) {
+    if ((strcmp(pair_style,"cg/cmm") == 0) ||
 	(strcmp(pair_style,"cg/cmm/coul/cut") == 0) ||
-	(strcmp(pair_style,"cg/cmm/old") == 0) ||
-	(strcmp(pair_style,"cg/cmm/coul/cut/old") == 0) ||
-	(strcmp(pair_style,"cg/cmm/coul/long/old") == 0)) {
+	(strcmp(pair_style,"cg/cmm/coul/long") == 0)) {
       for (int i = 1; i <= ntypes; i++) {
 	for (int j = i; j <= ntypes; j++) {
 	  fprintf(fp2,"pair_coeff %d %d %s %g %g\n",i,j,
@@ -3426,7 +3116,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 
   // bond coeffs to data file
 
-  if (write_coeffs && bond_style && fp2 == NULL) {
+  if (bond_style && fp2 == NULL) {
     if ((strcmp(bond_style,"none") != 0) &&
 	(strcmp(bond_style,"table") != 0) &&
 	(strcmp(bond_style,"hybrid") != 0))
@@ -3490,7 +3180,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
   // bond coeffs to input file
   // only supported styles = harmonic
 
-  if (write_coeffs && bond_style && fp2) {
+  if (bond_style && fp2) {
     if (strcmp(bond_style,"harmonic") == 0) {
       for (int i = 1; i <= nbondtypes; i++)
 	fprintf(fp2,"bond_coeff  %d %g %g\n",i,
@@ -3505,7 +3195,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 
   // angle coeffs to data file
 
-  if (write_coeffs && angle_style && fp2 == NULL) {
+  if (angle_style && fp2 == NULL) {
     if ((strcmp(angle_style,"none") != 0) &&
 	(strcmp(angle_style,"table") != 0) &&
 	(strcmp(angle_style,"hybrid") != 0))
@@ -3557,23 +3247,12 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 		angle_cosine_squared_k[i],
 		angle_cosine_squared_theta0[i]/PI*180.0);
 
-    } else if (strcmp(angle_style,"dipole") == 0) {
-      for (int i = 1; i <= nangletypes; i++)
-	fprintf(fp,"%d %g %g\n",i,
-		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0);
-
     } else if (strcmp(angle_style,"harmonic") == 0) {
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp,"%d %g %g\n",i,
 		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0);
 
-    } else if ((strcmp(angle_style,"cg/cmm") == 0) ||
-	       (strcmp(angle_style,"sdk") == 0)) {
-      for (int i = 1; i <= nangletypes; i++)
-	fprintf(fp,"%d %g %g %g\n",i,angle_harmonic_k[i],
-		angle_harmonic_theta0[i]/PI*180.0,angle_cg_cmm_epsilon[i]);
-
-    } else if (strcmp(angle_style,"cg/cmm/old") == 0) {
+    } else if (strcmp(angle_style,"cg/cmm") == 0) {
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp,"%d %g %g %s %g %g\n",i,
 		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0,
@@ -3585,7 +3264,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
   // angle coeffs to input file
   // only supported styles = cosine/squared, harmonic, cg/cmm
 
-  if (write_coeffs && angle_style && fp2) {
+  if (angle_style && fp2) {
     if ((strcmp(angle_style,"cosine/squared") == 0) ||
         (strcmp(angle_style,"cosine/delta") == 0)) {
       for (int i = 1; i <= nangletypes; i++)
@@ -3598,13 +3277,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 	fprintf(fp2,"angle_coeffs  %d %g %g\n",i,
 		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0);
 
-    } else if ((strcmp(angle_style,"cg/cmm") == 0) ||
-	       (strcmp(angle_style,"sdk") == 0)) {
-      for (int i = 1; i <= nangletypes; i++)
-	fprintf(fp2,"angle_coeffs  %d %g %g %g\n",i,angle_harmonic_k[i],
-		angle_harmonic_theta0[i]/PI*180.0,angle_cg_cmm_epsilon[i]);
-
-    } else if (strcmp(angle_style,"cg/cmm/old") == 0) {
+    } else if (strcmp(angle_style,"cg/cmm") == 0) {
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp2,"angle_coeffs  %d %g %g %s %g %g\n",i,
 		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0,
@@ -3618,7 +3291,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
     }
   }
 
-  if (write_coeffs && dihedral_style) {
+  if (dihedral_style) {
     if ((strcmp(dihedral_style,"none") != 0) &&
 	(strcmp(dihedral_style,"table") != 0) &&
 	(strcmp(dihedral_style,"hybrid") != 0))
@@ -3713,7 +3386,7 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
     }
   }
 
-  if (write_coeffs && improper_style) {
+  if (improper_style) {
     if ((strcmp(improper_style,"none") != 0) &&
 	(strcmp(improper_style,"hybrid") != 0))
       fprintf(fp,"\nImproper Coeffs\n\n");
@@ -3751,25 +3424,22 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
     int ix,iy,iz;
     for (bigint i = 0; i < natoms; i++) {
 
-      ix = (image[i] & IMGMASK) - IMGMAX;
-      iy = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
-      iz = (image[i] >> IMG2BITS) - IMGMAX;
-      
+      ix = (image[i] & 1023) - 512;
+      iy = (image[i] >> 10 & 1023) - 512;
+      iz = (image[i] >> 20) - 512;
+
       if (style_hybrid == 0) {
 	if (style_angle) write_atom_angle(fp,i,ix,iy,iz);
 	if (style_atomic) write_atom_atomic(fp,i,ix,iy,iz);
 	if (style_bond) write_atom_bond(fp,i,ix,iy,iz);
 	if (style_charge) write_atom_charge(fp,i,ix,iy,iz);
+	if (style_meso) write_atom_meso(fp,i,ix,iy,iz);
 	if (style_dipole) write_atom_dipole(fp,i,ix,iy,iz);
 	if (style_ellipsoid) write_atom_ellipsoid(fp,i,ix,iy,iz);
 	if (style_full) write_atom_full(fp,i,ix,iy,iz);
-	if (style_line) write_atom_line(fp,i,ix,iy,iz);
-	if (style_meso) write_atom_meso(fp,i,ix,iy,iz);
+	if (style_sphere) write_atom_sphere(fp,i,ix,iy,iz);
 	if (style_molecular) write_atom_molecular(fp,i,ix,iy,iz);
 	if (style_peri) write_atom_peri(fp,i,ix,iy,iz);
-	if (style_sphere) write_atom_sphere(fp,i,ix,iy,iz);
-	if (style_tri) write_atom_tri(fp,i,ix,iy,iz);
-	if (style_wavepacket) write_atom_wavepacket(fp,i,ix,iy,iz);
 	fprintf(fp,"\n");
 
       } else {
@@ -3780,23 +3450,20 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 	  if (k == style_atomic) write_atom_atomic_extra(fp,i);
 	  if (k == style_bond) write_atom_bond_extra(fp,i);
 	  if (k == style_charge) write_atom_charge_extra(fp,i);
+	  if (k == style_meso) write_atom_meso_extra(fp,i);
 	  if (k == style_dipole) write_atom_dipole_extra(fp,i);
 	  if (k == style_ellipsoid) write_atom_ellipsoid_extra(fp,i);
 	  if (k == style_full) write_atom_full_extra(fp,i);
-	  if (k == style_line) write_atom_line_extra(fp,i);
-	  if (k == style_meso) write_atom_meso_extra(fp,i);
+	  if (k == style_sphere) write_atom_sphere_extra(fp,i);
 	  if (k == style_molecular) write_atom_molecular_extra(fp,i);
 	  if (k == style_peri) write_atom_peri_extra(fp,i);
-	  if (k == style_sphere) write_atom_sphere_extra(fp,i);
-	  if (k == style_tri) write_atom_tri_extra(fp,i);
-	  if (k == style_wavepacket) write_atom_wavepacket_extra(fp,i);
 	}
 	fprintf(fp," %d %d %d\n",ix,iy,iz);
       }
     }
   }
 
-  if (write_vels && natoms) {
+  if (natoms) {
     fprintf(fp,"\nVelocities\n\n");
     for (bigint i = 0; i < natoms; i++)
 
@@ -3805,16 +3472,13 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 	if (style_atomic) write_vel_atomic(fp,i);
 	if (style_bond) write_vel_bond(fp,i);
 	if (style_charge) write_vel_charge(fp,i);
+	if (style_meso) write_vel_meso(fp,i);
 	if (style_dipole) write_vel_dipole(fp,i);
 	if (style_ellipsoid) write_vel_ellipsoid(fp,i);
 	if (style_full) write_vel_full(fp,i);
-	if (style_line) write_vel_line(fp,i);
-	if (style_meso) write_vel_meso(fp,i);
+	if (style_sphere) write_vel_sphere(fp,i);
 	if (style_molecular) write_vel_molecular(fp,i);
 	if (style_peri) write_vel_peri(fp,i);
-	if (style_sphere) write_vel_sphere(fp,i);
-	if (style_tri) write_vel_tri(fp,i);
-	if (style_wavepacket) write_vel_wavepacket(fp,i);
 	fprintf(fp,"\n");
 
       } else {
@@ -3824,16 +3488,13 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
 	  if (k == style_atomic) write_vel_atomic_extra(fp,i);
 	  if (k == style_bond) write_vel_bond_extra(fp,i);
 	  if (k == style_charge) write_vel_charge_extra(fp,i);
+	  if (k == style_meso) write_vel_meso_extra(fp,i);
 	  if (k == style_dipole) write_vel_dipole_extra(fp,i);
 	  if (k == style_ellipsoid) write_vel_ellipsoid_extra(fp,i);
 	  if (k == style_full) write_vel_full_extra(fp,i);
-	  if (k == style_line) write_vel_line_extra(fp,i);
-	  if (k == style_meso) write_vel_meso_extra(fp,i);
+	  if (k == style_sphere) write_vel_sphere_extra(fp,i);
 	  if (k == style_molecular) write_vel_molecular_extra(fp,i);
 	  if (k == style_peri) write_vel_peri_extra(fp,i);
-	  if (k == style_sphere) write_vel_sphere_extra(fp,i);
-	  if (k == style_tri) write_vel_tri_extra(fp,i);
-	  if (k == style_wavepacket) write_vel_wavepacket_extra(fp,i);
 	}
 	fprintf(fp,"\n");
       }
@@ -3850,31 +3511,31 @@ void Data::write(FILE *fp, FILE *fp2, int write_coeffs, int write_vels)
     }
   }
 
-  if (ibonds) {
+  if (nbonds) {
     fprintf(fp,"\nBonds\n\n");
-    for (bigint i = 0; i < ibonds; i++)
+    for (bigint i = 0; i < nbonds; i++)
       fprintf(fp,BIGINT_FORMAT " %d %d %d\n",
 	      i+1,bond_type[i],bond_atom1[i],bond_atom2[i]);
   }
 
-  if (iangles) {
+  if (nangles) {
     fprintf(fp,"\nAngles\n\n");
-    for (bigint i = 0; i < iangles; i++)
+    for (bigint i = 0; i < nangles; i++)
       fprintf(fp,BIGINT_FORMAT " %d %d %d %d\n",
 	      i+1,angle_type[i],angle_atom1[i],angle_atom2[i],angle_atom3[i]);
   }
 
-  if (idihedrals) {
+  if (ndihedrals) {
     fprintf(fp,"\nDihedrals\n\n");
-    for (bigint i = 0; i < idihedrals; i++)
+    for (bigint i = 0; i < ndihedrals; i++)
       fprintf(fp,BIGINT_FORMAT " %d %d %d %d %d\n",
 	      i+1,dihedral_type[i],dihedral_atom1[i],dihedral_atom2[i],
 	      dihedral_atom3[i],dihedral_atom4[i]);
   }
 
-  if (iimpropers) {
+  if (nimpropers) {
     fprintf(fp,"\nImpropers\n\n");
-    for (bigint i = 0; i < iimpropers; i++)
+    for (bigint i = 0; i < nimpropers; i++)
       fprintf(fp,BIGINT_FORMAT " %d %d %d %d %d\n",
 	      i+1,improper_type[i],improper_atom1[i],improper_atom2[i],
 	      improper_atom3[i],improper_atom4[i]);
@@ -3910,13 +3571,19 @@ void Data::write_atom_charge(FILE *fp, int i, int ix, int iy, int iz)
 	  tag[i],type[i],q[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
+void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
+{
+  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
+	  tag[i],type[i],rho[i],e[i],cv[i],x[i],y[i],z[i],ix,iy,iz);
+}
+
+
 void Data::write_atom_dipole(FILE *fp, int i, int ix, int iy, int iz)
 {
   fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e "
 	  "%-1.16e %-1.16e %d %d %d",
 	  tag[i],type[i],q[i],x[i],y[i],z[i],
-	  mul[i]*mux[i],mul[i]*muy[i],mul[i]*muz[i],
-	  ix,iy,iz);
+	  mux[i],muy[i],muz[i],ix,iy,iz);
 }
 
 void Data::write_atom_ellipsoid(FILE *fp, int i, int ix, int iy, int iz)
@@ -3931,16 +3598,10 @@ void Data::write_atom_full(FILE *fp, int i, int ix, int iy, int iz)
 	  tag[i],molecule[i],type[i],q[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
-void Data::write_atom_line(FILE *fp, int i, int ix, int iy, int iz)
+void Data::write_atom_sphere(FILE *fp, int i, int ix, int iy, int iz)
 {
-  fprintf(stderr,"support for atom style line is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
+  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
+	  tag[i],type[i],2.0*radius[i],density[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
 void Data::write_atom_molecular(FILE *fp, int i, int ix, int iy, int iz)
@@ -3953,24 +3614,6 @@ void Data::write_atom_peri(FILE *fp, int i, int ix, int iy, int iz)
 {
   fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
 	  tag[i],type[i],vfrac[i],rmass[i],x[i],y[i],z[i],ix,iy,iz);
-}
-
-void Data::write_atom_sphere(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
-	  tag[i],type[i],2.0*radius[i],density[i],x[i],y[i],z[i],ix,iy,iz);
-}
-
-void Data::write_atom_tri(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(stderr,"support for atom style tri is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_atom_wavepacket(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(stderr,"support for atom style wavepacket is not yet complete\n");
-  exit(1);
 }
 
 // ---------------------------------------------------------------------
@@ -3995,10 +3638,16 @@ void Data::write_atom_charge_extra(FILE *fp, int i)
   fprintf(fp," %-1.16e",q[i]);
 }
 
+void Data::write_atom_meso_extra(FILE *fp, int i)
+{
+  //fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",rho[i],e[i],vestx[i],vesty[i],vestz[i]);
+  fprintf(fp," %-1.16e %-1.16e %-1.16e",rho[i],e[i],cv[i]);
+}
+
+
 void Data::write_atom_dipole_extra(FILE *fp, int i)
 {
-  fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e",q[i],
-	  mul[i]*mux[i],mul[i]*muy[i],mul[i]*muz[i]);
+  fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e",q[i],mux[i],muy[i],muz[i]);
 }
 
 void Data::write_atom_ellipsoid_extra(FILE *fp, int i)
@@ -4011,16 +3660,9 @@ void Data::write_atom_full_extra(FILE *fp, int i)
   fprintf(fp," %d %-1.16e",molecule[i],q[i]);
 }
 
-void Data::write_atom_line_extra(FILE *fp, int i)
+void Data::write_atom_sphere_extra(FILE *fp, int i)
 {
-  fprintf(stderr,"support for atom style line is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_atom_meso_extra(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
+  fprintf(fp," %-1.16e %-1.16e",2.0*radius[i],density[i]);
 }
 
 void Data::write_atom_molecular_extra(FILE *fp, int i)
@@ -4031,23 +3673,6 @@ void Data::write_atom_molecular_extra(FILE *fp, int i)
 void Data::write_atom_peri_extra(FILE *fp, int i)
 {
   fprintf(fp," %-1.16e %-1.16e",vfrac[i],rmass[i]);
-}
-
-void Data::write_atom_sphere_extra(FILE *fp, int i)
-{
-  fprintf(fp," %-1.16e %-1.16e",2.0*radius[i],density[i]);
-}
-
-void Data::write_atom_tri_extra(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style tri is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_atom_wavepacket_extra(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style wavepacket is not yet complete\n");
-  exit(1);
 }
 
 // ---------------------------------------------------------------------
@@ -4075,6 +3700,12 @@ void Data::write_vel_charge(FILE *fp, int i)
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
+void Data::write_vel_meso(FILE *fp, int i)
+{
+  fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
+}
+
+
 void Data::write_vel_dipole(FILE *fp, int i)
 {
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
@@ -4091,16 +3722,10 @@ void Data::write_vel_full(FILE *fp, int i)
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
-void Data::write_vel_line(FILE *fp, int i)
+void Data::write_vel_sphere(FILE *fp, int i)
 {
-  fprintf(stderr,"support for atom style line is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_vel_meso(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
+  fprintf(fp,"%d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",
+	  tag[i],vx[i],vy[i],vz[i],omegax[i],omegay[i],omegaz[i]);
 }
 
 void Data::write_vel_molecular(FILE *fp, int i)
@@ -4113,24 +3738,6 @@ void Data::write_vel_peri(FILE *fp, int i)
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
-void Data::write_vel_sphere(FILE *fp, int i)
-{
-  fprintf(fp,"%d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",
-	  tag[i],vx[i],vy[i],vz[i],omegax[i],omegay[i],omegaz[i]);
-}
-
-void Data::write_vel_tri(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style tri is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_vel_wavepacket(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style wavepacket is not yet complete\n");
-  exit(1);
-}
-
 // ---------------------------------------------------------------------
 // per-atom velocity write routines of extra quantities unique to style
 // one routine per atom style
@@ -4140,6 +3747,7 @@ void Data::write_vel_angle_extra(FILE *fp, int i) {}
 void Data::write_vel_atomic_extra(FILE *fp, int i) {}
 void Data::write_vel_bond_extra(FILE *fp, int i) {}
 void Data::write_vel_charge_extra(FILE *fp, int i) {}
+void Data::write_vel_meso_extra(FILE *fp, int i) {}
 void Data::write_vel_dipole_extra(FILE *fp, int i) {}
 
 void Data::write_vel_ellipsoid_extra(FILE *fp, int i)
@@ -4148,18 +3756,14 @@ void Data::write_vel_ellipsoid_extra(FILE *fp, int i)
 }
 
 void Data::write_vel_full_extra(FILE *fp, int i) {}
-void Data::write_vel_line_extra(FILE *fp, int i) {}
-void Data::write_vel_meso_extra(FILE *fp, int i) {}
 
-void Data::write_vel_molecular_extra(FILE *fp, int i) {}
-void Data::write_vel_peri_extra(FILE *fp, int i) {}
 void Data::write_vel_sphere_extra(FILE *fp, int i)
 {
   fprintf(fp," %-1.16e %-1.16e %-1.16e",omegax[i],omegay[i],omegaz[i]);
 }
-void Data::write_vel_tri_extra(FILE *fp, int i) {}
-void Data::write_vel_wavepacket_extra(FILE *fp, int i) {}
 
+void Data::write_vel_molecular_extra(FILE *fp, int i) {}
+void Data::write_vel_peri_extra(FILE *fp, int i) {}
 
 // ---------------------------------------------------------------------
 // strip known accelerator suffixes from style name
@@ -4186,27 +3790,12 @@ void strip_suffix(char *style)
 
 // ---------------------------------------------------------------------
 // binary reads from restart file
-// all are wrappers on fread()
-// perform endian swap if swapflag is set
 // ---------------------------------------------------------------------
-
-void nread_int(int *buf, int n, FILE *fp)
-{
-  fread(buf,sizeof(int),n,fp);
-  if (swapflag) {}
-}
-
-void nread_double(double *buf, int n, FILE *fp)
-{
-  fread(buf,sizeof(double),n,fp);
-  if (swapflag) {}
-}
 
 int read_int(FILE *fp)
 {
   int value;
   fread(&value,sizeof(int),1,fp);
-  if (swapflag) {}
   return value;
 }
 
@@ -4214,7 +3803,6 @@ double read_double(FILE *fp)
 {
   double value;
   fread(&value,sizeof(double),1,fp);
-  if (swapflag) {}
   return value;
 }
 
@@ -4222,11 +3810,9 @@ char *read_char(FILE *fp)
 {
   int n;
   fread(&n,sizeof(int),1,fp);
-  if (swapflag) {}
   if (n == 0) return NULL;
   char *value = new char[n];
   fread(value,sizeof(char),n,fp);
-  if (swapflag) {}
   return value;
 }
 
@@ -4234,29 +3820,5 @@ bigint read_bigint(FILE *fp)
 {
   bigint value;
   fread(&value,sizeof(bigint),1,fp);
-  if (swapflag) {}
   return value;
-}
-
-// ---------------------------------------------------------------------
-// auto-detect if restart file needs to be byte-swapped on this platform
-// return 0 if not, 1 if it does
-// re-open file with fp after checking first few bytes
-// ---------------------------------------------------------------------
-
-int autodetect(FILE **pfp, char *file)
-{
-  FILE *fp = *pfp;
-
-  // read, check, set return flag
-
-  int flag = 0;
-
-  // reset file pointer
-
-  fclose(fp);
-  fp = fopen(file,"rb");
-  *pfp = fp;
-
-  return flag;
 }
