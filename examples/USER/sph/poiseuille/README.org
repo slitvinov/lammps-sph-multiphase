@@ -1,0 +1,3 @@
+Poiseuille flow with parameters from Morris
+http://dx.doi.org/10.1006/jcph.1997.5776
+
