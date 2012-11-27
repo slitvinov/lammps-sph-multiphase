@@ -32,10 +32,10 @@ variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
 
 # surface tension
 #variable          alpha equal ${sph_mass_g}
-variable          alpha equal 1.0/${sph_mass_g}
+variable          alpha equal ${sph_mass_g}
 
 # radios of the droplet
-variable          cyl_r equal 0.2
+variable          cyl_r equal 0.1875
 
 # type of the gas particle
 variable          g_type equal 1

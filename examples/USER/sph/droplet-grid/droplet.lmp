@@ -36,7 +36,7 @@ group	     flow region rflow
 group	     boundary subtract all flow
 
 # fix wall particles
-fix          wallim boundary setforce 0 0 0
+#fix          wallim boundary setforce 0 0 0
 
 # set mass of the particles
 mass               ${d_type} ${sph_mass_d}
@@ -95,6 +95,10 @@ velocity flow       set v_vx v_vy 0.0
 
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
+
+variable            time equal step*dt
+thermo_style        custom v_time
+thermo              10
 
 timestep           ${dt}
 run               10000
