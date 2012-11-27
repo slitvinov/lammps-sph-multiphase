@@ -58,17 +58,7 @@ include            settimestep.lmp
 neighbor           3.0e-2 bin
 neigh_modify       delay 0 every 1
 
-#timestep           ${dt}
-timestep           0.000002
 communicate        single vel yes
-
-# redistribute particles randomly (TODO: use more clear way)
-variable     Nflow  equal count(flow)
-shell        echo "create_atoms 1 random"  ${Nflow} "123456 rflow" > create.lmp
-delete_atoms region  rflow
-include      create.lmp
-group	     flow region rflow
-
 set                group all meso_rho ${sph_rho_g}
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 sph/taitwater/morris sph/surfacetension
@@ -84,7 +74,6 @@ pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c
 pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${h}
 
 pair_coeff         * * sph/surfacetension ${h}
-run               1000
 
 dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
 dump_modify        dump_dcd sort id
@@ -93,7 +82,6 @@ dump_modify        dump_dcd sort id
 region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
 set	           region rdroplet type ${d_type}
 write_restart      ${dname}/droplet.restart
-
 
 # add velocity
 variable            v0 equal 10.0
@@ -108,5 +96,5 @@ velocity flow       set v_vx v_vy 0.0
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
 
-timestep           0.00004
+timestep           ${dt}
 run               10000
