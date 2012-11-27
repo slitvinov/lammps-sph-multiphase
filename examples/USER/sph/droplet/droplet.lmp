@@ -34,11 +34,45 @@ variable     xhi  equal ${Lx}+2.5*${dx}
 region	     rflow block ${xlow} ${xhi} ${ylow} ${yhi} INF INF units box
 group	     flow region rflow
 group	     boundary subtract all flow
+
+# fix wall particles
 fix          wallim boundary setforce 0 0 0
 
 # set mass of the particles
 mass               ${d_type} ${sph_mass_d}
 mass               ${g_type} ${sph_mass_g}
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
+dump_modify        dump_id first yes sort id pad 8
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
+
+include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
+include            settimestep.lmp
+
+neighbor           3.0e-2 bin
+neigh_modify       delay 0 every 1
+
+#timestep           ${dt}
+timestep           0.000004
+communicate        single vel yes
+
+# redistribute particles randomly (TODO: use more clear way)
+variable     Nflow  equal count(flow)
+shell        echo "create_atoms 1 random"  ${Nflow} "123456 rflow" > create.lmp
+delete_atoms region  rflow
+include      create.lmp
+group	     flow region rflow
+
+set                group all meso_rho ${sph_rho_g}
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 sph/taitwater/morris sph/surfacetension
 pair_coeff         * * sph/rhosum_multiphase   ${h}
@@ -53,44 +87,13 @@ pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c
 pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${h}
 
 pair_coeff         * * sph/surfacetension ${h}
-
-compute            rho_peratom all meso_rho/atom
-compute            colorgradient_peratom all meso_colorgradient/atom
-
-# do full time integration for all particles
-fix                integrate_fix_full all meso
-
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
-dump_modify        dump_id first yes
-dump_modify        dump_id sort id
-dump_modify        dump_id pad 8
-thermo_modify      norm no
-thermo             1000
-
-include            ${ndim}-image.lmp
-variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
-include            settimestep.lmp
-
-neighbor           3.0e-2 bin
-neigh_modify       delay 0 every 1
-
-#timestep           ${dt}
-timestep           0.00004
-communicate        single vel yes
-
-# redistribute particles randomly (TODO: use more clear way)
-variable     Nflow  equal count(flow)
-shell        echo "create_atoms 1 random"  ${Nflow} "123456 rflow" > create.lmp
-delete_atoms region  rflow
-include      create.lmp
-group	     flow region rflow
-
-set                group all meso_rho ${sph_rho_g}
-run                1000
+run               1000
 
 # create droplet
 region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
 set	           region rdroplet type ${d_type}
+write_restart      ${dname}/droplet.restart
+
 
 # add velocity
 variable            v0 equal 10.0
