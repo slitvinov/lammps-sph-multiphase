@@ -180,16 +180,15 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    double Fij = - wfd / rij;
 	    double Vi = mass[itype]/rho[i]; 
 	    double Vj = mass[jtype]/rho[j];
-	    double rVi = 1.0/Vi; 
-	    double rVj = 1.0/Vj;
 	    double Vi2 = Vi*Vi;
 	    double Vj2 = Vj*Vj;
+
 	    double dphi = Fij*rij*alpha[itype][jtype];
 	    
-	    colorgradient[i][0] += dphi*rVi*Vj2*eij[0];
-	    colorgradient[i][1] += dphi*rVi*Vj2*eij[1];
+	    colorgradient[i][0] += dphi*Vj2*eij[0];
+	    colorgradient[i][1] += dphi*Vj2*eij[1];
 	    if (ndim==3) {
-	      colorgradient[i][2] += dphi*rVi*Vj2*eij[2];
+	      colorgradient[i][2] += dphi*Vj2*eij[2];
 	    }
           } // rsq < cutsq
 	  

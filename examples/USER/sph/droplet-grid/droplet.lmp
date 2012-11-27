@@ -36,7 +36,7 @@ group	     flow region rflow
 group	     boundary subtract all flow
 
 # fix wall particles
-#fix          wallim boundary setforce 0 0 0
+fix          wallim boundary setforce 0 0 0
 
 # set mass of the particles
 mass               ${d_type} ${sph_mass_d}

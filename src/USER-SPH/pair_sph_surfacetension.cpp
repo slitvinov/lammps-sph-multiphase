@@ -154,13 +154,13 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
 	if (ndim==2) {
 	  if (abscgi > epsilon) {
-	    SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/2.0/abscgi;
-	    SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/2.0/abscgi;
+	    SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/abscgi;
+	    SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/abscgi;
 	  }
 
 	  if (abscgj > epsilon) {
-	    SurfaceForcej[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/2.0/abscgj;
-	    SurfaceForcej[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/2.0/abscgj;
+	    SurfaceForcej[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/abscgj;
+	    SurfaceForcej[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/abscgj;
 	  }
 	} else {
 	  if (abscgi > epsilon) {
