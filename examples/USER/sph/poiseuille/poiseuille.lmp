@@ -1,0 +1,65 @@
+log                ${dname}/log.lammps
+echo               both
+dimension          2
+units              si
+atom_style         meso
+boundary          p p p
+variable          ndim index 2d
+include            ${ndim}-vars.lmp
+
+# create simulation box
+variable           pLz    equal  1.0e-6
+variable           nLz    equal  -1.0e-6
+variable           Lywall equal ${Ly}
+variable           Lxwall equal ${Lx}
+region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
+
+# crate one type of the particles
+create_box         1 box
+lattice            sq ${dx}
+create_atoms       1 region box
+
+
+# set mass of the particles
+mass               1 ${sph_mass}
+
+compute            rho_peratom all meso_rho/atom
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom
+dump_modify        dump_id first yes sort id pad 8
+
+include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta}/${sph_rho}
+include            settimestep.lmp
+
+neighbor           3.0e-6 bin
+neigh_modify       delay 0 every 1
+
+communicate        single vel yes
+set                group all meso_rho ${sph_rho}
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/morris
+pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
+write_restart      ${dname}/droplet.restart
+
+variable            time equal step*dt
+thermo_style        custom v_time
+thermo              10
+
+variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
+timestep           ${dt}
+run               10000
