@@ -89,18 +89,24 @@ pair_coeff         ${w_type} ${w_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 
 pair_coeff         * * sph/surfacetension ${h}
 
-dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
-dump_modify        dump_dcd sort id
-
-# create droplet
-region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
-set	           region rdroplet type ${d_type}
-write_restart      ${dname}/droplet.restart
-
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B H
 
 variable            time equal step*dt
 thermo_style        custom step v_time
 thermo              10
+
+# create droplet
+variable           x1 equal ${xcenter}-${dx}
+variable           x2 equal ${xcenter}+${dx}
+
+variable           y1 equal ${ylow}
+variable           y2 equal ${ylow}+${dx}
+
+region             rinsert block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box
+variable           Ninsert equal 1000
+variable           insert_every equal 10
+fix                fdep all deposit ${Ninsert} ${d_type} ${insert_every} 123456 region rinsert units box
 
 timestep           ${dt}
 run               10000
