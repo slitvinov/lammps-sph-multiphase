@@ -61,11 +61,7 @@ group	           flow subtract all gcylinder
 
 # fix wall particles
 fix                wallim gcylinder setforce 0 0 0
-
-
-
 write_restart      ${dname}/droplet.restart
-
 
 set                 type ${d_type} meso_rho ${sph_rho}
 set                 type ${g_type} meso_rho ${sph_rho}
@@ -74,22 +70,23 @@ variable bodyfx atom mass*${gx}
 fix reverce_periodic flow addforce v_bodyfx 0.0 0.0 
 
 variable            time equal step*dt
-thermo_style        custom v_time
+thermo_style        custom step v_time
 thermo              10
 
-# end of the domain
+timestep           ${dt}
+run               1000
+
+# end line
 variable           xend equal 0.9*${Lx}
 region             rend block ${xend} ${Lx} 0 ${Ly} EDGE EDGE units box
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 vx region rend file vx.av ave running units reduced
+fix av_vend all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 vx region rend file vend.av ave running units reduced
 
 # center line
 variable           x1 equal 0.45*${Lx}
 variable           x2 equal 0.55*${Lx}
 region             rcenter block ${x1} ${x2} 0 ${Ly} EDGE EDGE units box
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm region rend file vx.av ave running units reduced
+fix av_vcen all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 vx region rcenter file vcen.av ave running units reduced
 
-
-timestep           ${dt}
-run               10000
+run              10000

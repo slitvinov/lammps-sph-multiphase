@@ -1,6 +1,6 @@
 # number of particles in each of the directions
-variable          nx   equal 60
-variable          ny   equal 60
+variable          nx   equal 20
+variable          ny   equal 20
 
 # size of the domain
 variable          Lx   equal  0.1
