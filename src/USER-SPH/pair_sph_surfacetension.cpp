@@ -88,9 +88,15 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
-    double abscgi = sqrt(cg[i][0]*cg[i][0] +
-			 cg[i][1]*cg[i][1] +
-			 cg[i][2]*cg[i][2]);
+    double abscgi;
+    if (ndim == 3) {
+      double abscgi = sqrt(cg[i][0]*cg[i][0] +
+			   cg[i][1]*cg[i][1] +
+			   cg[i][2]*cg[i][2]);
+    } else {
+      double abscgi = sqrt(cg[i][0]*cg[i][0] +
+			   cg[i][1]*cg[i][1]);
+    }
     double epsilon = 1e-20;
     // if (abscgi > epsilon) {
     //   std::cout << "colorgradient: "
@@ -143,26 +149,24 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	double SurfaceForcej[ndim];
 	SurfaceForcei[0]=0; SurfaceForcej[0]=0;
 	SurfaceForcei[1]=0; SurfaceForcej[1]=0;
-
 	if (ndim==3) {
 	  SurfaceForcei[2]=0; SurfaceForcej[2]=0;
 	}
 
-	double abscgj = sqrt(cg[j][0]*cg[j][0] +
-			     cg[j][1]*cg[j][1] +
-			     cg[j][2]*cg[j][2]);
 
 	if (ndim==2) {
+	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1]);
 	  if (abscgi > epsilon) {
-	    SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/abscgi;
-	    SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/abscgi;
+	    SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/2.0/abscgi;
+	    SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/2.0/abscgi;
 	  }
 
 	  if (abscgj > epsilon) {
-	    SurfaceForcej[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/abscgj;
-	    SurfaceForcej[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/abscgj;
+	    SurfaceForcej[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/2.0/abscgj;
+	    SurfaceForcej[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/2.0/abscgj;
 	  }
 	} else {
+	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1] + cg[j][2]*cg[j][2]);
 	  if (abscgi > epsilon) {
 	    SurfaceForcei[0] = (3*cg[i][0]*cg[i][2]*eij[2]-eij[0]*cg[i][2]*cg[i][2]+3*cg[i][0]*cg[i][1]*eij[1]
 				-eij[0]*cg[i][1]*cg[i][1]+2*cg[i][0]*cg[i][0]*eij[0])/abscgi;

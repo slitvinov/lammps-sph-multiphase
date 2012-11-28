@@ -14,8 +14,6 @@ variable           pLz    equal  1.0e-3
 variable           nLz    equal  -1.0e-3
 variable           Lywall equal ${Ly}+6*${dx}
 variable           Lxwall equal ${Lx}+6*${dx}
-variable           xcenter equal 0.5*${Lxwall}
-variable           ycenter equal 0.5*${Lywall}
 region             box block 0.0 ${Lxwall}  0.0 ${Lywall} ${nLz} ${pLz} units box
 
 # create box with two types of particles (gas and droplet)
@@ -24,6 +22,9 @@ create_box         2 box
 # create gas particles
 lattice            sq ${dx}
 create_atoms       ${g_type} region box
+
+variable           xcenter equal 0.5*(bound(all,xmin)+bound(all,xmax))
+variable           ycenter equal 0.5*(bound(all,ymin)+bound(all,ymax))
 
 variable     ylow equal 3*${dx}
 variable     yhi  equal ${Ly}+2.5*${dx}
@@ -101,4 +102,4 @@ thermo_style        custom v_time
 thermo              10
 
 timestep           ${dt}
-run               10000
+run               100000
