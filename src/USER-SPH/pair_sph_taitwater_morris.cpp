@@ -247,7 +247,7 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   double soundspeed_one = force->numeric(arg[3]);
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
-  double B_one = soundspeed_one * soundspeed_one;
+  double B_one = soundspeed_one * soundspeed_one * rho0_one;
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
