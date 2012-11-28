@@ -1,0 +1,95 @@
+log                ${dname}/log.lammps
+echo               both
+dimension          2
+units              si
+atom_style         meso
+# periodic boundaries to have a correct density on the wall
+# TODO: make density fixed for the choosen particles
+boundary          p p p
+variable          ndim index 2d
+include            ${ndim}-vars.lmp
+variable           pLz    equal  1.0e-3
+variable           nLz    equal  -1.0e-3
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
+
+# create box with two types of particles (gas and droplet)
+create_box         2 box
+
+# create gas particles
+lattice            sq ${dx}
+create_atoms       ${g_type} region box
+
+# set mass of the particles
+mass               ${d_type} ${sph_mass_d}
+mass               ${g_type} ${sph_mass_g}
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
+dump_modify        dump_id first yes sort id pad 8
+
+include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta}/${sph_rho}
+include            settimestep.lmp
+
+communicate        single vel yes
+set                group all meso_rho ${sph_rho}
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/morris
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+
+# harmonic mean of viscosities
+pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
+
+neighbor           3e-6 bin
+neigh_modify       delay 0 every 1
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
+
+# create cylinder
+region             rcylinder cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
+set	           region rcylinder type ${d_type}
+group              gcylinder region rcylinder
+group	           flow subtract all gcylinder
+
+# fix wall particles
+fix                wallim gcylinder setforce 0 0 0
+
+
+
+write_restart      ${dname}/droplet.restart
+
+
+set                 type ${d_type} meso_rho ${sph_rho}
+set                 type ${g_type} meso_rho ${sph_rho}
+
+variable bodyfx atom mass*${gx}
+fix reverce_periodic flow addforce v_bodyfx 0.0 0.0 
+
+variable            time equal step*dt
+thermo_style        custom v_time
+thermo              10
+
+# end of the domain
+variable           xend equal 0.9*${Lx}
+region             rend block ${xend} ${Lx} 0 ${Ly} EDGE EDGE units box
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 vx region rend file vx.av ave running units reduced
+
+# center line
+variable           x1 equal 0.45*${Lx}
+variable           x2 equal 0.55*${Lx}
+region             rcenter block ${x1} ${x2} 0 ${Ly} EDGE EDGE units box
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm region rend file vx.av ave running units reduced
+
+
+timestep           ${dt}
+run               10000
