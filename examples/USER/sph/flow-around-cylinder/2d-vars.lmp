@@ -1,0 +1,37 @@
+# number of particles in each of the directions
+variable          nx   equal 60
+variable          ny   equal 60
+
+# size of the domain
+variable          Lx   equal  0.1
+variable          Ly   equal  0.1
+variable          dx   equal  ${Lx}/${nx}
+
+# density of droplet
+variable          sph_rho equal 1e3
+
+# sound speed 
+variable          sph_c equal 5.77e-4
+
+# viscosity of droplet 
+variable          sph_eta equal 1e-3
+
+variable          h equal 3.0*${dx}
+variable          Nfreq equal 100
+variable          Nfreqimage equal 100
+
+# mass of droplet particle
+variable          sph_mass_d equal ${dx}*${dx}*${sph_rho}
+# mass of gas particle
+variable          sph_mass_g equal ${dx}*${dx}*${sph_rho}
+
+# radios of the cylinder
+variable          cyl_r equal 2e-2
+
+# body force
+variable          gx    equal 1.5e-7
+
+# type of the gas particle
+variable          g_type equal 1
+# type of the droplet particle
+variable          d_type equal 2
