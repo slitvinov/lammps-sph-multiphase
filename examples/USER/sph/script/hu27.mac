@@ -1,0 +1,18 @@
+/* (27) an equation form Hu2006 */
+
+kill(all);
+
+d: 2;
+cg: [cg[j][0], cg[j][1]];
+eij: [eij[0], eij[1]];
+
+
+Pi(i,j):= ( 1/d*kron_delta(i, j) * cg.cg - cg[i]*cg[j] );
+
+
+display2d: false;
+
+sum(eij[k]*Pi(k, 1), k, 1, d);
+sum(eij[k]*Pi(k, 2), k, 1, d);
+
+/* sum(eij[i]*Pi(i, 3), i, 1, d); */
