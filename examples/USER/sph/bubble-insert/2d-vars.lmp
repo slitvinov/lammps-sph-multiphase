@@ -7,17 +7,16 @@ variable          Lx   equal  1.0
 variable          Ly   equal  1.0
 variable          dx   equal  ${Lx}/${nx}
 
-# density of droplet
-variable          sph_rho_d equal 1.0
 # density of gas phase
 variable          sph_rho_g equal 1.0
+# density of droplet
+variable          sph_rho_d equal 1e-3
 # wall density
 variable          sph_rho_w equal 1.0
 
-
 # sound speed 
-variable          sph_c_d equal 10.0
 variable          sph_c_g equal 10.0
+variable          sph_c_d equal 10.0
 variable          sph_c_w equal 10.0
 
 # viscosity of droplet 
