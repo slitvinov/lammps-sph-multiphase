@@ -44,6 +44,7 @@ PairSPHTaitwaterMorris::~PairSPHTaitwaterMorris() {
     memory->destroy(soundspeed);
     memory->destroy(B);
     memory->destroy(viscosity);
+    memory->destroy(rbackground);
   }
 }
 
@@ -112,7 +113,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
-    double pi = sph_pressure(B[itype], rho0[itype], rho[i]);
+    double pi = sph_pressure(B[itype], rho0[itype], rbackground[itype], rho[i]);
     fi = pi / (rho[i] * rho[i]);
 
     for (jj = 0; jj < jnum; jj++) {
@@ -146,7 +147,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
         }
 
         // compute pressure  of atom j with Tait EOS
-	double pj = sph_pressure(B[jtype], rho0[jtype], rho[j]);
+	double pj = sph_pressure(B[jtype], rho0[jtype], rbackground[jtype], rho[j]);
 	//printf("rho[j], B[jtype], rho0[jtype], pj: %f %f %f %f\n", rho[j], B[jtype], rho0[jtype], pj);
 	fj = pj / (rho[j] * rho[j]);
 
@@ -213,6 +214,7 @@ void PairSPHTaitwaterMorris::allocate() {
 
   memory->create(rho0, n + 1, "pair:rho0");
   memory->create(soundspeed, n + 1, "pair:soundspeed");
+  memory->create(rbackground, n + 1, "pair:rbackground");
   memory->create(B, n + 1, "pair:B");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(viscosity, n + 1, n + 1, "pair:viscosity");
@@ -233,9 +235,9 @@ void PairSPHTaitwaterMorris::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
-  if (narg != 6)
+  if (!( (narg == 6 ) || (narg == 7) ))
     error->all(FLERR,
-        "Incorrect args for pair_style sph/taitwater/morris coefficients");
+        "Incorrect args for pair_style sph/taitwater/morris coefficients (expect 5 or 6)");
   if (!allocated)
     allocate();
 
@@ -248,6 +250,12 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
   double B_one = soundspeed_one * soundspeed_one  * rho0_one;
+  double rbackground_one;
+  if (narg == 6) {
+    rbackground_one  = 0.0;
+  } else {
+    rbackground_one  = force->numeric(arg[6]);
+  }
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
@@ -255,6 +263,7 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
     printf("i rho0[i]: %i %e\n", i, rho0[i]);
     soundspeed[i] = soundspeed_one;
     B[i] = B_one;
+    rbackground[i] = rbackground_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
       cut[i][j] = cut_one;
@@ -293,6 +302,6 @@ double PairSPHTaitwaterMorris::single(int i, int j, int itype, int jtype,
   return 0.0;
 }
 
-double sph_pressure(double B, double rho0, double rho) {
-  return B*rho/rho0;
+double sph_pressure(double B, double rho0, double rbackground, double rho) {
+  return B*(rho/rho0 - rbackground);
 }

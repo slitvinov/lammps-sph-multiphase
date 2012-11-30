@@ -10,7 +10,7 @@ variable          dx   equal  ${Lx}/${nx}
 # density of gas phase
 variable          sph_rho_g equal 1.0
 # density of droplet
-variable          sph_rho_d equal 1e-3
+variable          sph_rho_d equal 1.0e-3
 # wall density
 variable          sph_rho_w equal 1.0
 
@@ -26,6 +26,10 @@ variable          sph_eta_g equal 5e-2
 # viscosity of gas
 variable          sph_eta_w equal 5e-2
 
+# extract that rbackground in the equation of state
+# pressu ~ ( rho/rho0 - rbackground)^gamma
+variable          rbackground equal 1.0
+
 
 variable          h equal 3.0*${dx}
 variable          Nfreq equal 100
@@ -40,9 +44,6 @@ variable          sph_mass_w equal ${dx}*${dx}*${sph_rho_w}
 # surface tension
 #variable          alpha equal ${sph_mass_g}
 variable          alpha equal 2.0
-
-# radios of the droplet
-variable          cyl_r equal 0.1875
 
 # type of the gas particle
 variable          g_type equal 1

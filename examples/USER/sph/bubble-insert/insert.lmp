@@ -80,12 +80,12 @@ pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
 variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
 variable           sph_eta_dw equal 2*${sph_eta_d}*${sph_eta_w}/(${sph_eta_d}+${sph_eta_w})
-pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} ${h}
-pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${h}
-pair_coeff         ${g_type} ${w_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_w} ${sph_eta_gw} ${h}
-pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h}
-pair_coeff         ${d_type} ${w_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_w} ${sph_eta_dw} ${h}
-pair_coeff         ${w_type} ${w_type} sph/taitwater/morris ${sph_rho_w} ${sph_c_w} ${sph_eta_w} ${h}
+pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} ${h} ${rbackground}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${h} ${rbackground}
+pair_coeff         ${g_type} ${w_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_w} ${sph_eta_gw} ${h} ${rbackground}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
+pair_coeff         ${d_type} ${w_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_w} ${sph_eta_dw} ${h} ${rbackground}
+pair_coeff         ${w_type} ${w_type} sph/taitwater/morris ${sph_rho_w} ${sph_c_w} ${sph_eta_w} ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
 
