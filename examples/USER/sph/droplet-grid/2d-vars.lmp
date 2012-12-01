@@ -1,6 +1,6 @@
 # number of particles in each of the directions
-variable          nx   equal 120
-variable          ny   equal 120
+variable          nx   equal 60
+variable          ny   equal 60
 
 # size of the domain
 variable          Lx   equal  1.0
@@ -32,7 +32,7 @@ variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
 
 # surface tension
 #variable          alpha equal ${sph_mass_g}
-variable          alpha equal 2.0
+variable          alpha equal 1.0
 
 # radios of the droplet
 variable          cyl_r equal 0.1875

@@ -101,5 +101,6 @@ variable            time equal step*dt
 thermo_style        custom v_time
 thermo              10
 
-timestep           ${dt}
+variable           dt_real equal 0.01*${dt}
+timestep           ${dt_real}
 run               100000

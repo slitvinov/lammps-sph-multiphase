@@ -12,7 +12,24 @@ Pi(i,j):= ( 1/d*kron_delta(i, j) * cg.cg - cg[i]*cg[j] );
 
 display2d: false;
 
-sum(eij[k]*Pi(k, 1), k, 1, d);
-sum(eij[k]*Pi(k, 2), k, 1, d);
+ex[1]: sum(eij[k]*Pi(k, 1), k, 1, d);
+ex[2]: sum(eij[k]*Pi(k, 2), k, 1, d);
 
 /* sum(eij[i]*Pi(i, 3), i, 1, d); */
+
+/* simplified model from the code */
+/* interm0: 1/(cg.cg); */
+interm0: 1;
+interm1: (cg[1]*cg[1] - cg[2]*cg[2])/2;
+interm2: cg[1]*cg[2];
+
+cgnew[1]: interm1*interm0;
+cgnew[2]: interm2*interm0;
+
+sforce[1]: cgnew[1]*eij[1] + cgnew[2]*eij[2];
+sforce[2]: cgnew[2]*eij[1] - cgnew[1]*eij[2];
+
+kill(cg);
+kill(eij);
+ratsimp(ev(sforce[2]+ex[2]));
+ratsimp(ev(sforce[1]+ex[1]));

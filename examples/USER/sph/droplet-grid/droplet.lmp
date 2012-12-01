@@ -100,5 +100,6 @@ variable            time equal step*dt
 thermo_style        custom v_time
 thermo              10
 
+#variable           rdt equal 0.25*${dt}
 timestep           ${dt}
 run               10000

@@ -249,13 +249,14 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   double soundspeed_one = force->numeric(arg[3]);
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
-  double B_one = soundspeed_one * soundspeed_one  * rho0_one;
+  double B_one = soundspeed_one * soundspeed_one  * rho0_one / 7.0;
   double rbackground_one;
   if (narg == 6) {
     rbackground_one  = 0.0;
   } else {
     rbackground_one  = force->numeric(arg[6]);
   }
+
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
@@ -303,5 +304,5 @@ double PairSPHTaitwaterMorris::single(int i, int j, int itype, int jtype,
 }
 
 double sph_pressure(double B, double rho0, double rbackground, double rho) {
-  return B*(rho/rho0 - rbackground);
+  return B*( pow(rho/rho0, 7.0) - rbackground);
 }
