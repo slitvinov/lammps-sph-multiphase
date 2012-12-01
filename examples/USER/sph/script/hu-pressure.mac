@@ -1,0 +1,15 @@
+kill(all);
+
+env1: [B=0.892857, rho=1000, rho0=1000];
+env2: [B=0.892857, rho=10, rho0=10];
+gamma: 7;
+
+eq1: B=c^2/gamma*rho0;
+eq2: p=B*(rho/rho0)^gamma;
+
+
+sol: solve([eq1, eq2], [c, p])[2];
+
+float(ev(sol, env1));
+float(ev(sol, env2));
+

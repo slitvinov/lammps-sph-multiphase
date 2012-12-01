@@ -1,8 +1,9 @@
 kill(all);
 gamma: 7;
-B: c^2/gamma;
+B: c^2/gamma*rho0;
 p: B*(rho/rho0)^gamma;
 dp: diff(p, rho);
+/* should be c^2 */
 ev(dp, rho=rho0);
 
 ev(p, [rho=1.05, rho0=1.0, c=20.0]);
