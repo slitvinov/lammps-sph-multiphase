@@ -80,7 +80,10 @@ variable           y2 equal ${ycenter}+${dx}
 region             rinsert block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 10
-fix                fdep all phase_change ${Ninsert} ${d_type} ${insert_every} 123456 region rinsert units box
+#fix                fdep all phase_change ${Ninsert} ${d_type} ${insert_every} 123456 region rinsert units box
+
+create_atoms      ${d_type} single  ${xcenter} ${ycenter} 0.0 units box
+
 
 timestep           ${dt}
 run               10000

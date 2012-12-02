@@ -37,12 +37,11 @@ class FixPhaseChange : public Fix {
 
  private:
   int ninsert,ntype,nfreq,seed;
-  int iregion,globalflag,localflag,maxattempt,rateflag,scaleflag,targetflag;
+  int iregion,maxattempt,scaleflag;
   char *idregion;
-  double lo,hi,deltasq,nearsq,rate;
+  double lo,hi,deltasq;
   double vxlo,vxhi,vylo,vyhi,vzlo,vzhi;
   double xlo,xhi,ylo,yhi,zlo,zhi;
-  double tx,ty,tz;
   int nfirst,ninserted;
   class RanPark *random;
 
