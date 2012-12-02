@@ -13,7 +13,7 @@
 
 #ifdef FIX_CLASS
 
-FixStyle(deposit,FixPhaseChange)
+FixStyle(phase_change,FixPhaseChange)
 
 #else
 
