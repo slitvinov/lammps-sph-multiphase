@@ -1,5 +1,5 @@
 # number of particles in each of the directions
-variable          nx   equal 40
+variable          nx   equal 30
 variable          ny   equal 2*${nx}
 
 # size of the domain

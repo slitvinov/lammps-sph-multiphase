@@ -42,9 +42,9 @@ class PairSPHTaitwaterMorris : public Pair {
   void allocate();
 };
 
+  // equation of state (helper function)
+  double sph_pressure(double B, double rho0, double rbackground, double rho);
 }
-// equation of state
-double sph_pressure(double B, double rho0, double rbackground, double rho);
 
 
 #endif
