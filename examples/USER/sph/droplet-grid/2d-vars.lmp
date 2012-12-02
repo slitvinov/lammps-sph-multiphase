@@ -1,6 +1,6 @@
 # number of particles in each of the directions
-variable          nx   equal 120
-variable          ny   equal 120
+variable          nx   equal 60
+variable          ny   equal 60
 
 # size of the domain
 variable          Lx   equal  1.0
@@ -13,8 +13,8 @@ variable          sph_rho_d equal 1.0
 variable          sph_rho_g equal 1.0
 
 # sound speed 
-variable          sph_c_d equal 10.0
-variable          sph_c_g equal 10.0
+variable          sph_c_d equal 20.0
+variable          sph_c_g equal 20.0
 
 # viscosity of droplet 
 variable          sph_eta_d equal 5e-2

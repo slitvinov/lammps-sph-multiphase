@@ -20,11 +20,11 @@ variable          sph_c_g equal 20.0/sqrt(${sph_rho_g})
 # viscosity of droplet 
 variable          sph_eta_d equal 5e-2
 # viscosity of gas
-variable          sph_eta_g equal 5e-2
+variable          sph_eta_g equal 5e-4
 
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 100
-variable          Nfreqimage equal 100
+variable          Nfreq equal 1000
+variable          Nfreqimage equal 1000
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}*${dx}*${sph_rho_d}
@@ -33,7 +33,7 @@ variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
 
 # surface tension
 #variable          alpha equal ${sph_mass_g}
-variable          alpha equal 2.0
+variable          alpha equal 1.0
 
 # radios of the droplet
 variable          cyl_r equal 0.2
