@@ -55,14 +55,10 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   iregion = -1;
   idregion = NULL;
-  globalflag = localflag = 0;
   lo = hi = deltasq = 0.0;
-  nearsq = 0.0;
   maxattempt = 10;
-  rateflag = 0;
   vxlo = vxhi = vylo = vyhi = vzlo = vzhi = 0.0;
   scaleflag = 1;
-  targetflag = 0;
 
   // read options from end of input line
 
@@ -113,23 +109,17 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   if (domain->dimension == 2) {
     lo *= yscale;
     hi *= yscale;
-    rate *= yscale;
   } else {
     lo *= zscale;
     hi *= zscale;
-    rate *= zscale;
   }
   deltasq *= xscale*xscale;
-  nearsq *= xscale*xscale;
   vxlo *= xscale;
   vxhi *= xscale;
   vylo *= yscale;
   vyhi *= yscale;
   vzlo *= zscale;
   vzhi *= zscale;
-  tx *= xscale;
-  ty *= yscale;
-  tz *= zscale;
 
   // random number generator, same for all procs
 
@@ -186,11 +176,6 @@ void FixPhaseChange::pre_exchange()
 
   if (next_reneighbor != update->ntimestep) return;
 
-  // compute current offset = bottom of insertion volume
-
-  double offset = 0.0;
-  if (rateflag) offset = (update->ntimestep - nfirst) * update->dt * rate;
-
   double *sublo,*subhi;
   if (domain->triclinic == 0) {
     sublo = domain->sublo;
@@ -221,49 +206,6 @@ void FixPhaseChange::pre_exchange()
       coord[2] = zlo + random->uniform() * (zhi-zlo);
     }
 
-    // adjust vertical coord by offset
-
-    if (domain->dimension == 2) coord[1] += offset;
-    else coord[2] += offset;
-
-    // if global, reset vertical coord to be lo-hi above highest atom
-    // if local, reset vertical coord to be lo-hi above highest "nearby" atom
-    // local computation computes lateral distance between 2 particles w/ PBC
-
-    if (globalflag || localflag) {
-      int dim;
-      double max,maxall,delx,dely,delz,rsq;
-
-      if (domain->dimension == 2) {
-        dim = 1;
-        max = domain->boxlo[1];
-      } else {
-        dim = 2;
-        max = domain->boxlo[2];
-      }
-
-      double **x = atom->x;
-      int nlocal = atom->nlocal;
-      for (i = 0; i < nlocal; i++) {
-        if (localflag) {
-          delx = coord[0] - x[i][0];
-          dely = coord[1] - x[i][1];
-          delz = 0.0;
-          domain->minimum_image(delx,dely,delz);
-          if (domain->dimension == 2) rsq = delx*delx;
-          else rsq = delx*delx + dely*dely;
-          if (rsq > deltasq) continue;
-        }
-        if (x[i][dim] > max) max = x[i][dim];
-      }
-
-      MPI_Allreduce(&max,&maxall,1,MPI_DOUBLE,MPI_MAX,world);
-      if (domain->dimension == 2)
-        coord[1] = maxall + lo + random->uniform()*(hi-lo);
-      else
-        coord[2] = maxall + lo + random->uniform()*(hi-lo);
-    }
-
     // now have final coord
     // if distance to any atom is less than near, try again
 
@@ -277,32 +219,11 @@ void FixPhaseChange::pre_exchange()
       delz = coord[2] - x[i][2];
       domain->minimum_image(delx,dely,delz);
       rsq = delx*delx + dely*dely + delz*delz;
-      if (rsq < nearsq) flag = 1;
     }
     MPI_Allreduce(&flag,&flagall,1,MPI_INT,MPI_MAX,world);
     if (flagall) continue;
 
-    // insertion will proceed
-    // choose random velocity for new atom
-
-    double vxtmp = vxlo + random->uniform() * (vxhi-vxlo);
-    double vytmp = vylo + random->uniform() * (vyhi-vylo);
-    double vztmp = vzlo + random->uniform() * (vzhi-vzlo);
-
     // if we have a sputter target change velocity vector accordingly
-    if (targetflag) {
-      double vel = sqrt(vxtmp*vxtmp + vytmp*vytmp + vztmp*vztmp);
-      delx = tx - coord[0];
-      dely = ty - coord[1];
-      delz = tz - coord[2];
-      double rsq = delx*delx + dely*dely + delz*delz;
-      if (rsq > 0.0) {
-        double rinv = sqrt(1.0/rsq);
-        vxtmp = delx*rinv*vel;
-        vytmp = dely*rinv*vel;
-        vztmp = delz*rinv*vel;
-      }
-    }
 
     // check if new atom is in my sub-box or above it if I'm highest proc
     // if so, add to my list via create_atom()
@@ -331,9 +252,9 @@ void FixPhaseChange::pre_exchange()
       int m = atom->nlocal - 1;
       atom->type[m] = ntype;
       atom->mask[m] = 1 | groupbit;
-      atom->v[m][0] = vxtmp;
-      atom->v[m][1] = vytmp;
-      atom->v[m][2] = vztmp;
+      atom->v[m][0] = 0.0;
+      atom->v[m][1] = 0.0;
+      atom->v[m][2] = 0.0;
       for (j = 0; j < nfix; j++)
         if (fix[j]->create_attribute) fix[j]->set_arrays(m);
     }
@@ -390,62 +311,16 @@ void FixPhaseChange::options(int narg, char **arg)
       idregion = new char[n];
       strcpy(idregion,arg[iarg+1]);
       iarg += 2;
-    } else if (strcmp(arg[iarg],"global") == 0) {
-      if (iarg+3 > narg) error->all(FLERR,"Illegal fix deposit command");
-      globalflag = 1;
-      localflag = 0;
-      lo = atof(arg[iarg+1]);
-      hi = atof(arg[iarg+2]);
-      iarg += 3;
-    } else if (strcmp(arg[iarg],"local") == 0) {
-      if (iarg+4 > narg) error->all(FLERR,"Illegal fix deposit command");
-      localflag = 1;
-      globalflag = 0;
-      lo = atof(arg[iarg+1]);
-      hi = atof(arg[iarg+2]);
-      deltasq = atof(arg[iarg+3])*atof(arg[iarg+3]);
-      iarg += 4;
-    } else if (strcmp(arg[iarg],"near") == 0) {
-      if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
-      nearsq = atof(arg[iarg+1])*atof(arg[iarg+1]);
-      iarg += 2;
     } else if (strcmp(arg[iarg],"attempt") == 0) {
       if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
       maxattempt = atoi(arg[iarg+1]);
       iarg += 2;
-    } else if (strcmp(arg[iarg],"rate") == 0) {
-      if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
-      rateflag = 1;
-      rate = atof(arg[iarg+1]);
-      iarg += 2;
-    } else if (strcmp(arg[iarg],"vx") == 0) {
-      if (iarg+3 > narg) error->all(FLERR,"Illegal fix deposit command");
-      vxlo = atof(arg[iarg+1]);
-      vxhi = atof(arg[iarg+2]);
-      iarg += 3;
-    } else if (strcmp(arg[iarg],"vy") == 0) {
-      if (iarg+3 > narg) error->all(FLERR,"Illegal fix deposit command");
-      vylo = atof(arg[iarg+1]);
-      vyhi = atof(arg[iarg+2]);
-      iarg += 3;
-    } else if (strcmp(arg[iarg],"vz") == 0) {
-      if (iarg+3 > narg) error->all(FLERR,"Illegal fix deposit command");
-      vzlo = atof(arg[iarg+1]);
-      vzhi = atof(arg[iarg+2]);
-      iarg += 3;
     } else if (strcmp(arg[iarg],"units") == 0) {
       if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
       if (strcmp(arg[iarg+1],"box") == 0) scaleflag = 0;
       else if (strcmp(arg[iarg+1],"lattice") == 0) scaleflag = 1;
       else error->all(FLERR,"Illegal fix deposit command");
       iarg += 2;
-    } else if (strcmp(arg[iarg],"target") == 0) {
-      if (iarg+4 > narg) error->all(FLERR,"Illegal fix deposit command");
-      tx = atof(arg[iarg+1]);
-      ty = atof(arg[iarg+2]);
-      tz = atof(arg[iarg+3]);
-      targetflag = 1;
-      iarg += 4;
     } else error->all(FLERR,"Illegal fix deposit command");
   }
 }
