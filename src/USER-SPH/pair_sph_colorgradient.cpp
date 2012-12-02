@@ -14,6 +14,7 @@
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sph_colorgradient.h"
+#include "sph_kernel_quintic.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -161,20 +162,15 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 
 	    h = cut[itype][jtype];
 	    ih = 1.0 / h;
-	    ihsq = ih * ih;
 
-	    double wfd = h - sqrt(rsq);
-	    if (ndim == 3) {
-	      // Lucy Kernel, 3d
-	      // Note that wfd, the derivative of the weight function with respect to r,
-	      // is lacking a factor of r.
-	      // The missing factor of r is recovered by
-	      // (1) using delV . delX instead of delV . (delX/r) and
-	      // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
-	      wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      // Quintic spline
+	      wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+	      wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
 	    } else {
-	      // Lucy Kernel, 2d
-	      wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+	      wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+	      wfd = wfd * ih * ih * ih / sqrt(rsq);
 	    }
 	    double rij = sqrt(rsq);	    
 	    double Fij = - wfd / rij;

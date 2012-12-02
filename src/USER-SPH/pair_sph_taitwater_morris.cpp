@@ -131,6 +131,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
+	double wfd;
         if (domain->dimension == 3) {
           // Quintic spline
 	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
