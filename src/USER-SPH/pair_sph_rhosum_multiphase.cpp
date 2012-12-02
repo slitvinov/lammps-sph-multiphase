@@ -14,6 +14,7 @@
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sph_rhosum_multiphase.h"
+#include "sph_kernel_quintic.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -124,7 +125,6 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
         } else {
           wf = sph_kernel_quintic2d(0.0) / (h * h);
         }
-        
         rho[i] = wf;
       } // ii loop
 
@@ -152,13 +152,11 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
           if (rsq < cutsq[itype][jtype]) {
             h = cut[itype][jtype];
             ih = 1.0 / h;
-            ihsq = ih * ih;
-
             if (domain->dimension == 3) {
-              r = sqrt(rsq);
+              r = sqrt(rsq) * ih;
               wf = sph_kernel_quintic3d(r) * ih * ih * ih;
             } else {
-              r = sqrt(rsq);
+              r = sqrt(rsq) * ih;
               wf = sph_kernel_quintic2d(r) * ih * ih ;
             }
 

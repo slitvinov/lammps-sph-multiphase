@@ -14,7 +14,9 @@
 #ifndef LMP_SPH_KERNEL_QUINTIC_H
 #define LMP_SPH_KERNEL_QUINTIC_H
 namespace LAMMPS_NS {
-  double sph_kernel_quintic_3d(double r);
-  double sph_kernel_quintic_2d(double r);
+  double sph_kernel_quintic3d(double r);
+  double sph_kernel_quintic2d(double r);
+  double sph_dw_quintic3d(double r);
+  double sph_dw_quintic2d(double r);
 }
 #endif

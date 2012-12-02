@@ -131,28 +131,13 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
-        ihsq = ih * ih;
-        wfd = h - sqrt(rsq);
         if (domain->dimension == 3) {
-          // Lucy Kernel, 3d
-          // Note that wfd, the derivative of the weight function with respect to r,
-          // is lacking a factor of r.
-          // The missing factor of r is recovered by
-          // (1) using delV . delX instead of delV . (delX/r) and
-          // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
-          wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
-        } else {
           // Quintic spline
-	  double s = 3.0*sqrt(rsq)*ih;
-	  double norm2d = 0.041952976630918;
-	  if (s<1) {
-	    wfd = -50*pow(s,4)+120*pow(s,3)-120*s;
-	  } else if (s<2) {
-	    wfd = 25*pow(s,4)-180*pow(s,3)+450*pow(s,2)-420*s+75;
-	  } else {
-	    wfd = -5*pow(s,4)+60*pow(s,3)-270*pow(s,2)+540*s-405;
-	  }
-          wfd = norm2d * wfd * ih * ih * ih / sqrt(rsq);
+	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
+        } else {
+	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 
         // compute pressure  of atom j with Tait EOS
@@ -312,6 +297,6 @@ double PairSPHTaitwaterMorris::single(int i, int j, int itype, int jtype,
   return 0.0;
 }
 
-double sph_pressure(double B, double rho0, double rbackground, double rho) {
+double LAMMPS_NS::sph_pressure(double B, double rho0, double rbackground, double rho) {
   return B*( pow(rho/rho0, 7.0) - rbackground);
 }
