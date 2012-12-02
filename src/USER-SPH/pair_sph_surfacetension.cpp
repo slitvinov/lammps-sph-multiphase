@@ -98,6 +98,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
       double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			   cg[i][1]*cg[i][1]);
     }
+    // TODO: FixMe
     double epsilon = 1e-20;
     // if (abscgi > epsilon) {
     //   std::cout << "colorgradient: "

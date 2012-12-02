@@ -50,7 +50,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   seed = atoi(arg[6]);
 
   if (seed <= 0) error->all(FLERR,"Illegal fix deposit command");
-
   // set defaults
 
   iregion = -1;
@@ -167,11 +166,6 @@ void FixPhaseChange::init()
 
 void FixPhaseChange::pre_exchange()
 {
-  int i,j;
-  int flag,flagall;
-  double coord[3],lamda[3],delx,dely,delz,rsq;
-  double *newcoord;
-
   // just return if should not be called on this timestep
 
   if (next_reneighbor != update->ntimestep) return;
@@ -187,80 +181,19 @@ void FixPhaseChange::pre_exchange()
 
   // attempt an insertion until successful
 
-  int nfix = modify->nfix;
-  Fix **fix = modify->fix;
-
-  int success = 0;
-  int attempt = 0;
-  while (attempt < maxattempt) {
-    attempt++;
 
     // choose random position for new atom within region
+  int nins = 0;
+  int nlocal = atom->nlocal;
+  double **x = atom->x;
+  double coord[3];
+  coord[0] = xlo + random->uniform() * (xhi-xlo);
+  coord[1] = ylo + random->uniform() * (yhi-ylo);
+  coord[2] = zlo + random->uniform() * (zhi-zlo);
+  bool ok = insert_one_atom(coord, sublo, subhi);
 
-    coord[0] = xlo + random->uniform() * (xhi-xlo);
-    coord[1] = ylo + random->uniform() * (yhi-ylo);
-    coord[2] = zlo + random->uniform() * (zhi-zlo);
-    while (domain->regions[iregion]->match(coord[0],coord[1],coord[2]) == 0) {
-      coord[0] = xlo + random->uniform() * (xhi-xlo);
-      coord[1] = ylo + random->uniform() * (yhi-ylo);
-      coord[2] = zlo + random->uniform() * (zhi-zlo);
-    }
-
-    // now have final coord
-    // if distance to any atom is less than near, try again
-
-    double **x = atom->x;
-    int nlocal = atom->nlocal;
-
-    flag = 0;
-    for (i = 0; i < nlocal; i++) {
-      delx = coord[0] - x[i][0];
-      dely = coord[1] - x[i][1];
-      delz = coord[2] - x[i][2];
-      domain->minimum_image(delx,dely,delz);
-      rsq = delx*delx + dely*dely + delz*delz;
-    }
-    MPI_Allreduce(&flag,&flagall,1,MPI_INT,MPI_MAX,world);
-    if (flagall) continue;
-
-    // if we have a sputter target change velocity vector accordingly
-
-    // check if new atom is in my sub-box or above it if I'm highest proc
-    // if so, add to my list via create_atom()
-    // initialize info about the atoms
-    // set group mask to "all" plus fix group
-
-    if (domain->triclinic) {
-      domain->x2lamda(coord,lamda);
-      newcoord = lamda;
-    } else newcoord = coord;
-
-    flag = 0;
-    if (newcoord[0] >= sublo[0] && newcoord[0] < subhi[0] &&
-        newcoord[1] >= sublo[1] && newcoord[1] < subhi[1] &&
-        newcoord[2] >= sublo[2] && newcoord[2] < subhi[2]) flag = 1;
-    else if (domain->dimension == 3 && newcoord[2] >= domain->boxhi[2] &&
-             comm->myloc[2] == comm->procgrid[2]-1 &&
-             newcoord[0] >= sublo[0] && newcoord[0] < subhi[0] &&
-             newcoord[1] >= sublo[1] && newcoord[1] < subhi[1]) flag = 1;
-    else if (domain->dimension == 2 && newcoord[1] >= domain->boxhi[1] &&
-             comm->myloc[1] == comm->procgrid[1]-1 &&
-             newcoord[0] >= sublo[0] && newcoord[0] < subhi[0]) flag = 1;
-
-    if (flag) {
-      atom->avec->create_atom(ntype,coord);
-      int m = atom->nlocal - 1;
-      atom->type[m] = ntype;
-      atom->mask[m] = 1 | groupbit;
-      atom->v[m][0] = 0.0;
-      atom->v[m][1] = 0.0;
-      atom->v[m][2] = 0.0;
-      for (j = 0; j < nfix; j++)
-        if (fix[j]->create_attribute) fix[j]->set_arrays(m);
-    }
-    MPI_Allreduce(&flag,&success,1,MPI_INT,MPI_MAX,world);
-    break;
-  }
+  /// TODO: fix the flag
+  int success = 1;
 
   // warn if not successful b/c too many attempts or no proc owned particle
 
@@ -360,4 +293,57 @@ void FixPhaseChange::restart(char *buf)
   next_reneighbor = static_cast<int> (list[n++]);
 
   random->reset(seed);
+}
+
+bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi)
+{
+  int flagall, flag;
+  double lamda[3];
+  double *newcoord;
+
+  int i, j;
+  int nfix = modify->nfix;
+  Fix **fix = modify->fix;
+
+  int nlocal = atom->nlocal;
+  int success = 0;
+
+  // check if new atom is in my sub-box or above it if I'm highest proc
+  // if so, add to my list via create_atom()
+  // initialize info about the atoms
+  // set group mask to "all" plus fix group
+  if (domain->triclinic) {
+    domain->x2lamda(coord,lamda);
+    newcoord = lamda;
+  } else newcoord = coord;
+
+  flag = 0;
+  if (newcoord[0] >= sublo[0] && newcoord[0] < subhi[0] &&
+      newcoord[1] >= sublo[1] && newcoord[1] < subhi[1] &&
+      newcoord[2] >= sublo[2] && newcoord[2] < subhi[2]) flag = 1;
+  else if (domain->dimension == 3 && newcoord[2] >= domain->boxhi[2] &&
+	   comm->myloc[2] == comm->procgrid[2]-1 &&
+	   newcoord[0] >= sublo[0] && newcoord[0] < subhi[0] &&
+	   newcoord[1] >= sublo[1] && newcoord[1] < subhi[1]) flag = 1;
+  else if (domain->dimension == 2 && newcoord[1] >= domain->boxhi[1] &&
+	   comm->myloc[1] == comm->procgrid[1]-1 &&
+	   newcoord[0] >= sublo[0] && newcoord[0] < subhi[0]) flag = 1;
+
+  if (flag) {
+    atom->avec->create_atom(ntype,coord);
+    int m = atom->nlocal - 1;
+    atom->type[m] = ntype;
+    atom->mask[m] = 1 | groupbit;
+    atom->v[m][0] = 0.0;
+    atom->v[m][1] = 0.0;
+    atom->v[m][2] = 0.0;
+    for (j = 0; j < nfix; j++)
+      if (fix[j]->create_attribute) fix[j]->set_arrays(m);
+  }
+  MPI_Allreduce(&flag,&success,1,MPI_INT,MPI_MAX,world);
+  if (success) {
+    return true;
+  } else {
+    return false;
+  }
 }
