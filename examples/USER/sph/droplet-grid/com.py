@@ -32,13 +32,4 @@ for tc in t:
     com[i, 1] = np.mean(y[idx])
     i = i + 1
 
-# com = np.zeros([np.size(t), 2])
-# i = 0
-# for tc in t:
-#     x = d.vecs(tc, "x")
-#     com[i, 0] = np.mean(x) - 0.5
-#     y = d.vecs(tc, "y")
-#     com[i, 1] = np.mean(y) - 0.5
-#     i = i + 1
-
 np.savetxt("com.dat", np.column_stack( (t, com) ))
