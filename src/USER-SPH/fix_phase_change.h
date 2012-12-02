@@ -34,7 +34,7 @@ class FixPhaseChange : public Fix {
   void pre_exchange();
   void write_restart(FILE *);
   void restart(char *);
-
+  
  private:
   int ninsert,ntype,nfreq,seed;
   int iregion,maxattempt,scaleflag;
@@ -46,6 +46,8 @@ class FixPhaseChange : public Fix {
   class RanPark *random;
 
   void options(int, char **);
+  // insert one atom, return true if sucsesfull
+  bool insert_one_atom(double* coord, double* sublo, double* subhi);
 };
 
 }
