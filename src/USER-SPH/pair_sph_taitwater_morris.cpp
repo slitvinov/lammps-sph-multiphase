@@ -21,6 +21,7 @@
 #include "memory.h"
 #include "error.h"
 #include "domain.h"
+#include "sph_kernel_quintic.h"
 
 using namespace LAMMPS_NS;
 
@@ -131,7 +132,6 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
         ihsq = ih * ih;
-
         wfd = h - sqrt(rsq);
         if (domain->dimension == 3) {
           // Lucy Kernel, 3d
@@ -142,8 +142,17 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
           // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
           wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
         } else {
-          // Lucy Kernel, 2d
-          wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+          // Quintic spline
+	  double s = 3.0*sqrt(rsq)*ih;
+	  double norm2d = 0.041952976630918;
+	  if (s<1) {
+	    wfd = -50*pow(s,4)+120*pow(s,3)-120*s;
+	  } else if (s<2) {
+	    wfd = 25*pow(s,4)-180*pow(s,3)+450*pow(s,2)-420*s+75;
+	  } else {
+	    wfd = -5*pow(s,4)+60*pow(s,3)-270*pow(s,2)+540*s-405;
+	  }
+          wfd = norm2d * wfd * ih * ih * ih / sqrt(rsq);
         }
 
         // compute pressure  of atom j with Tait EOS
