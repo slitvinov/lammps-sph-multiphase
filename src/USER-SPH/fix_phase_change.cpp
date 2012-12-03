@@ -192,7 +192,6 @@ void FixPhaseChange::pre_exchange()
   /// find a total number of inserted atoms
   int ninsall;
   MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
-  printf("ninsall, nins: %i %i\n", ninsall, nins);
 
   // reset global natoms
   // set tag # of new particle beyond all previous atoms
