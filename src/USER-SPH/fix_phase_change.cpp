@@ -37,7 +37,8 @@ using namespace FixConst;
 FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  if (narg < 7) error->all(FLERR,"Illegal fix deposit command");
+  int nnarg = 9;
+  if (narg < nnarg) error->all(FLERR,"Illegal fix phase_change command");
 
   restart_global = 1;
   time_depend = 1;
@@ -45,8 +46,11 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   // required args
 
   //ninsert = atoi(arg[3]);
-  ntype = atoi(arg[4]);
-  nfreq = atoi(arg[5]);
+  Tc = atof(arg[3]);
+  Cp = atof(arg[4]);
+  dr = atof(arg[5]);
+  ntype = atoi(arg[6]);
+  nfreq = atoi(arg[7]);
 
   iregion = -1;
   idregion = NULL;
@@ -55,15 +59,15 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   // read options from end of input line
 
-  options(narg-7,&arg[7]);
+  options(narg-nnarg,&arg[nnarg]);
 
   // error checks on region and its extent being inside simulation box
 
-  if (iregion == -1) error->all(FLERR,"Must specify a region in fix deposit");
+  if (iregion == -1) error->all(FLERR,"Must specify a region in fix phase_change");
   if (domain->regions[iregion]->bboxflag == 0)
-    error->all(FLERR,"Fix deposit region does not support a bounding box");
+    error->all(FLERR,"Fix phase_change region does not support a bounding box");
   if (domain->regions[iregion]->dynamic_check())
-    error->all(FLERR,"Fix deposit region cannot be dynamic");
+    error->all(FLERR,"Fix phase_change region cannot be dynamic");
 
   xlo = domain->regions[iregion]->extent_xlo;
   xhi = domain->regions[iregion]->extent_xhi;
@@ -76,18 +80,18 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
     if (xlo < domain->boxlo[0] || xhi > domain->boxhi[0] ||
         ylo < domain->boxlo[1] || yhi > domain->boxhi[1] ||
         zlo < domain->boxlo[2] || zhi > domain->boxhi[2])
-      error->all(FLERR,"Deposition region extends outside simulation box");
+      error->all(FLERR,"Phase change region extends outside simulation box");
   } else {
     if (xlo < domain->boxlo_bound[0] || xhi > domain->boxhi_bound[0] ||
         ylo < domain->boxlo_bound[1] || yhi > domain->boxhi_bound[1] ||
         zlo < domain->boxlo_bound[2] || zhi > domain->boxhi_bound[2])
-      error->all(FLERR,"Deposition region extends outside simulation box");
+      error->all(FLERR,"Phase change region extends outside simulation box");
   }
 
   // setup scaling
 
   if (scaleflag && domain->lattice == NULL)
-    error->all(FLERR,"Use of fix deposit with undefined lattice");
+    error->all(FLERR,"Use of fix phase_change with undefined lattice");
 
   double xscale,yscale,zscale;
   if (scaleflag) {
@@ -129,7 +133,7 @@ void FixPhaseChange::init()
 
   iregion = domain->find_region(idregion);
   if (iregion == -1)
-    error->all(FLERR,"Region ID for fix deposit does not exist");
+    error->all(FLERR,"Region ID for fix phase_change does not exist");
 }
 
 /* ----------------------------------------------------------------------
@@ -165,17 +169,22 @@ void FixPhaseChange::pre_exchange()
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    if ( (abscgi>1e-20) && (e[i]>0.95) ) {
+    if ( (abscgi>1e-20) && (e[i]>Tc) ) {
       printf ("abscgi: %e\n", abscgi);
       double coord[3];
-      double dx = 1e-4;
-      coord[0] = x[i][0] + dx;
-      coord[1] = x[i][1] + dx;
-      coord[2] = x[i][2] + dx;
+      // place an atom in the directions opposite to the color gradient
+      double eij[3];
+      eij[0] = -cg[i][0]/abscgi;
+      eij[1] = -cg[i][1]/abscgi;
+      eij[2] = -cg[i][2]/abscgi;
+      coord[0] = x[i][0] + eij[0]*dr;
+      coord[1] = x[i][1] + eij[1]*dr;
+      coord[2] = x[i][2] + eij[2]*dr;
       bool ok = insert_one_atom(coord, sublo, subhi);
       if (ok) {
 	nins++;
-	e[i] = 0;
+	// change in energy of the particle
+	e[i] -= Cp;
       }
     }
   }
@@ -217,25 +226,25 @@ void FixPhaseChange::options(int narg, char **arg)
   int iarg = 0;
   while (iarg < narg) {
     if (strcmp(arg[iarg],"region") == 0) {
-      if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
+      if (iarg+2 > narg) error->all(FLERR,"Illegal fix phase_change command");
       iregion = domain->find_region(arg[iarg+1]);
       if (iregion == -1)
-        error->all(FLERR,"Region ID for fix deposit does not exist");
+        error->all(FLERR,"Region ID for fix phase_change does not exist");
       int n = strlen(arg[iarg+1]) + 1;
       idregion = new char[n];
       strcpy(idregion,arg[iarg+1]);
       iarg += 2;
     } else if (strcmp(arg[iarg],"attempt") == 0) {
-      if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
+      if (iarg+2 > narg) error->all(FLERR,"Illegal fix phase_change command");
       maxattempt = atoi(arg[iarg+1]);
       iarg += 2;
     } else if (strcmp(arg[iarg],"units") == 0) {
-      if (iarg+2 > narg) error->all(FLERR,"Illegal fix deposit command");
+      if (iarg+2 > narg) error->all(FLERR,"Illegal fix phase_change command");
       if (strcmp(arg[iarg+1],"box") == 0) scaleflag = 0;
       else if (strcmp(arg[iarg+1],"lattice") == 0) scaleflag = 1;
-      else error->all(FLERR,"Illegal fix deposit command");
+      else error->all(FLERR,"Illegal fix phase_change command");
       iarg += 2;
-    } else error->all(FLERR,"Illegal fix deposit command");
+    } else error->all(FLERR,"Illegal fix phase_change command");
   }
 }
 
