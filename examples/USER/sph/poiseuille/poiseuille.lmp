@@ -1,22 +1,27 @@
 log                ${dname}/log.lammps
 echo               both
-dimension          2
+variable           ndim equal 3
+dimension          ${ndim}
 units              si
 atom_style         meso
 boundary          p p p
-variable          ndim index 2d
-include            ${ndim}-vars.lmp
+include           vars.lmp
 
 # create simulation box
-variable           pLz    equal  1.0e-6
-variable           nLz    equal  -1.0e-6
-variable           Lywall equal ${Ly}
-variable           Lxwall equal ${Lx}
-region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
+if ${ndim}==2 then &
+"variable           pLz    equal  1.0e-6" &
+"variable           nLz    equal  -1.0e-6" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
 
 # crate one type of the particles
 create_box         1 box
-lattice            sq ${dx}
+# create gas particles
+if ${ndim}==3 then &
+"lattice            sc ${dx}" &
+else &
+"lattice            sq ${dx}"
 create_atoms       1 region box
 
 
@@ -31,7 +36,6 @@ fix                integrate_fix_full all meso
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom
 dump_modify        dump_id first yes sort id pad 8
 
-#include            ${ndim}-image.lmp
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
 include            settimestep.lmp
 
@@ -51,7 +55,7 @@ write_restart      ${dname}/droplet.restart
 
 timestep           ${dt}
 variable            time equal step*dt
-thermo_style        custom v_time
+thermo_style        custom v_time step
 thermo              10
 
 variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))

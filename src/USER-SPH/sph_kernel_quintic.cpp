@@ -15,7 +15,8 @@
 #include "sph_kernel_quintic.h"
 
 double LAMMPS_NS::sph_kernel_quintic3d(double r) {
-  double norm3d = 0.0026636810559313;
+  // double norm3d = 0.0026636810559313;
+  double norm3d = 0.041952976630918;
   double s = 3.0*r;
   if (s<1.0) {
     return norm3d*(pow(3 - s, 5) - 6*pow(2 - s, 5) + 15*pow(1 - s, 5));
@@ -41,7 +42,8 @@ double LAMMPS_NS::sph_kernel_quintic2d(double r) {
 }
 
 double LAMMPS_NS::sph_dw_quintic3d(double r) {
-  double norm3d = 3.0*0.0026636810559313;
+  //double norm3d = 9.0*0.0026636810559313;
+  double norm3d =  3.0*0.041952976630918;
   double s = 3.0*r;
   double wfd;
   if (s<1) {
