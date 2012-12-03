@@ -1,10 +1,14 @@
 # number of particles in each of the directions
 variable          nx   equal 40
 variable          ny   equal 40
+if "${ndim}==3" then &
+"variable nz equal ${nx}"
 
 # size of the domain
 variable          Lx   equal  0.1
 variable          Ly   equal  0.1
+if "${ndim}==3" then &
+"variable Lz equal ${Lx}"
 variable          dx   equal  ${Lx}/${nx}
 
 # density of droplet
@@ -21,9 +25,9 @@ variable          Nfreq equal 100
 variable          Nfreqimage equal 100
 
 # mass of droplet particle
-variable          sph_mass_d equal ${dx}*${dx}*${sph_rho}
+variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho}
 # mass of gas particle
-variable          sph_mass_g equal ${dx}*${dx}*${sph_rho}
+variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho}
 
 # radios of the cylinder
 variable          cyl_r equal 2e-2
