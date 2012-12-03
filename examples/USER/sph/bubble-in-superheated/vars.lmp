@@ -1,5 +1,5 @@
 # number of particles in each of the directions
-variable          nx   equal 40
+variable          nx   equal 20
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"
@@ -36,13 +36,13 @@ variable          Nfreq equal 10
 variable          Nfreqimage equal 10
 
 # mass of droplet particle
-variable          sph_mass_d equal ${dx}*${dx}*${sph_rho_d}
+variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
 # mass of gas particle
-variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
+variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
 #variable          alpha equal ${sph_mass_g}
-variable          alpha equal 1.0
+variable          alpha equal 5.0
 
 # type of the gas particle
 variable          g_type equal 1
