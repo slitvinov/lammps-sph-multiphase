@@ -29,7 +29,6 @@ mass               ${g_type} ${sph_mass_g}
 
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
-set                 type * meso_e 1.0
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
@@ -67,7 +66,7 @@ pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         * * sph/heatconduction  1.0 ${h}
+pair_coeff         * * sph/heatconduction  0.4 ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
@@ -87,10 +86,17 @@ variable           y2 equal ${ycenter}+${dx}
 region             rinsert block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 100
-fix                fdep all phase_change ${Ninsert} ${d_type} ${insert_every} 123456 region rinsert units box
+
+variable           Tc equal 0.95
+variable           Cp equal 1.0
+variable           dr equal 0.25*${dx}
+fix                fdep all phase_change ${Tc} ${Cp} ${dr} ${d_type} ${insert_every} 123456 region rinsert units box
 
 variable          xcenter_per equal ${xcenter}+0.5*${dx} 
 create_atoms      ${d_type} single  ${xcenter_per} ${ycenter} 0.0 units box
+
+set                 type ${g_type} meso_e 1.0
+set                 type ${d_type} meso_e 0.0
 
 timestep           ${dt}
 run               10000

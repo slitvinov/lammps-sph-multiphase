@@ -42,6 +42,13 @@ class FixPhaseChange : public Fix {
   double xlo,xhi,ylo,yhi,zlo,zhi;
   int nfirst;
 
+  // crytical temperature
+  double Tc;
+  // specific heat of evaporation
+  double Cp;
+  // how far a new atom should be placed
+  double dr;
+
   void options(int, char **);
   // insert one atom, return true if sucsesfull
   bool insert_one_atom(double* coord, double* sublo, double* subhi);
