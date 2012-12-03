@@ -50,7 +50,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   iregion = -1;
   idregion = NULL;
-  lo = hi = deltasq = 0.0;
   maxattempt = 10;
   scaleflag = 1;
 
@@ -97,17 +96,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
     zscale = domain->lattice->zlattice;
   }
   else xscale = yscale = zscale = 1.0;
-
-  // apply scaling to all input parameters with dist/vel units
-
-  if (domain->dimension == 2) {
-    lo *= yscale;
-    hi *= yscale;
-  } else {
-    lo *= zscale;
-    hi *= zscale;
-  }
-  deltasq *= xscale*xscale;
 
 
   // set up reneighboring
