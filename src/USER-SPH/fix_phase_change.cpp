@@ -186,27 +186,39 @@ void FixPhaseChange::pre_exchange()
   int nins = 0;
   int nlocal = atom->nlocal;
   double **x = atom->x;
-  double coord[3];
-  coord[0] = xlo + random->uniform() * (xhi-xlo);
-  coord[1] = ylo + random->uniform() * (yhi-ylo);
-  coord[2] = zlo + random->uniform() * (zhi-zlo);
-  bool ok = insert_one_atom(coord, sublo, subhi);
-
-  /// TODO: fix the flag
-  int success = 1;
-
-  // warn if not successful b/c too many attempts or no proc owned particle
-
-  if (!success && comm->me == 0)
-    error->warning(FLERR,"Particle deposition was unsuccessful",0);
+  double **cg = atom->colorgradient;
+  double *e   = atom->e;
+  
+  for (int i = 0; i < nlocal; i++) {
+    double abscgi = sqrt(cg[i][0]*cg[i][0] +
+			 cg[i][1]*cg[i][1] +
+			 cg[i][2]*cg[i][2]);
+    if ( (abscgi>1e-20) && (e[i]>0.95) ) {
+      printf ("abscgi: %e\n", abscgi);
+      double coord[3];
+      double dx = 1e-4;
+      coord[0] = x[i][0] + dx;
+      coord[1] = x[i][1] + dx;
+      coord[2] = x[i][2] + dx;
+      bool ok = insert_one_atom(coord, sublo, subhi);
+      if (ok) {
+	nins++;
+	e[i] = 0;
+      }
+    }
+  }
+  /// find a total number of inserted atoms
+  int ninsall;
+  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
+  printf("ninsall, nins: %i %i\n", ninsall, nins);
 
   // reset global natoms
   // set tag # of new particle beyond all previous atoms
   // if global map exists, reset it now instead of waiting for comm
   // since deleting atoms messes up ghosts
-
+  int success = 1;
   if (success) {
-    atom->natoms += 1;
+    atom->natoms += ninsall;
     if (atom->tag_enable) {
       atom->tag_extend();
       if (atom->map_style) {
@@ -306,7 +318,7 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
   Fix **fix = modify->fix;
 
   int nlocal = atom->nlocal;
-  int success = 0;
+  int success = 1;
 
   // check if new atom is in my sub-box or above it if I'm highest proc
   // if so, add to my list via create_atom()
@@ -340,8 +352,7 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
     for (j = 0; j < nfix; j++)
       if (fix[j]->create_attribute) fix[j]->set_arrays(m);
   }
-  MPI_Allreduce(&flag,&success,1,MPI_INT,MPI_MAX,world);
-  if (success) {
+  if (flag) {
     return true;
   } else {
     return false;
