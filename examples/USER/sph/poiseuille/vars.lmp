@@ -7,7 +7,6 @@ if "${ndim}==3" then &
 # size of the domain
 variable          Lx   equal  1e-3
 variable          Ly   equal  2*${Lx}
-
 if "${ndim}==3" then &
 "variable Lz equal ${Lx}"
 
