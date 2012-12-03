@@ -1,26 +1,35 @@
 log                ${dname}/log.lammps
 echo               both
-dimension          2
 units              si
 atom_style         meso
 # periodic boundaries to have a correct density on the wall
 # TODO: make density fixed for the choosen particles
 boundary          p p p
-variable          ndim index 2d
-include            ${ndim}-vars.lmp
+
+variable          ndim equal 3
+dimension         ${ndim}
+include           vars.lmp
 
 # create simulation box
-variable           pLz    equal  1.0e-3
-variable           nLz    equal  -1.0e-3
 variable           xcenter equal 0.5*${Lx}
 variable           ycenter equal 0.5*${Ly}
-region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
+
+if ${ndim}==2 then &
+"variable           pLz    equal  1.0e-3" &
+"variable           nLz    equal  -1.0e-3" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box"
 
 # create box with two types of particles (water, gas)
 create_box         2 box
 
 # create gas particles
-lattice            sq ${dx}
+if ${ndim}==2 then &
+"lattice            sq ${dx}" &
+else &
+"lattice            sc ${dx}"
+
 create_atoms       ${g_type} region box
 
 # set mass of the particles
@@ -56,7 +65,7 @@ pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
 
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 
-variable           cg_cutoff equal 2.0*${dx}
+variable           cg_cutoff equal 3.0*${dx}
 pair_coeff         ${d_type} ${d_type} sph/colorgradient ${cg_cutoff} 0
 pair_coeff         ${g_type} ${d_type} sph/colorgradient ${cg_cutoff} ${alpha}
 pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
@@ -91,9 +100,9 @@ create_atoms      ${d_type} single  ${xcenter_per} ${ycenter} 0.0 units box
 
 set               type ${g_type} meso_e 1.0
 set               type ${d_type} meso_e 1.0
-run               300
+run               0
 
-region             rinsert block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box
+region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.70

@@ -1,10 +1,15 @@
 # number of particles in each of the directions
-variable          nx   equal 60
-variable          ny   equal 60
+variable          nx   equal 40
+variable          ny   equal ${nx}
+if ${ndim}==3 then &
+"variable nz equal ${nx}"
 
 # size of the domain
 variable          Lx   equal  1.0
 variable          Ly   equal  1.0
+if ${ndim}==3 then &
+"variable         Lz   equal ${Lx}"
+
 variable          dx   equal  ${Lx}/${nx}
 
 # density of gas phase
