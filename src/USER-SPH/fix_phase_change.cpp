@@ -177,9 +177,9 @@ void FixPhaseChange::pre_exchange()
       eij[0] = cg[i][0]/abscgi;
       eij[1] = cg[i][1]/abscgi;
       eij[2] = cg[i][2]/abscgi;
-      coord[0] = x[i][0] + eij[0]*dr;
-      coord[1] = x[i][1] + eij[1]*dr;
-      coord[2] = x[i][2] + eij[2]*dr;
+      coord[0] = x[i][0] - eij[0]*dr;
+      coord[1] = x[i][1] - eij[1]*dr;
+      coord[2] = x[i][2] - eij[2]*dr;
       bool ok = insert_one_atom(coord, sublo, subhi);
       if (ok) {
 	nins++;
