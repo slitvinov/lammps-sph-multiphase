@@ -39,7 +39,6 @@ class FixPhaseChange : public Fix {
   int ntype,nfreq;
   int iregion,maxattempt,scaleflag;
   char *idregion;
-  double lo,hi,deltasq;
   double xlo,xhi,ylo,yhi,zlo,zhi;
   int nfirst;
 
