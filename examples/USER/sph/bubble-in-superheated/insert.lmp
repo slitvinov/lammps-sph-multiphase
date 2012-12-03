@@ -38,8 +38,8 @@ compute         ie_atom all meso_e/atom
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy &
-fx fy fz c_rho_peratom c_colorgradient_peratom c_ie_atom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y vx vy &
+c_rho_peratom c_colorgradient_peratom c_ie_atom
 dump_modify        dump_id first yes sort id pad 8
 
 #include            ${ndim}-image.lmp

@@ -44,19 +44,14 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   // required args
 
-  ninsert = atoi(arg[3]);
+  //ninsert = atoi(arg[3]);
   ntype = atoi(arg[4]);
   nfreq = atoi(arg[5]);
-  seed = atoi(arg[6]);
-
-  if (seed <= 0) error->all(FLERR,"Illegal fix deposit command");
-  // set defaults
 
   iregion = -1;
   idregion = NULL;
   lo = hi = deltasq = 0.0;
   maxattempt = 10;
-  vxlo = vxhi = vylo = vyhi = vzlo = vzhi = 0.0;
   scaleflag = 1;
 
   // read options from end of input line
@@ -113,30 +108,19 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
     hi *= zscale;
   }
   deltasq *= xscale*xscale;
-  vxlo *= xscale;
-  vxhi *= xscale;
-  vylo *= yscale;
-  vyhi *= yscale;
-  vzlo *= zscale;
-  vzhi *= zscale;
 
-  // random number generator, same for all procs
-
-  random = new RanPark(lmp,seed);
 
   // set up reneighboring
 
   force_reneighbor = 1;
   next_reneighbor = update->ntimestep + 1;
   nfirst = next_reneighbor;
-  ninserted = 0;
 }
 
 /* ---------------------------------------------------------------------- */
 
 FixPhaseChange::~FixPhaseChange()
 {
-  delete random;
   delete [] idregion;
 }
 
@@ -231,10 +215,7 @@ void FixPhaseChange::pre_exchange()
 
   // next timestep to insert
   // next_reneighbor = 0 if done
-
-  if (success) ninserted++;
-  if (ninserted < ninsert) next_reneighbor += nfreq;
-  else next_reneighbor = 0;
+  next_reneighbor += nfreq;
 }
 
 /* ----------------------------------------------------------------------
@@ -278,9 +259,6 @@ void FixPhaseChange::write_restart(FILE *fp)
 {
   int n = 0;
   double list[4];
-  list[n++] = random->state();
-  list[n++] = ninserted;
-  list[n++] = nfirst;
   list[n++] = next_reneighbor;
 
   if (comm->me == 0) {
@@ -299,12 +277,9 @@ void FixPhaseChange::restart(char *buf)
   int n = 0;
   double *list = (double *) buf;
 
-  seed = static_cast<int> (list[n++]);
-  ninserted = static_cast<int> (list[n++]);
   nfirst = static_cast<int> (list[n++]);
   next_reneighbor = static_cast<int> (list[n++]);
 
-  random->reset(seed);
 }
 
 bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi)

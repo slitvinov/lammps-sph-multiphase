@@ -36,14 +36,12 @@ class FixPhaseChange : public Fix {
   void restart(char *);
   
  private:
-  int ninsert,ntype,nfreq,seed;
+  int ntype,nfreq;
   int iregion,maxattempt,scaleflag;
   char *idregion;
   double lo,hi,deltasq;
-  double vxlo,vxhi,vylo,vyhi,vzlo,vzhi;
   double xlo,xhi,ylo,yhi,zlo,zhi;
-  int nfirst,ninserted;
-  class RanPark *random;
+  int nfirst;
 
   void options(int, char **);
   // insert one atom, return true if sucsesfull
