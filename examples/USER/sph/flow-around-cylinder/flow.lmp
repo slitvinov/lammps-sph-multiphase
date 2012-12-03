@@ -1,24 +1,31 @@
 log                ${dname}/log.lammps
 echo               both
-dimension          2
+variable           ndim equal 3
+dimension          ${ndim}
 units              si
 atom_style         meso
+include            vars.lmp
 # periodic boundaries to have a correct density on the wall
 # TODO: make density fixed for the choosen particles
 boundary          p p p
-variable          ndim index 2d
-include            ${ndim}-vars.lmp
-variable           pLz    equal  1.0e-3
-variable           nLz    equal  -1.0e-3
+# create simulation box
+if ${ndim}==2 then &
+"variable           pLz    equal  1.0e-3" &
+"variable           nLz    equal  -1.0e-3" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
 variable           xcenter equal 0.5*${Lx}
 variable           ycenter equal 0.5*${Ly}
-region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
 
-# create box with two types of particles (gas and droplet)
+# create box with two types of particles (flow and wall)
 create_box         2 box
 
 # create gas particles
-lattice            sq ${dx}
+if ${ndim}==3 then &
+"lattice            sc ${dx}" &
+else &
+"lattice            sq ${dx}"
 create_atoms       ${g_type} region box
 
 # set mass of the particles
@@ -34,7 +41,6 @@ fix                integrate_fix_full all meso
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
 dump_modify        dump_id first yes sort id pad 8
 
-include            ${ndim}-image.lmp
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
 include            settimestep.lmp
 
