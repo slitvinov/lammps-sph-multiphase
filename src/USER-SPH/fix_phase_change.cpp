@@ -137,7 +137,7 @@ void FixPhaseChange::init()
 }
 
 /* ----------------------------------------------------------------------
-   perform particle insertion
+   perform phase change
 ------------------------------------------------------------------------- */
 
 void FixPhaseChange::pre_exchange()
@@ -164,19 +164,19 @@ void FixPhaseChange::pre_exchange()
   double **x = atom->x;
   double **cg = atom->colorgradient;
   double *e   = atom->e;
+  int *type = atom->type;
   
   for (int i = 0; i < nlocal; i++) {
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    if ( (abscgi>1e-20) && (e[i]>Tc) ) {
-      printf ("abscgi: %e\n", abscgi);
+    if ( (abscgi>1e-20) && (e[i]>Tc) && (type[i] == ntype) ) {
       double coord[3];
-      // place an atom in the directions opposite to the color gradient
+      // place an atom in the directions of color gradient
       double eij[3];
-      eij[0] = -cg[i][0]/abscgi;
-      eij[1] = -cg[i][1]/abscgi;
-      eij[2] = -cg[i][2]/abscgi;
+      eij[0] = cg[i][0]/abscgi;
+      eij[1] = cg[i][1]/abscgi;
+      eij[2] = cg[i][2]/abscgi;
       coord[0] = x[i][0] + eij[0]*dr;
       coord[1] = x[i][1] + eij[1]*dr;
       coord[2] = x[i][2] + eij[2]*dr;
@@ -185,6 +185,7 @@ void FixPhaseChange::pre_exchange()
 	nins++;
 	// change in energy of the particle
 	e[i] -= Cp;
+	e[atom->nlocal] = Tc;
       }
     }
   }
