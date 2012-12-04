@@ -15,6 +15,12 @@
 #include "stdlib.h"
 #include "string.h"
 #include "fix_phase_change.h"
+#include "sph_kernel_quintic.h"
+#include "neighbor.h"
+#include "neigh_list.h"
+#include "neigh_request.h"
+#include "pair.h"
+#include "random_park.h"
 #include "atom.h"
 #include "atom_vec.h"
 #include "force.h"
@@ -37,7 +43,7 @@ using namespace FixConst;
 FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  int nnarg = 9;
+  int nnarg = 12;
   if (narg < nnarg) error->all(FLERR,"Illegal fix phase_change command");
 
   restart_global = 1;
@@ -47,10 +53,16 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   //ninsert = atoi(arg[3]);
   Tc = atof(arg[3]);
-  Cp = atof(arg[4]);
-  dr = atof(arg[5]);
-  ntype = atoi(arg[6]);
-  nfreq = atoi(arg[7]);
+  Tt = atof(arg[4]);
+  cp = atof(arg[5]);
+  dr = atof(arg[6]);
+  cutoff = atof(arg[7]);
+  from_type = atoi(arg[8]);
+  to_type = atoi(arg[9]);
+  nfreq = atoi(arg[10]);
+  seed = atoi(arg[11]);
+
+  if (seed <= 0) error->all(FLERR,"Illegal value for seed");
 
   iregion = -1;
   idregion = NULL;
@@ -101,7 +113,7 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   }
   else xscale = yscale = zscale = 1.0;
 
-
+  random = new RanPark(lmp,seed);
   // set up reneighboring
 
   force_reneighbor = 1;
@@ -113,6 +125,7 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
 FixPhaseChange::~FixPhaseChange()
 {
+  delete random;
   delete [] idregion;
 }
 
@@ -134,6 +147,19 @@ void FixPhaseChange::init()
   iregion = domain->find_region(idregion);
   if (iregion == -1)
     error->all(FLERR,"Region ID for fix phase_change does not exist");
+
+  // need a full neighbor list, built whenever re-neighboring occurs
+
+  int irequest = neighbor->request((void *) this);
+  neighbor->requests[irequest]->pair = 0;
+  neighbor->requests[irequest]->fix = 1;
+  neighbor->requests[irequest]->half = 0;
+  neighbor->requests[irequest]->full = 1;
+}
+
+void FixPhaseChange::init_list(int id, NeighList *ptr)
+{
+  list = ptr;
 }
 
 /* ----------------------------------------------------------------------
@@ -161,7 +187,11 @@ void FixPhaseChange::pre_exchange()
     // choose random position for new atom within region
   int nins = 0;
   int nlocal = atom->nlocal;
+  int inum = list->inum;
+  int* ilist = list->ilist;
+  int* numneigh = list->numneigh;
   double **x = atom->x;
+  double **v = atom->v;
   double **cg = atom->colorgradient;
   double *e   = atom->e;
   int *type = atom->type;
@@ -170,25 +200,77 @@ void FixPhaseChange::pre_exchange()
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    if ( (abscgi>1e-20) && (e[i]>Tc) && (type[i] == ntype) ) {
+    if ( (abscgi>1e-20) && (e[i]>Tt) && (type[i] == to_type) ) {
       double coord[3];
       // place an atom in the directions of color gradient
       double eij[3];
-      eij[0] = cg[i][0]/abscgi;
-      eij[1] = cg[i][1]/abscgi;
-      eij[2] = cg[i][2]/abscgi;
-      coord[0] = x[i][0] - eij[0]*dr;
-      coord[1] = x[i][1] - eij[1]*dr;
-      coord[2] = x[i][2] - eij[2]*dr;
+      eij[0] = random->uniform();
+      eij[1] = random->uniform();
+      eij[2] = random->uniform();
+      double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
+      coord[0] = x[i][0] + eij[0]*dr/eijabs;
+      coord[1] = x[i][1] + eij[1]*dr/eijabs;
+      coord[2] = x[i][2] + eij[2]*dr/eijabs;
       bool ok = insert_one_atom(coord, sublo, subhi);
       if (ok) {
 	nins++;
-	// change in energy of the particle
-	e[i] -= Cp;
-	e[atom->nlocal] = Tc;
+	// look for the neighbors of the type from_type
+	// and extract energy to all of them
+	double xtmp = x[i][0];
+	double ytmp = x[i][1];
+	double ztmp = x[i][2];
+	int** firstneigh = list->firstneigh;
+	int jnum = numneigh[i];
+	int* jlist = firstneigh[i];
+	// collect
+	double wtotal = 0.0;
+	for (int jj = 0; jj < jnum; jj++) {
+	  int j = jlist[jj];
+	  j &= NEIGHMASK;
+	  if (type[j]==from_type) {
+	    double delx = xtmp - x[j][0];
+	    double dely = ytmp - x[j][1];
+	    double delz = ztmp - x[j][2];
+	    double rsq = delx * delx + dely * dely + delz * delz;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      wfd = sph_dw_quintic2d(sqrt(rsq)*cutoff);
+	    } else {
+	      wfd = sph_dw_quintic3d(sqrt(rsq)*cutoff);
+	    }
+	    wtotal+=wfd;
+	  }
+	}
+
+	// distribute
+	for (int jj = 0; jj < jnum; jj++) {
+	  int j = jlist[jj];
+	  j &= NEIGHMASK;
+	  if (type[j]==from_type) {
+	    double delx = xtmp - x[j][0];
+	    double dely = ytmp - x[j][1];
+	    double delz = ztmp - x[j][2];
+	    double rsq = delx * delx + dely * dely + delz * delz;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      wfd = sph_dw_quintic2d(sqrt(rsq)*cutoff);
+	    } else {
+	      wfd = sph_dw_quintic3d(sqrt(rsq)*cutoff);
+	    }
+	    e[j] -= cp*wfd/wtotal;
+	  }
+	}
+	
+	e[i] = Tc;
+	e[atom->nlocal-1] = Tc;
+	v[atom->nlocal-1][0] = v[i][0];
+	v[atom->nlocal-1][1] = v[i][1];
+	v[atom->nlocal-1][2] = v[i][2];
+	// velocity must be the same as original atom
       }
     }
   }
+
   /// find a total number of inserted atoms
   int ninsall;
   MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
@@ -274,9 +356,11 @@ void FixPhaseChange::restart(char *buf)
   int n = 0;
   double *list = (double *) buf;
 
+  seed = static_cast<int> (list[n++]);
   nfirst = static_cast<int> (list[n++]);
   next_reneighbor = static_cast<int> (list[n++]);
 
+  random->reset(seed);
 }
 
 bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi)
@@ -314,13 +398,10 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
 	   newcoord[0] >= sublo[0] && newcoord[0] < subhi[0]) flag = 1;
 
   if (flag) {
-    atom->avec->create_atom(ntype,coord);
+    atom->avec->create_atom(to_type,coord);
     int m = atom->nlocal - 1;
-    atom->type[m] = ntype;
+    atom->type[m] = to_type;
     atom->mask[m] = 1 | groupbit;
-    atom->v[m][0] = 0.0;
-    atom->v[m][1] = 0.0;
-    atom->v[m][2] = 0.0;
     for (j = 0; j < nfix; j++)
       if (fix[j]->create_attribute) fix[j]->set_arrays(m);
   }
@@ -330,3 +411,4 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
     return false;
   }
 }
+
