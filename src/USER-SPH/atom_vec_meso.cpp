@@ -302,7 +302,7 @@ int AtomVecMeso::unpack_reverse_hybrid(int n, int *list, double *buf) {
 
 int AtomVecMeso::pack_comm(int n, int *list, double *buf, int pbc_flag,
 		int *pbc) {
-	printf("in AtomVecMeso::pack_comm\n");
+  //	printf("in AtomVecMeso::pack_comm\n");
 	int i, j, m;
 	double dx, dy, dz;
 

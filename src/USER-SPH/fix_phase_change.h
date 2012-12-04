@@ -31,23 +31,30 @@ class FixPhaseChange : public Fix {
   ~FixPhaseChange();
   int setmask();
   void init();
+  void init_list(int, class NeighList *);
   void pre_exchange();
   void write_restart(FILE *);
   void restart(char *);
   
  private:
-  int ntype,nfreq;
+  int from_type,to_type,nfreq,seed;
   int iregion,maxattempt,scaleflag;
   char *idregion;
   double xlo,xhi,ylo,yhi,zlo,zhi;
+  double cutoff;
   int nfirst;
+  class NeighList *list;
 
-  // crytical temperature
+  // critical temperature
   double Tc;
-  // specific heat of evaporation
-  double Cp;
+  // temperature which triggers phase change
+  double Tt;
+  // latent heat of evaporation
+  double cp;
   // how far a new atom should be placed
   double dr;
+
+  class RanPark *random;
 
   void options(int, char **);
   // insert one atom, return true if sucsesfull
