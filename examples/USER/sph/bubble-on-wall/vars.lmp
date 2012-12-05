@@ -1,12 +1,12 @@
 # number of particles in each of the directions
-variable          nx   equal 20
+variable          nx   equal 120
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"
 
 # size of the domain
-variable          Lx   equal  1.0
-variable          Ly   equal  1.0
+variable          Lx   equal  2.0
+variable          Ly   equal  ${Lx}*${ny}/${nx}
 if ${ndim}==3 then &
 "variable         Lz   equal ${Lx}"
 
@@ -42,7 +42,9 @@ variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
 variable          alpha equal 0.5
-#variable          alpha equal 1.0
+
+# add an uplift force to the gas particles
+#variable          gy    equal 0.0
 
 # type of the gas particle
 variable          g_type equal 1

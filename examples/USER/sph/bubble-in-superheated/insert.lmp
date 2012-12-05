@@ -6,7 +6,7 @@ atom_style         meso
 # TODO: make density fixed for the choosen particles
 boundary          p p p
 
-variable          ndim equal 2
+variable          ndim equal 3
 dimension         ${ndim}
 include           vars.lmp
 
@@ -94,11 +94,11 @@ thermo              10
 
 timestep           ${dt}
 variable          xcenter_per equal ${xcenter}+0.5*${dx}
-create_atoms      ${d_type} single  ${xcenter_per} ${ycenter} ${zcenter} units box
+variable          ycenter_per equal ${ycenter}+0.5*${dx}
+create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
 set               type ${g_type} meso_e 1.0
 set               type ${d_type} meso_e 1.0
-run               0
 
 region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
 variable           Ninsert equal 1000
@@ -114,9 +114,9 @@ compute            rg droplet gyration
 
 variable vrg equal c_rg
 variable vnd equal count(droplet)
-fix extra all print 1 "${vrg} ${vnd}" file rg.dat
+fix extra all print 10 "${vrg} ${vnd}" file rg.dat screen no
 
-run               100000 every 1 & 
+run               100000 pre no  post no every 10 &
 "group droplet type ${d_type}"
 
-# "set type ${g_type} meso_e 1.0" &
+
