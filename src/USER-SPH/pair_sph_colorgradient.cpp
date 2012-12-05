@@ -124,9 +124,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
         i = ilist[ii];
         colorgradient[i][0] = 0.0;
         colorgradient[i][1] = 0.0;
-	if (ndim==3) {
-	  colorgradient[i][2] = 0.0;
-	}
+	colorgradient[i][2] = 0.0;
       } // ii loop
 
       // add density at each atom via kernel function overlap

@@ -41,7 +41,7 @@ variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
 variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
-variable          alpha equal 1.0
+variable          alpha equal 10.0
 
 # size of the square
 variable          a_sq equal 0.2
