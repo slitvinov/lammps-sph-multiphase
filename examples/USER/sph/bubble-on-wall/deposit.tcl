@@ -7,9 +7,14 @@ mol modstyle 0 0 Points 16
 pbc set {1.0 1.0 1.0} -all
 
 set sel [atomselect top all]
-$sel set radius 0.015
+$sel set radius 0.018
 
-mol modstyle 0 0 VDW 0.600000 12.000000
+mol modstyle 0 0 VDW 0.600000 15.000000
+
+color Display Background white
+color Display FPS black
+color Axes Labels black
+axes location off
 
 # show only gas
 #mol modselect 0 0 (all) and user > 0 and name B
