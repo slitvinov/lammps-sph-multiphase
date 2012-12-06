@@ -195,7 +195,7 @@ void FixPhaseChange::pre_exchange()
   double **cg = atom->colorgradient;
   double *e   = atom->e;
   int *type = atom->type;
-  
+  /// TODO: how to distribute to ghosts?
   for (int i = 0; i < nlocal; i++) {
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
