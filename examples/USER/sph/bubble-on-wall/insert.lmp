@@ -118,7 +118,7 @@ variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.90
 variable           Tt equal 0.95
-variable           Cp equal 1.00
+variable           Cp equal 0.50
 variable           dr equal 0.5*${dx}
 fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 1234 region rinsert units box
 
@@ -136,3 +136,4 @@ echo              none
 run               25000 pre no  post no every 1 &
 "group droplet type ${d_type}" &
 "set               group boundary meso_e 1.0"
+"if ${vmi)>3 then quit"
