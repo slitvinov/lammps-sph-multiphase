@@ -120,7 +120,7 @@ variable           Tc equal 0.90
 variable           Tt equal 0.95
 variable           Cp equal 1.00
 variable           dr equal 0.5*${dx}
-fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
+fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 1234 region rinsert units box
 
 group              droplet type ${d_type}
 variable bodyfy atom mass*${gy}
@@ -133,6 +133,6 @@ variable vmi equal (bound(droplet,ymin)-${ylow})/${dx}
 fix extra all print 1 "${vrg} ${vnd} ${vmi}" file ${dname}/rg.dat
 
 echo              none
-run               22000 pre no  post no every 1 &
+run               25000 pre no  post no every 1 &
 "group droplet type ${d_type}" &
 "set               group boundary meso_e 1.0"
