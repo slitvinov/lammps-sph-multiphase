@@ -36,6 +36,15 @@ else &
 
 create_atoms       ${g_type} region box
 
+# create walls on the top and on the bottom
+variable     x1  equal 3*${dx}
+variable     x2  equal ${Lx}-2.5*${dx}
+variable     y1 equal 3*${dx}
+variable     y2  equal ${Ly}-2.5*${dx}
+region	     rflow block ${x1} ${x2} ${y1} ${y2} INF INF units box
+group	     flow region rflow
+group	     boundary subtract all flow
+
 # set mass of the particles
 mass               ${d_type} ${sph_mass_d}
 mass               ${g_type} ${sph_mass_g}
@@ -103,20 +112,24 @@ set               type ${d_type} meso_e 1.0
 region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.90
-variable           Tt equal 0.95
+variable           Tc equal 0.70
+variable           Tt equal 0.75
 variable           Cp equal 0.25
 variable           dr equal 0.5*${dx}
 fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
+
+#variable            a_sq equal 0.2
+#include             square.lmp
 
 group              droplet type ${d_type}
 compute            rg droplet gyration
 
 variable vrg equal c_rg
 variable vnd equal count(droplet)
-fix extra all print 10 "${vrg} ${vnd}" file rg.dat screen no
+fix extra all print 1 "${vrg} ${vnd}" file ${dname}/rg.dat screen no
 
-run               100000 pre no  post no every 10 &
+run               100000 pre no  post no every 1 &
+"set               group boundary meso_e 1.0" &
 "group droplet type ${d_type}"
 
 

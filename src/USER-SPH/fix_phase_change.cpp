@@ -224,10 +224,11 @@ void FixPhaseChange::pre_exchange()
 	int* jlist = firstneigh[i];
 	// collect
 	double wtotal = 0.0;
+	  /// TODO: make it run in parallel
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type) {
+	  if (type[j]==from_type && j<nlocal) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -246,7 +247,8 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type) {
+	  /// TODO: make it run in parallel
+	  if (type[j]==from_type && j<nlocal) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
