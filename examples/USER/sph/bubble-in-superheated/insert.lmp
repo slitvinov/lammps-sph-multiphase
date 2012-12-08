@@ -112,8 +112,8 @@ set               type ${d_type} meso_e 1.0
 region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.70
-variable           Tt equal 0.75
+variable           Tc equal 0.90
+variable           Tt equal 0.95
 variable           Cp equal 0.25
 variable           dr equal 0.5*${dx}
 fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
