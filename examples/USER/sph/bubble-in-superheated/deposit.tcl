@@ -2,7 +2,7 @@
 log vmd.tcl
 
 # read variable number of atoms
-topo readvarxyz data-wall/data.xyz
+topo readvarxyz [lindex $argv 0]/data.xyz
 mol modstyle 0 0 Points 16
 pbc set {1.0 1.0 1.0} -all
 

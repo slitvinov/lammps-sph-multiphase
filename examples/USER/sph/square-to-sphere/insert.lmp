@@ -90,21 +90,11 @@ variable            natoms equal count(all)
 thermo_style        custom step v_time v_natoms
 thermo              10
 
-timestep           ${dt}
-variable          x1 equal ${xcenter}-${a_sq}
-variable          x2 equal ${xcenter}+${a_sq}
-variable          y1 equal ${ycenter}-${a_sq}
-variable          y2 equal ${ycenter}+${a_sq}
-if ${ndim}==3 then &
-"variable          z1 equal ${zcenter}-${a_sq}" &
-"variable          z2 equal ${zcenter}+${a_sq}"
+timestep           0.0011410886614690962486
 
-if ${ndim}==3 then &
-"region          rsq block  ${x1} ${x2} ${y1} ${y2} ${z1} ${z2} units box" &
-else &
-"region           rsq block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box"
 
-set               region rsq type ${d_type}
+include            square.lmp
+
 
 write_restart      ${dname}/droplet.restart
 run               10000
