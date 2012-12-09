@@ -89,7 +89,7 @@ variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.90
 variable           Tt equal 0.95
-variable           Cp equal 1.0
+variable           Cp equal 0.2
 variable           dr equal 0.5*${dx}
 fix                fdep all phase_change &
                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
