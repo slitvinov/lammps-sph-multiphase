@@ -196,9 +196,20 @@ void FixPhaseChange::pre_exchange()
   double **cg = atom->colorgradient;
   double *rmass = atom->rmass;
   double *e   = atom->e;
+  double *de   = atom->de;
   int *type = atom->type;
+  
+  /// TODO: clear de
+  int nall;
+  if (force->newton) nall = atom->nlocal + atom->nghost;
+  else nall = atom->nlocal;
+  for (int i = 0; i < nall; i++) {
+    de[i] = 0.0;
+  }
+
   /// TODO: how to distribute to ghosts?
   for (int i = 0; i < nlocal; i++) {
+    // clear de, I will use it to transfer energy
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
@@ -233,7 +244,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type && j<nlocal) {
+	  if (type[j]==from_type) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -252,8 +263,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  /// TODO: make it run in parallel
-	  if (type[j]==from_type && j<nlocal) {
+	  if (type[j]==from_type) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -264,13 +274,15 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_dw_quintic3d(sqrt(rsq)*cutoff);
 	    }
-	    e[j] -= energy_to_dist*wfd/wtotal;
+	    de[j] -= energy_to_dist*wfd/wtotal;
 	  }
 	}
 	
 	e[i] = Tc;
+	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
 	e[atom->nlocal-1] = Tc;
+	de[atom->nlocal-1] = 0.0;
 	v[atom->nlocal-1][0] = v[i][0];
 	v[atom->nlocal-1][1] = v[i][1];
 	v[atom->nlocal-1][2] = v[i][2];
@@ -281,7 +293,8 @@ void FixPhaseChange::pre_exchange()
   /// find a total number of inserted atoms
   int ninsall;
   MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
-
+  next_reneighbor += nfreq;
+  
   // reset global natoms
   // set tag # of new particle beyond all previous atoms
   // if global map exists, reset it now instead of waiting for comm
@@ -299,9 +312,11 @@ void FixPhaseChange::pre_exchange()
     }
   }
 
-  // next timestep to insert
-  // next_reneighbor = 0 if done
-  next_reneighbor += nfreq;
+  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
+  comm->reverse_comm();
+  for (int i = 0; i < nlocal; i++) {
+    e[i] += de[i];
+  }
 }
 
 /* ----------------------------------------------------------------------
