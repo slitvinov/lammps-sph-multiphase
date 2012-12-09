@@ -51,7 +51,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   // required args
 
-  //ninsert = atoi(arg[3]);
   Tc = atof(arg[3]);
   Tt = atof(arg[4]);
   cp = atof(arg[5]);
@@ -193,6 +192,7 @@ void FixPhaseChange::pre_exchange()
   double **x = atom->x;
   double **v = atom->v;
   double **cg = atom->colorgradient;
+  double *mass = atom->mass;
   double *e   = atom->e;
   int *type = atom->type;
   /// TODO: how to distribute to ghosts?
@@ -213,9 +213,12 @@ void FixPhaseChange::pre_exchange()
       coord[2] = x[i][2] - eij[2]*dr/eijabs;
       bool ok = insert_one_atom(coord, sublo, subhi);
       if (ok) {
+	/// distribute energy to neighboring particles
+	/// latent heat + heat particle i + heat a new particle
+	double energy_to_dist = cp + (Tc - e[i] + Tc)*mass[from_type]/mass[to_type];
 	nins++;
 	// look for the neighbors of the type from_type
-	// and extract energy to all of them
+	// and extract energy from all of them
 	double xtmp = x[i][0];
 	double ytmp = x[i][1];
 	double ztmp = x[i][2];
@@ -259,7 +262,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_dw_quintic3d(sqrt(rsq)*cutoff);
 	    }
-	    e[j] -= cp*wfd/wtotal;
+	    e[j] -= energy_to_dist*wfd/wtotal;
 	  }
 	}
 	

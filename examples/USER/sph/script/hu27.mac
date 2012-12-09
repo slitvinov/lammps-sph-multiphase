@@ -3,22 +3,23 @@
 kill(all);
 
 d: 2;
-cg: [cg[j][0], cg[j][1]];
-eij: [eij[0], eij[1]];
-
+if d=2 then (
+  cg: [cg[j][0], cg[j][1]],
+  eij: [eij[0], eij[1]]
+) else (
+  cg: [cg[j][0], cg[j][1], cg[j][2]],
+  eij: [eij[0], eij[1], eij[2]]
+  );
 
 Pi(i,j):= ( 1/d*kron_delta(i, j) * cg.cg - cg[i]*cg[j] );
 
-
 display2d: false;
-
 ex[1]: sum(eij[k]*Pi(k, 1), k, 1, d);
 ex[2]: sum(eij[k]*Pi(k, 2), k, 1, d);
+if d=3 then (ex[3]: sum(eij[k]*Pi(k, 3), k, 1, d));
 
-/* sum(eij[i]*Pi(i, 3), i, 1, d); */
 
 /* simplified model from the code */
-/* interm0: 1/(cg.cg); */
 interm0: 1;
 interm1: (cg[1]*cg[1] - cg[2]*cg[2])/2;
 interm2: cg[1]*cg[2];
@@ -29,7 +30,9 @@ cgnew[2]: interm2*interm0;
 sforce[1]: cgnew[1]*eij[1] + cgnew[2]*eij[2];
 sforce[2]: cgnew[2]*eij[1] - cgnew[1]*eij[2];
 
+/*
 kill(cg);
 kill(eij);
-ratsimp(ev(sforce[2]+ex[2]));
 ratsimp(ev(sforce[1]+ex[1]));
+ratsimp(ev(sforce[2]+ex[2]));
+*/
