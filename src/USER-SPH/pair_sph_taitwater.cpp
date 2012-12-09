@@ -67,7 +67,7 @@ void PairSPHTaitwater::compute(int eflag, int vflag) {
   double **x = atom->x;
   double **f = atom->f;
   double *rho = atom->rho;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *de = atom->de;
   double *drho = atom->drho;
   int *type = atom->type;
@@ -112,7 +112,7 @@ void PairSPHTaitwater::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    imass = rmass[i];
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
@@ -128,7 +128,7 @@ void PairSPHTaitwater::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
 

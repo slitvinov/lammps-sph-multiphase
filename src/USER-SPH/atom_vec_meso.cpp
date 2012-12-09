@@ -30,18 +30,19 @@ using namespace LAMMPS_NS;
 AtomVecMeso::AtomVecMeso(LAMMPS *lmp, int narg, char **arg) :
 	AtomVec(lmp, narg, arg) {
 	molecular = 0;
-	mass_type = 1;
+	mass_type = 0;
 
 	comm_x_only = 0; // we communicate not only x forward but also vest ...
 	comm_f_only = 0; // we also communicate de and drho in reverse direction
-	size_forward = 11; // 3 + rho + colorgradient[3] + e + vest[3], that means we may only communicate 8 in hybrid
+	size_forward = 12; // 3 + rmass + rho + colorgradient[3] + e + vest[3], that means we may only communicate 8 in hybrid
 	size_reverse = 5; // 3 + drho + de
-	size_border = 15; // 6 + rho + colorgradient[3] + e + vest[3] + cv
+	size_border = 16; // 6 + rmass + rho + colorgradient[3] + e + vest[3] + cv
 	size_velocity = 3;
 	size_data_atom = 8;
 	size_data_vel = 4;
 	xcol_data = 6;
 
+	atom->rmass_flag = 1;
 	atom->e_flag = 1;
 	atom->rho_flag = 1;
 	atom->colorgradient_flag = 1;
@@ -75,6 +76,7 @@ void AtomVecMeso::grow(int n) {
 	rho = memory->grow(atom->rho, nmax, "atom:rho");
 	colorgradient = memory->grow(atom->colorgradient, nmax, 3, "atom:colorgradient");
 	drho = memory->grow(atom->drho, nmax*comm->nthreads, "atom:drho");
+	rmass = memory->grow(atom->rmass, nmax, "atom:rmass");
 	e = memory->grow(atom->e, nmax, "atom:e");
 	de = memory->grow(atom->de, nmax*comm->nthreads, "atom:de");
 	vest = memory->grow(atom->vest, nmax, 3, "atom:vest");
@@ -100,6 +102,7 @@ void AtomVecMeso::grow_reset() {
 	rho = atom->rho;
 	colorgradient = atom->colorgradient;
 	drho = atom->drho;
+	rmass = atom->rmass;
 	e = atom->e;
 	de = atom->de;
 	vest = atom->vest;
@@ -126,6 +129,7 @@ void AtomVecMeso::copy(int i, int j, int delflag) {
 	colorgradient[j][1] = colorgradient[i][1];
 	colorgradient[j][2] = colorgradient[i][2];
 	drho[j] = drho[i];
+	rmass[j] = rmass[i];
 	e[j] = e[i];
 	de[j] = de[i];
 	cv[j] = cv[i];
@@ -152,6 +156,7 @@ int AtomVecMeso::pack_comm_hybrid(int n, int *list, double *buf, int pbc_flag,
 	    buf[m++] = colorgradient[j][0];
 	    buf[m++] = colorgradient[j][1];
 	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    buf[m++] = vest[j][0];
 	    buf[m++] = vest[j][1];
@@ -167,6 +172,7 @@ int AtomVecMeso::pack_comm_hybrid(int n, int *list, double *buf, int pbc_flag,
 	    buf[m++] = colorgradient[j][0];
 	    buf[m++] = colorgradient[j][1];
 	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    if (mask[i] & deform_groupbit) {
 	      buf[m++] = vest[j][0] + dvx;
@@ -195,6 +201,7 @@ int AtomVecMeso::unpack_comm_hybrid(int n, int first, double *buf) {
 		colorgradient[i][0] = buf[m++];
 		colorgradient[i][1] = buf[m++];
 		colorgradient[i][2] = buf[m++];
+		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
 		vest[i][1] = buf[m++];
@@ -217,6 +224,7 @@ int AtomVecMeso::pack_border_hybrid(int n, int *list, double *buf, int pbc_flag,
 	    buf[m++] = colorgradient[j][0];
 	    buf[m++] = colorgradient[j][1];
 	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    buf[m++] = vest[j][0];
 	    buf[m++] = vest[j][1];
@@ -232,6 +240,7 @@ int AtomVecMeso::pack_border_hybrid(int n, int *list, double *buf, int pbc_flag,
 	    buf[m++] = colorgradient[j][0];
 	    buf[m++] = colorgradient[j][1];
 	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    if (mask[i] & deform_groupbit) {
 	      buf[m++] = vest[j][0] + dvx;
@@ -260,6 +269,7 @@ int AtomVecMeso::unpack_border_hybrid(int n, int first, double *buf) {
 		colorgradient[i][0] = buf[m++];
 		colorgradient[i][1] = buf[m++];
 		colorgradient[i][2] = buf[m++];
+		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
 		vest[i][1] = buf[m++];
@@ -317,6 +327,7 @@ int AtomVecMeso::pack_comm(int n, int *list, double *buf, int pbc_flag,
 			buf[m++] = colorgradient[j][0];
 			buf[m++] = colorgradient[j][1];
 			buf[m++] = colorgradient[j][2];
+			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = vest[j][0];
 			buf[m++] = vest[j][1];
@@ -341,6 +352,7 @@ int AtomVecMeso::pack_comm(int n, int *list, double *buf, int pbc_flag,
 			buf[m++] = colorgradient[j][0];
 			buf[m++] = colorgradient[j][1];
 			buf[m++] = colorgradient[j][2];
+			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = vest[j][0];
 			buf[m++] = vest[j][1];
@@ -372,6 +384,7 @@ int AtomVecMeso::pack_comm_vel(int n, int *list, double *buf, int pbc_flag,
 			buf[m++] = colorgradient[j][0];
 			buf[m++] = colorgradient[j][1];
 			buf[m++] = colorgradient[j][2];
+			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = vest[j][0];
 			buf[m++] = vest[j][1];
@@ -400,6 +413,7 @@ int AtomVecMeso::pack_comm_vel(int n, int *list, double *buf, int pbc_flag,
 		    buf[m++] = colorgradient[j][0];
 		    buf[m++] = colorgradient[j][1];
 		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    buf[m++] = vest[j][0];
 		    buf[m++] = vest[j][1];
@@ -427,6 +441,7 @@ int AtomVecMeso::pack_comm_vel(int n, int *list, double *buf, int pbc_flag,
 		    buf[m++] = colorgradient[j][0];
 		    buf[m++] = colorgradient[j][1];
 		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    if (mask[i] & deform_groupbit) {
 		      buf[m++] = vest[j][0] + dvx;
@@ -459,6 +474,7 @@ void AtomVecMeso::unpack_comm(int n, int first, double *buf) {
 		colorgradient[i][0] = buf[m++];
 		colorgradient[i][1] = buf[m++];
 		colorgradient[i][2] = buf[m++];
+		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
 		vest[i][1] = buf[m++];
@@ -485,6 +501,7 @@ void AtomVecMeso::unpack_comm_vel(int n, int first, double *buf) {
 		colorgradient[i][0] = buf[m++];
 		colorgradient[i][1] = buf[m++];
 		colorgradient[i][2] = buf[m++];
+		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
 		vest[i][1] = buf[m++];
@@ -549,6 +566,7 @@ int AtomVecMeso::pack_border(int n, int *list, double *buf, int pbc_flag,
 			buf[m++] = colorgradient[j][0];
 			buf[m++] = colorgradient[j][1];
 			buf[m++] = colorgradient[j][2];
+			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = cv[j];
 			buf[m++] = vest[j][0];
@@ -577,6 +595,7 @@ int AtomVecMeso::pack_border(int n, int *list, double *buf, int pbc_flag,
 			buf[m++] = colorgradient[j][0];
 			buf[m++] = colorgradient[j][1];
 			buf[m++] = colorgradient[j][2];
+			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = cv[j];
 			buf[m++] = vest[j][0];
@@ -612,6 +631,7 @@ int AtomVecMeso::pack_border_vel(int n, int *list, double *buf, int pbc_flag,
 			buf[m++] = colorgradient[j][0];
 			buf[m++] = colorgradient[j][1];
 			buf[m++] = colorgradient[j][2];
+			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = cv[j];
 			buf[m++] = vest[j][0];
@@ -644,6 +664,7 @@ int AtomVecMeso::pack_border_vel(int n, int *list, double *buf, int pbc_flag,
 		    buf[m++] = colorgradient[j][0];
 		    buf[m++] = colorgradient[j][1];
 		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    buf[m++] = cv[j];
 		    buf[m++] = vest[j][0];
@@ -675,6 +696,7 @@ int AtomVecMeso::pack_border_vel(int n, int *list, double *buf, int pbc_flag,
 		    buf[m++] = colorgradient[j][0];
 		    buf[m++] = colorgradient[j][1];
 		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    buf[m++] = cv[j];
 		    if (mask[i] & deform_groupbit) {
@@ -713,6 +735,7 @@ void AtomVecMeso::unpack_border(int n, int first, double *buf) {
 		colorgradient[i][0] = buf[m++];
 		colorgradient[i][1] = buf[m++];
 		colorgradient[i][2] = buf[m++];
+		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		cv[i] = buf[m++];
 		vest[i][0] = buf[m++];
@@ -745,6 +768,7 @@ void AtomVecMeso::unpack_border_vel(int n, int first, double *buf) {
 		colorgradient[i][0] = buf[m++];
 		colorgradient[i][1] = buf[m++];
 		colorgradient[i][2] = buf[m++];
+		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		cv[i] = buf[m++];
 		vest[i][0] = buf[m++];
@@ -775,6 +799,7 @@ int AtomVecMeso::pack_exchange(int i, double *buf) {
 	buf[m++] = colorgradient[i][0];
 	buf[m++] = colorgradient[i][1];
 	buf[m++] = colorgradient[i][2];
+	buf[m++] = rmass[i];
 	buf[m++] = e[i];
 	buf[m++] = cv[i];
 	buf[m++] = vest[i][0];
@@ -812,6 +837,7 @@ int AtomVecMeso::unpack_exchange(double *buf) {
 	colorgradient[nlocal][0] = buf[m++];
 	colorgradient[nlocal][1] = buf[m++];
 	colorgradient[nlocal][2] = buf[m++];
+	rmass[nlocal] = buf[m++];
 	e[nlocal] = buf[m++];
 	cv[nlocal] = buf[m++];
 	vest[nlocal][0] = buf[m++];
@@ -836,7 +862,7 @@ int AtomVecMeso::size_restart() {
         int i;
 
 	int nlocal = atom->nlocal;
-	int n = 20 * nlocal; // 11 + rho + colorgradient[3] + e + cv + vest[3]
+	int n = 21 * nlocal; // 11 + rmass + rho + colorgradient[3] + e + cv + vest[3]
 
         if (atom->nextra_restart)
                 for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
@@ -868,6 +894,7 @@ int AtomVecMeso::pack_restart(int i, double *buf) {
 	buf[m++] = colorgradient[i][0];
 	buf[m++] = colorgradient[i][1];
 	buf[m++] = colorgradient[i][2];
+	buf[m++] = rmass[i];
 	buf[m++] = e[i];
 	buf[m++] = cv[i];
 	buf[m++] = vest[i][0];
@@ -909,6 +936,7 @@ int AtomVecMeso::unpack_restart(double *buf) {
 	colorgradient[nlocal][0] = buf[m++];
 	colorgradient[nlocal][1] = buf[m++];
 	colorgradient[nlocal][2] = buf[m++];
+	rmass[nlocal] = buf[m++];
 	e[nlocal] = buf[m++];
 	cv[nlocal] = buf[m++];
 	vest[nlocal][0] = buf[m++];
@@ -950,6 +978,7 @@ void AtomVecMeso::create_atom(int itype, double *coord) {
 	colorgradient[nlocal][0] = 0.0;
 	colorgradient[nlocal][1] = 0.0;
 	colorgradient[nlocal][2] = 0.0;
+	rmass[nlocal] = 0.0;
 	e[nlocal] = 0.0;
 	cv[nlocal] = 1.0;
 	vest[nlocal][0] = 0.0;
@@ -980,8 +1009,9 @@ void AtomVecMeso::data_atom(double *coord, tagint imagetmp, char **values) {
                 error->one(FLERR,"Invalid atom type in Atoms section of data file");
 
         rho[nlocal] = atof(values[2]);
-        e[nlocal] = atof(values[3]);
-        cv[nlocal] = atof(values[4]);
+        rmass[nlocal] = atof(values[3]);
+        e[nlocal] = atof(values[4]);
+        cv[nlocal] = atof(values[5]);
 
         x[nlocal][0] = coord[0];
         x[nlocal][1] = coord[1];
@@ -1018,10 +1048,11 @@ void AtomVecMeso::data_atom(double *coord, tagint imagetmp, char **values) {
 int AtomVecMeso::data_atom_hybrid(int nlocal, char **values) {
 
   rho[nlocal] = atof(values[0]);
-  e[nlocal] = atof(values[1]);
-  cv[nlocal] = atof(values[2]);
+  rmass[nlocal] = atof(values[1]);
+  e[nlocal] = atof(values[2]);
+  cv[nlocal] = atof(values[3]);
 
-  return 3;
+  return 4;
 }
 
 /* ----------------------------------------------------------------------
@@ -1045,10 +1076,12 @@ bigint AtomVecMeso::memory_usage() {
 		bytes += memory->usage(v, nmax, 3);
 	if (atom->memcheck("f"))
 		bytes += memory->usage(f, nmax*comm->nthreads, 3);
+	if (atom->memcheck("rmass"))
+		bytes += memory->usage(rmass, nmax);
 	if (atom->memcheck("rho"))
 		bytes += memory->usage(rho, nmax);
 	if (atom->memcheck("colorgradient"))
-		bytes += memory->usage(colorgradient, nmax);
+	        bytes += memory->usage(colorgradient, nmax, 3);
 	if (atom->memcheck("drho"))
 		bytes += memory->usage(drho, nmax*comm->nthreads);
 	if (atom->memcheck("e"))

@@ -101,7 +101,6 @@ void FixMesoStationary::final_integrate() {
   double *drho = atom->drho;
   int *type = atom->type;
   int *mask = atom->mask;
-  double *mass = atom->mass;
   int nlocal = atom->nlocal;
   if (igroup == atom->firstgroup)
     nlocal = atom->nfirst;

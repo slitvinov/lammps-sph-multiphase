@@ -87,7 +87,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
   double *rho = atom->rho;
   double **colorgradient = atom->colorgradient;
   int *type = atom->type;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
 
   // check consistency of pair coefficients
 
@@ -172,8 +172,8 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    }
 	    double rij = sqrt(rsq);	    
 	    double Fij = - wfd / rij;
-	    double Vi = mass[itype]/rho[i]; 
-	    double Vj = mass[jtype]/rho[j];
+	    double Vi = rmass[i]/rho[i]; 
+	    double Vj = rmass[j]/rho[j];
 	    double Vi2 = Vi*Vi;
 	    double Vj2 = Vj*Vj;
 

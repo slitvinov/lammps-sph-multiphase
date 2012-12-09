@@ -65,7 +65,7 @@ class AtomVecMeso : public AtomVec {
   int *tag,*type,*mask;
   tagint *image;
   double **x,**v,**f;
-  double *rho, *drho, *e, *de, *cv;
+  double *rmass, *rho, *drho, *e, *de, *cv;
   double **colorgradient;
   double **vest; // estimated velocity during force computation
 };

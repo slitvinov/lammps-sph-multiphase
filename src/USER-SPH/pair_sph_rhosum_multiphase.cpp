@@ -82,7 +82,7 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
   double **x = atom->x;
   double *rho = atom->rho;
   int *type = atom->type;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
 
   // check consistency of pair coefficients
 
@@ -135,7 +135,7 @@ void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
         ytmp = x[i][1];
         ztmp = x[i][2];
         itype = type[i];
-        double imass = mass[itype];
+        double imass = rmass[i];
         jlist = firstneigh[i];
         jnum = numneigh[i];
 
