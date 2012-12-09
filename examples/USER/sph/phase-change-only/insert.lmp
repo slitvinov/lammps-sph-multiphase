@@ -102,7 +102,7 @@ variable vrg equal c_rg
 variable vnd equal count(droplet)
 fix extra all print 1 "${vrg} ${vnd}" file ${dname}/rg.dat screen no
 
-run               100000 pre no  post no every 1 &
+run               100 pre no  post no every 1 &
 "group droplet type ${d_type}"
 
 

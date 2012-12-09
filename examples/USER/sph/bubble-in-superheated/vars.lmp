@@ -41,7 +41,10 @@ variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
 variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
-variable          alpha equal 1.0/${dx}
+if ${ndim}==3 then &
+"variable          alpha equal 1.0/${dx}" &
+else &
+"variable          alpha equal 1.0"
 
 # type of the gas particle
 variable          g_type equal 1

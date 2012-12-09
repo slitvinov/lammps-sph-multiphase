@@ -3,7 +3,7 @@ A = 0.0038854976612842
 B = 1.5
 
 set macros
-lim="[200:1000]"
+lim="[:][:]"
 file="data-wall3/rg.dat"
 fit @lim f(x) file u 0:2 via B, A
 
