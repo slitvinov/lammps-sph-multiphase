@@ -35,22 +35,12 @@ else &
 "lattice            sc ${dx}"
 
 create_atoms       ${g_type} region box
-
-
-# set mass of the particles
-mass               ${d_type} ${sph_mass_d}
-mass               ${g_type} ${sph_mass_g}
-
-set                 type ${d_type} meso_rho ${sph_rho_d}
-set                 type ${g_type} meso_rho ${sph_rho_g}
-
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
 
 compute         ie_atom all meso_e/atom
 compute         ie all reduce sum c_ie_atom
 
-# do full time integration for all particles
 fix                integrate_fix_full all meso/stationary
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
@@ -63,9 +53,7 @@ neigh_modify       delay 0 every 1
 communicate        single vel yes
 set                group all meso_rho ${sph_rho_g}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 sph/heatconduction &
-                   sph/surfacetension
-
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 sph/heatconduction
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 
 variable           cg_cutoff equal 3.0*${dx}
@@ -74,7 +62,6 @@ pair_coeff         ${g_type} ${d_type} sph/colorgradient ${cg_cutoff} ${alpha}
 pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
 
 
-pair_coeff         * * sph/surfacetension ${h}
 pair_coeff         * * sph/heatconduction  0.01 ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
@@ -90,6 +77,10 @@ variable          xcenter_per equal ${xcenter}+0.5*${dx}
 variable          ycenter_per equal ${ycenter}+0.5*${dx}
 create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+set               type ${d_type} meso_rho ${sph_rho_d}
+set               type ${g_type} meso_rho ${sph_rho_g}
 set               type ${g_type} meso_e 1.0
 set               type ${d_type} meso_e 1.0
 
@@ -100,10 +91,7 @@ variable           Tc equal 0.9
 variable           Tt equal 0.9
 variable           Cp equal 1.0
 variable           dr equal 0.5*${dx}
-fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
-
-#variable            a_sq equal 0.2
-#include             square.lmp
+#fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
 
 group              droplet type ${d_type}
 compute            rg droplet gyration
