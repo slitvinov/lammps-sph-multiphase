@@ -217,13 +217,16 @@ void FixPhaseChange::pre_exchange()
       double coord[3];
       // place an atom in the directions of color gradient
       double eij[3];
-      eij[0] = random->uniform() - 0.5;
-      eij[1] = random->uniform() - 0.5;
-      eij[2] = random->uniform() - 0.5;
+      // eij[0] = random->uniform() - 0.5;
+      // eij[1] = random->uniform() - 0.5;
+      // eij[2] = random->uniform() - 0.5;
+      eij[0] = cg[i][0];
+      eij[1] = cg[i][1];
+      eij[2] = cg[i][2];
       double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
-      coord[0] = x[i][0] - eij[0]*dr/eijabs;
-      coord[1] = x[i][1] - eij[1]*dr/eijabs;
-      coord[2] = x[i][2] - eij[2]*dr/eijabs;
+      coord[0] = x[i][0] + eij[0]*dr/eijabs;
+      coord[1] = x[i][1] + eij[1]*dr/eijabs;
+      coord[2] = x[i][2] + eij[2]*dr/eijabs;
       bool ok = insert_one_atom(coord, sublo, subhi);
       if (ok) {
 	/// distribute energy to neighboring particles

@@ -6,7 +6,7 @@ atom_style         meso
 # TODO: make density fixed for the choosen particles
 boundary          p p p
 
-variable          ndim equal 3
+#variable          ndim equal 3 
 dimension         ${ndim}
 include           vars.lmp
 
@@ -54,6 +54,8 @@ group	     boundary subtract all flow
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
 compute         ie_atom all meso_e/atom
+compute         ie all reduce sum c_ie_atom
+variable        vie equal c_ie
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
@@ -89,49 +91,57 @@ pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         * * sph/heatconduction  0.01 ${h}
+pair_coeff         * * sph/heatconduction  ${D_heat} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
 
 variable            time equal step*dt
 variable            natoms equal count(all)
-thermo_style        custom step v_time v_natoms
-thermo              1
-
 
 timestep           ${dt}
 variable          xcenter_per equal ${xcenter}+0.5*${dx}
 variable          ycenter_per equal ${ycenter}+0.5*${dx}
-create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+#create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+
+region            rsph sphere ${xcenter} ${ycenter} ${zcenter} 0.1 units box
+group             gsph region rsph
+set               region rsph type ${d_type}
 
 set               type ${g_type} meso_e 1.0
-set               type ${d_type} meso_e 1.0
 set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
 set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
 
-region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.90
-variable           Tt equal 0.92
+variable           Tt equal 0.95
 variable           Cp equal 0.50
-variable           dr equal 0.5*${dx}
-fix                fdep all phase_change &
-                   ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
-
+variable           dr equal 0.50*${dx}
 group              droplet type ${d_type}
-compute            rg droplet gyration
 
-variable vrg equal c_rg
-variable vnd equal count(droplet)
-fix extra all print 1 "${vrg} ${vnd}" file ${dname}/rg.dat screen no
+compute         crg droplet gyration
+compute         ied droplet reduce sum c_ie_atom
+variable        vied equal c_ied
 
-run               100000 pre no  post no every 1 &
-"set               group boundary meso_e 1.0" &
-"group droplet type ${d_type}"
+variable vrg equal c_crg
+variable vnd equal count(droplet)*${dx}^${ndim}
+# time, volume of droplet, total energy, energy of droplet
+fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg}" file ${dname}/rg.dat screen no
+
+# set fix temperature on the wall
+fix             fidtemp boundary setmesode 0.0
+
+thermo_style        custom step v_time v_natoms v_vnd
+thermo              10
 
 
+run               200
+set               type ${d_type} meso_e ${Tc}
+fix                fdep droplet phase_change &
+                   ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
+                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
+
+run               10000000

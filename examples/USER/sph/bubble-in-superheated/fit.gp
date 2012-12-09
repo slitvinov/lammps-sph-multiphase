@@ -1,15 +1,16 @@
-f(x) = A*abs(x)**B
+f(x) = A*abs(x)**B + C
 A = 0.0038854976612842
 B = 1.5
+C = 1.0
 
 set macros
-lim="[:][:]"
-file="data-wall3/rg.dat"
-fit @lim f(x) file u 0:2 via B, A
+lim="[0.06:0.15][:]"
+file="data-nx20-ndim3-np8b/rg.dat"
+fit @lim f(x) file u 1:2 via A, C, B
 
 set xlabel "t, time"
-set ylabel "number of vapor particles"
+set ylabel "Volume of bubble"
 
 set fit errorvariables
 set key left
-plot @lim file u 0:2 w lp, f(x) t sprintf("A*t^%.2f +/- %.2f", B, B_err)
+plot file u 1:2 w lp, f(x) t sprintf("A*t^%.2f +/- %.3f", B, B_err)

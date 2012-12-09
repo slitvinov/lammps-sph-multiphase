@@ -32,7 +32,7 @@ variable          rbackground equal 0.0
 
 
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 20
+variable          Nfreq equal 100
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
@@ -41,11 +41,9 @@ variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
 if ${ndim}==3 then &
-"variable          alpha equal 20.0" &
+"variable          D_heat equal 0.01" &
 else &
-"variable          alpha equal 1.0"
-
-variable           D_heat equal 0.2
+"variable          D_heat equal 0.01"
 
 # type of the gas particle
 variable          g_type equal 1

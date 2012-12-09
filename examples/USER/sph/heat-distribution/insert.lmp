@@ -6,7 +6,7 @@ atom_style         meso
 # TODO: make density fixed for the choosen particles
 boundary          p p p
 
-variable          ndim equal 3
+#variable          ndim equal 3 
 dimension         ${ndim}
 include           vars.lmp
 
@@ -36,24 +36,29 @@ else &
 
 create_atoms       ${g_type} region box
 
+# create walls on the top and on the bottom
+variable     x1  equal 3*${dx}
+variable     x2  equal ${Lx}-2.5*${dx}
+variable     y1 equal 3*${dx}
+variable     y2  equal ${Ly}-2.5*${dx}
+region	     rflow block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box
 
-set                 type ${d_type} meso_rho ${sph_rho_d}
-set                 type ${g_type} meso_rho ${sph_rho_g}
+group	     flow region rflow
+group	     boundary subtract all flow
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
 compute         ie_atom all meso_e/atom
+compute         ie all reduce sum c_ie_atom
+variable        vie equal c_ie
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y vx vy &
-c_rho_peratom c_colorgradient_peratom c_ie_atom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
+                                      c_rho_peratom c_ie_atom
 dump_modify        dump_id first yes sort id pad 8
 
-#include            ${ndim}-image.lmp
-variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
-include            settimestep.lmp
 
 neighbor           3.0e-2 bin
 neigh_modify       delay 0 every 1
@@ -61,41 +66,30 @@ neigh_modify       delay 0 every 1
 communicate        single vel yes
 set                group all meso_rho ${sph_rho_g}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
-                   sph/taitwater/morris sph/surfacetension
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/heatconduction
 
 pair_coeff         * * sph/rhosum_multiphase   ${h}
-
-variable           cg_cutoff equal 3.0*${dx}
-pair_coeff         ${d_type} ${d_type} sph/colorgradient ${cg_cutoff} 0
-pair_coeff         ${g_type} ${d_type} sph/colorgradient ${cg_cutoff} ${alpha}
-pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
-
-# harmonic mean of viscosities
-variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
-pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} ${h} ${rbackground}
-pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${h} ${rbackground}
-pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
-
-pair_coeff         * * sph/surfacetension ${h}
+pair_coeff         * * sph/heatconduction  ${D_heat} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
 
 variable            time equal step*dt
-variable            natoms equal count(all)
-thermo_style        custom step v_time v_natoms
-thermo              10
 
-timestep           0.0011410886614690962486
+timestep            1e-3
 
-
-#include            square.lmp
-include            cube.lmp
+set               group boundary meso_e 2.0
+set               group flow     meso_e 1.0
 set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
+set               type ${d_type} meso_rho ${sph_rho_d}
+set               type ${g_type} meso_rho ${sph_rho_g}
+
+
+thermo_style        custom step v_time
+thermo              10
+
+run               1000
 
 
 
-write_restart      ${dname}/droplet.restart
-run               10000
