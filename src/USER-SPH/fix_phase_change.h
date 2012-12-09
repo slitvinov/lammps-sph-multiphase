@@ -53,6 +53,8 @@ class FixPhaseChange : public Fix {
   double cp;
   // how far a new atom should be placed
   double dr;
+  // mass of a particle of a new phase
+  double to_mass;
 
   class RanPark *random;
 

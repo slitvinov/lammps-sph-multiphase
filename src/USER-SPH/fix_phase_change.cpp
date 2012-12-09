@@ -10,7 +10,7 @@
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
-
+#include "assert.h"
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
@@ -43,23 +43,25 @@ using namespace FixConst;
 FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  int nnarg = 12;
+  int nnarg = 13;
   if (narg < nnarg) error->all(FLERR,"Illegal fix phase_change command");
 
   restart_global = 1;
   time_depend = 1;
 
   // required args
-
-  Tc = atof(arg[3]);
-  Tt = atof(arg[4]);
-  cp = atof(arg[5]);
-  dr = atof(arg[6]);
-  cutoff = atof(arg[7]);
-  from_type = atoi(arg[8]);
-  to_type = atoi(arg[9]);
-  nfreq = atoi(arg[10]);
-  seed = atoi(arg[11]);
+  int m = 3;
+  Tc = atof(arg[m++]);
+  Tt = atof(arg[m++]);
+  cp = atof(arg[m++]);
+  dr = atof(arg[m++]);
+  to_mass = atof(arg[m++]);
+  cutoff = atof(arg[m++]);
+  from_type = atoi(arg[m++]);
+  to_type = atoi(arg[m++]);
+  nfreq = atoi(arg[m++]);
+  seed = atoi(arg[m++]);
+  assert(m==nnarg);
 
   if (seed <= 0) error->all(FLERR,"Illegal value for seed");
 
@@ -192,7 +194,7 @@ void FixPhaseChange::pre_exchange()
   double **x = atom->x;
   double **v = atom->v;
   double **cg = atom->colorgradient;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *e   = atom->e;
   int *type = atom->type;
   /// TODO: how to distribute to ghosts?
@@ -215,7 +217,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp + (Tc - e[i] + Tc)*mass[from_type]/mass[to_type];
+	double energy_to_dist = cp + (Tc - e[i] + Tc)*rmass[i]/to_mass;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -267,11 +269,11 @@ void FixPhaseChange::pre_exchange()
 	}
 	
 	e[i] = Tc;
+	rmass[atom->nlocal-1] = to_mass;
 	e[atom->nlocal-1] = Tc;
 	v[atom->nlocal-1][0] = v[i][0];
 	v[atom->nlocal-1][1] = v[i][1];
 	v[atom->nlocal-1][2] = v[i][2];
-	// velocity must be the same as original atom
       }
     }
   }
