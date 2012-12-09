@@ -1,11 +1,11 @@
 f(x) = A*abs(x)**B
 A = 0.0038854976612842
-B = 1.2
+B = 1.5
 
 set macros
-lim="[][20:500]"
+lim="[200:1000]"
 file="data-wall3/rg.dat"
-fit @lim f(x) file u 0:2 via B
+fit @lim f(x) file u 0:2 via B, A
 
 set xlabel "t, time"
 set ylabel "number of vapor particles"

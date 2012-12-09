@@ -23,11 +23,6 @@ if ${ndim}==3 then &
 else &
 "lattice            sq ${dx}"
 create_atoms       1 region box
-
-
-# set mass of the particles
-mass               1 ${sph_mass}
-
 compute            rho_peratom all meso_rho/atom
 
 # do full time integration for all particles
@@ -44,6 +39,7 @@ neigh_modify       delay 0 every 1
 
 communicate        single vel yes
 set                group all meso_rho ${sph_rho}
+set                group all mass ${sph_mass}
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/morris
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}

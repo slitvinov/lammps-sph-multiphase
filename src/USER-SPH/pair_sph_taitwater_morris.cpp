@@ -68,7 +68,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   double **x = atom->x;
   double **f = atom->f;
   double *rho = atom->rho;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *de = atom->de;
   double *drho = atom->drho;
   int *type = atom->type;
@@ -112,7 +112,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    imass = rmass[i];
 
     double pi = sph_pressure(B[itype], rho0[itype], rbackground[itype], rho[i]);
     fi = pi / (rho[i] * rho[i]);
@@ -126,7 +126,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];

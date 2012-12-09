@@ -60,7 +60,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
   double **x = atom->x;
   double *e = atom->e;
   double *de = atom->de;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *rho = atom->rho;
   int *type = atom->type;
   int nlocal = atom->nlocal;
@@ -84,7 +84,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    imass = rmass[i];
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -95,7 +95,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
@@ -116,7 +116,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
           wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
         }
 
-        jmass = mass[jtype];
+        jmass = rmass[j];
         D = alpha[itype][jtype]; // diffusion coefficient
 
         deltaE = 2.0 * imass * jmass / (imass+jmass);

@@ -62,7 +62,7 @@ void PairSPHLJ::compute(int eflag, int vflag) {
   double **x = atom->x;
   double **f = atom->f;
   double *rho = atom->rho;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *de = atom->de;
   double *e = atom->e;
   double *cv = atom->cv;
@@ -90,7 +90,7 @@ void PairSPHLJ::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    imass = rmass[i];
 
     // compute pressure of particle i with LJ EOS
     LJEOS2(rho[i], e[i], cv[i], &fi, &ci);
@@ -106,7 +106,7 @@ void PairSPHLJ::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
