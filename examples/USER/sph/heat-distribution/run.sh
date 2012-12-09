@@ -1,10 +1,9 @@
 #! /bin/bash
 
-nx=40
-ndim=3
+nx=30
+ndim=2
 np=8
-dname=data-nx${nx}-ndim${ndim}-np${np}b
-rm -rf ${dname}
+dname=data-nx${nx}-ndim${ndim}-np${np}
 mkdir -p ${dname}
 mpirun -np ${np}  ../../../../src/lmp_linux -in insert.lmp -var ndim ${ndim} -var nx ${nx} -var dname ${dname}
 
