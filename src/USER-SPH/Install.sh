@@ -19,6 +19,7 @@ if (test $1 = 1) then
   cp -p compute_meso_colorgradient_atom.cpp ..
   cp -p compute_meso_t_atom.cpp ..
   cp -p fix_meso.cpp ..
+  cp -p fix_setmesode.cpp ..
   cp -p fix_meso_stationary.cpp ..
 
   cp -p fix_phase_change.h ..
@@ -37,6 +38,7 @@ if (test $1 = 1) then
   cp -p compute_meso_rho_atom.h ..
   cp -p compute_meso_colorgradient_atom.h ..
   cp -p compute_meso_t_atom.h ..
+  cp -p fix_setmesode.h ..
   cp -p fix_meso.h ..
   cp -p fix_meso_stationary.h ..
 
@@ -57,6 +59,7 @@ elif (test $1 = 0) then
   rm -f ../compute_meso_colorgradient_atom.cpp
   rm -f ../compute_meso_t_atom.cpp
   rm -f ../sph_kernel_quintic.cpp
+  rm -f ../fix_setmesode.cpp
   rm -f ../fix_meso.cpp
   rm -f ../fix_meso_stationary.cpp
 
@@ -77,6 +80,7 @@ elif (test $1 = 0) then
   rm -f ../compute_meso_t_atom.h
   rm -f ../sph_kernel_quintic.h
   rm -f ../fix_meso.h
+  rm -f ../fix_setmesode.h
   rm -f ../fix_meso_stationary.h
 
 fi
