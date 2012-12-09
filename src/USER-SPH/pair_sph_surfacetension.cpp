@@ -60,7 +60,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
   double **x = atom->x;
   double **f = atom->f;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *rho = atom->rho;
   double **cg = atom->colorgradient;
   const int ndim = domain->dimension;
@@ -87,7 +87,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    imass = rmass[i];
 
     double abscgi;
     if (ndim == 3) {
@@ -116,7 +116,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
@@ -129,7 +129,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 
-        jmass = mass[jtype];
         if (ndim==2) {
 	  eij[0]= delx/sqrt(rsq); 
 	  eij[1]= dely/sqrt(rsq);    
