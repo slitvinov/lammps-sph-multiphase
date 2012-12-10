@@ -100,13 +100,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
     }
     // TODO: FixMe
     double epsilon = 1e-20;
-    // if (abscgi > epsilon) {
-    //   std::cout << "colorgradient: "
-    // 		<< xtmp << ' ' << ytmp << ' ' << ztmp << ' '
-    // 		<< cg[i][0] << ' ' << cg[i][1] << ' ' << cg[i][2] << '\n';
-    // }
-
-
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
       j &= NEIGHMASK;
@@ -182,7 +175,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	const double Vi = imass / rho[i];
 	const double Vj = jmass / rho[j];
 	const double rij = sqrt(rsq);	    
-        const double Fij = -wfd / rij;
+        const double Fij = -wfd ;
 
 	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
 	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij;
