@@ -1,8 +1,8 @@
 #! /bin/bash
 
-nx=20
+nx=80
 ndim=3
-np=1
+np=8
 dname=data-nx${nx}-ndim${ndim}-np${np}-perpcg-withst
 rm -rf ${dname}
 mkdir -p ${dname}

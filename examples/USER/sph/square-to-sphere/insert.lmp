@@ -6,7 +6,7 @@ atom_style         meso
 # TODO: make density fixed for the choosen particles
 boundary          p p p
 
-variable          ndim equal 3
+#variable          ndim equal 3
 dimension         ${ndim}
 include           vars.lmp
 
@@ -87,7 +87,7 @@ variable            natoms equal count(all)
 thermo_style        custom step v_time v_natoms
 thermo              10
 
-timestep           0.0011410886614690962486
+timestep           ${dt}
 
 
 #include            square.lmp
@@ -97,5 +97,14 @@ set               type ${g_type} mass ${sph_mass_g}
 
 
 
-write_restart      ${dname}/droplet.restart
-run               10000
+group             droplet type ${d_type}
+compute           crg droplet gyration
+variable          vrg equal c_crg
+
+write_restart     ${dname}/droplet.restart
+variable          time equal step*dt
+fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
+
+variable          nstep equal 0.1/${dt}
+
+run               ${nstep}
