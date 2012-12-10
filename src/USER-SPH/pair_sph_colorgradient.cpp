@@ -170,19 +170,17 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	      wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
 	      wfd = wfd * ih * ih * ih / sqrt(rsq);
 	    }
-	    double rij = sqrt(rsq);	    
-	    double Fij = - wfd / rij;
 	    double Vi = rmass[i]/rho[i]; 
 	    double Vj = rmass[j]/rho[j];
 	    double Vi2 = Vi*Vi;
 	    double Vj2 = Vj*Vj;
 
-	    double dphi = Fij*rij*alpha[itype][jtype];
+	    double dphi = -wfd*alpha[itype][jtype];
 	    
-	    colorgradient[i][0] += dphi*Vj2*eij[0];
-	    colorgradient[i][1] += dphi*Vj2*eij[1];
+	    colorgradient[i][0] += dphi*Vj2/Vi*eij[0];
+	    colorgradient[i][1] += dphi*Vj2/Vi*eij[1];
 	    if (ndim==3) {
-	      colorgradient[i][2] += dphi*Vj2*eij[2];
+	      colorgradient[i][2] += dphi*Vj2/Vi*eij[2];
 	    }
           } // rsq < cutsq
 	  
