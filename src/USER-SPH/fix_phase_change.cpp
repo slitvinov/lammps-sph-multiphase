@@ -220,9 +220,9 @@ void FixPhaseChange::pre_exchange()
       // eij[0] = random->uniform() - 0.5;
       // eij[1] = random->uniform() - 0.5;
       // eij[2] = random->uniform() - 0.5;
-      eij[0] = cg[i][0];
-      eij[1] = cg[i][1];
-      eij[2] = cg[i][2];
+      eij[0] = -cg[i][1];
+      eij[1] = cg[i][0];
+      eij[2] = 0.0;
       double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
       coord[0] = x[i][0] + eij[0]*dr/eijabs;
       coord[1] = x[i][1] + eij[1]*dr/eijabs;
