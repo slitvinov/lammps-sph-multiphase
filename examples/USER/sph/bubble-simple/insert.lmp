@@ -38,12 +38,12 @@ create_atoms       ${g_type} region box
 
 # create walls on the top and on the bottom
 variable     x1  equal 3*${dx}
-variable     x2  equal ${Lx}-2.5*${dx}
+variable     x2  equal ${Lx}-3.0*${dx}
 variable     y1 equal 3*${dx}
-variable     y2  equal ${Ly}-2.5*${dx}
+variable     y2  equal ${Ly}-3.0*${dx}
 if ${ndim}==3 then &
 "variable     z1 equal 3*${dx}" &
-"variable     z2  equal ${Lz}-2.5*${dx}" &
+"variable     z2  equal ${Lz}-3.0*${dx}" &
 "region	     rflow block ${x1} ${x2} ${y1} ${y2} ${z1} ${z2} units box" &
 else &
 "region	     rflow block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box"
