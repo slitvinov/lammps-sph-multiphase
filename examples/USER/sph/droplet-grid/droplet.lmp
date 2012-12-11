@@ -38,10 +38,6 @@ group	     boundary subtract all flow
 # fix wall particles
 fix          wallim boundary setforce 0 0 0
 
-# set mass of the particles
-mass               ${d_type} ${sph_mass_d}
-mass               ${g_type} ${sph_mass_g}
-
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
 
@@ -102,4 +98,14 @@ thermo              10
 
 #variable           rdt equal 0.25*${dt}
 timestep           ${dt}
+
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+
+group              droplet type ${d_type}
+compute            rg droplet gyration
+variable           vrg equal c_rg
+variable           vspher equal c_rg[1]/c_rg[2]
+fix extra all print 1 "${time} ${vrg} ${vspher}" file ${dname}/com.dat screen no
+
 run               10000

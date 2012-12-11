@@ -1,5 +1,6 @@
 # read lammps files with "fix deposit"
 log vmd.tcl
+user add key q exit
 
 # read variable number of atoms
 topo readvarxyz [lindex $argv 0]/data.xyz
@@ -11,9 +12,9 @@ $sel set radius 0.018
 
 mol modstyle 0 0 VDW 0.600000 15.000000
 
-color Display Background white
-color Display FPS black
-color Axes Labels black
+#color Display Background white
+#color Display FPS black
+#color Axes Labels black
 axes location off
 
 # show only gas
