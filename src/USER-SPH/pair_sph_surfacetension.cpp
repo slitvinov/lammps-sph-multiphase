@@ -116,10 +116,10 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
         ih = 1.0 / h;
         if (domain->dimension == 3) {
 	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
-          wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
+          wfd = wfd * ih * ih * ih * ih;
         } else {
 	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
-          wfd = wfd * ih * ih * ih / sqrt(rsq);
+          wfd = wfd * ih * ih * ih;
         }
 
         if (ndim==2) {
