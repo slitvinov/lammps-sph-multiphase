@@ -1,5 +1,5 @@
-log                ${dname}/log.lammps
 echo               both
+log                ${dname}/log.lammps
 units              si
 atom_style         meso
 # periodic boundaries to have a correct density on the wall
@@ -91,7 +91,10 @@ pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         * * sph/heatconduction  ${D_heat} ${h}
+pair_coeff         ${g_type} ${g_type} sph/heatconduction  ${D_heat_g} ${h}
+variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
+pair_coeff         ${g_type} ${d_type} sph/heatconduction  ${D_heat_gd} ${h}
+pair_coeff         ${d_type} ${d_type} sph/heatconduction  ${D_heat_d} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
@@ -116,20 +119,24 @@ set               type ${g_type} meso_rho ${sph_rho_g}
 
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.95
-variable           Tt equal 0.96
-variable           Cp equal 1.0
-variable           dr equal 0.50*${dx}
+variable           Tc equal 0.85
+variable           Tt equal 0.86
+variable           Cp equal 0.25
+variable           dr equal 0.1*${dx}
 group              droplet type ${d_type}
 
-compute         crg droplet gyration
-compute         ied droplet reduce sum c_ie_atom
-variable        vied equal c_ied
+variable          volume atom mass/c_rho_peratom
+compute           dvol droplet reduce sum v_volume
+variable          vvol equal c_dvol
 
-variable vrg equal c_crg
+compute           crg droplet gyration
+compute           ied droplet reduce sum c_ie_atom
+variable          vied equal c_ied
+variable vrg equal c_crg/count(droplet)
 variable vnd equal count(droplet)*${dx}^${ndim}
+#variable vcount equal count(
 # time, volume of droplet, total energy, energy of droplet
-fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg}" file ${dname}/rg.dat screen no
+fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg} ${vvol}" file ${dname}/rg.dat screen no
 
 # set fix temperature on the wall
 #group           liquid  subtract all droplet
@@ -141,7 +148,7 @@ thermo              10
 
 variable          pre_step equal round(0.02/${dt})
 print             "running for  ${pre_step}"
-run               ${pre_step}
+#run               ${pre_step}
 set               type ${d_type} meso_e ${Tc}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
