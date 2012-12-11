@@ -41,7 +41,7 @@ variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
 variable          alpha equal 0.5
-variable           D_heat equal 0.2
+variable           D_heat equal 0.01
 
 # type of the gas particle
 variable          g_type equal 1
