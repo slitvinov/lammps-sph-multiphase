@@ -231,7 +231,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp + (Tc - e[i] + Tc)*rmass[i]/to_mass;
+	double energy_to_dist = cp + (Tc - e[i])*rmass[i]/to_mass;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -254,9 +254,9 @@ void FixPhaseChange::pre_exchange()
 	    double rsq = delx * delx + dely * dely + delz * delz;
 	    double wfd;
 	    if (domain->dimension == 3) {
-	      wfd = sph_dw_quintic2d(sqrt(rsq)*cutoff);
+	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
 	    } else {
-	      wfd = sph_dw_quintic3d(sqrt(rsq)*cutoff);
+	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
 	    wtotal+=wfd;
 	  }
@@ -273,9 +273,9 @@ void FixPhaseChange::pre_exchange()
 	    double rsq = delx * delx + dely * dely + delz * delz;
 	    double wfd;
 	    if (domain->dimension == 3) {
-	      wfd = sph_dw_quintic2d(sqrt(rsq)*cutoff);
+	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
 	    } else {
-	      wfd = sph_dw_quintic3d(sqrt(rsq)*cutoff);
+	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
 	    de[j] -= energy_to_dist*wfd/wtotal;
 	  }

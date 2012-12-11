@@ -96,15 +96,15 @@ pair_coeff         * * sph/heatconduction  ${D_heat} ${h}
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
 
-variable            time equal step*dt
+timestep           ${dt}
+variable            time equal step*${dt}
 variable            natoms equal count(all)
 
-timestep           ${dt}
-variable          xcenter_per equal ${xcenter}+0.5*${dx}
-variable          ycenter_per equal ${ycenter}+0.5*${dx}
+#variable          xcenter_per equal ${xcenter}+0.5*${dx}
+#variable          ycenter_per equal ${ycenter}+0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsph sphere ${xcenter} ${ycenter} ${zcenter} 0.2 units box
+region            rsph sphere ${xcenter} ${ycenter} ${zcenter} 0.1 units box
 group             gsph region rsph
 set               region rsph type ${d_type}
 
@@ -117,8 +117,8 @@ set               type ${g_type} meso_rho ${sph_rho_g}
 variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.95
-variable           Tt equal 0.97
-variable           Cp equal 1.00
+variable           Tt equal 0.96
+variable           Cp equal 1.0
 variable           dr equal 0.50*${dx}
 group              droplet type ${d_type}
 
@@ -132,6 +132,8 @@ variable vnd equal count(droplet)*${dx}^${ndim}
 fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg}" file ${dname}/rg.dat screen no
 
 # set fix temperature on the wall
+#group           liquid  subtract all droplet
+#fix             fliquid  liquid  setmesode 0.0
 fix             fidtemp boundary setmesode 0.0
 
 thermo_style        custom step v_time v_natoms v_vnd
