@@ -1,5 +1,8 @@
 #! /bin/bash
 
+set -e
+set -u
+
 nx=$1
 gy=$2
 np=8

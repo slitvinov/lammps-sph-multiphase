@@ -41,7 +41,7 @@ variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
 variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
-variable          alpha equal 0.05/120.0*80.0
+variable          alpha equal 0.5
 
 # add an uplift force to the gas particles
 #variable          gy    equal 0.0

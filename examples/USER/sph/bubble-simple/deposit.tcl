@@ -1,5 +1,6 @@
 # read lammps files with "fix deposit"
 log vmd.tcl
+user add key q exit
 
 # read variable number of atoms
 topo readvarxyz [lindex $argv 0]/data.xyz
