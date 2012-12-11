@@ -10,7 +10,7 @@ pbc set {1.0 1.0 1.0} -all
 set sel [atomselect top all]
 $sel set radius 0.018
 
-mol modstyle 0 0 VDW 0.600000 15.000000
+#mol modstyle 0 0 VDW 0.600000 15.000000
 
 #color Display Background white
 #color Display FPS black

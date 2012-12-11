@@ -127,10 +127,10 @@ variable           insert_every equal 1
 variable           Tc equal 0.95
 variable           Tt equal 0.97
 variable           Cp equal 1.00
-variable           dr equal 0.50*${dx}
-# fix                fdep droplet phase_change &
-#                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-#                    ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
+variable           dr equal 0.25*${dx}
+fix                fdep droplet phase_change &
+                   ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
+                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
 
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
