@@ -119,9 +119,9 @@ set               type ${g_type} meso_rho ${sph_rho_g}
 
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.85
-variable           Tt equal 0.86
-variable           Cp equal 0.25
+variable           Tc equal 0.95
+variable           Tt equal 0.97
+variable           Cp equal 1.00
 variable           dr equal 0.1*${dx}
 group              droplet type ${d_type}
 
