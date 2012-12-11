@@ -1,7 +1,7 @@
 #! /bin/bash
 
 function getnp_depart() {
-    awk '$3>1.0&&NR>1{print $2;exit}' $1
+    awk '$4>1.0&&NR>1{print $3;exit}' $1
 }
 
 function getg() {
@@ -9,7 +9,7 @@ function getg() {
 }
 
 
-for d in $(ls -d data-wall-gy*); do
+for d in $(ls -d data-wall-gy*-nx40-np8); do
     g=$(getg $d)
     Np=$(getnp_depart $d/rg.dat)
     echo $g ${Np}

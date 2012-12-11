@@ -1,5 +1,5 @@
 # number of particles in each of the directions
-variable          nx   equal 120
+#variable          nx   equal 120
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"
@@ -41,7 +41,7 @@ variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
 variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
-variable          alpha equal 1.0
+variable          alpha equal 0.05/120.0*80.0
 
 # add an uplift force to the gas particles
 #variable          gy    equal 0.0

@@ -8,9 +8,6 @@ d = dump.dump("data-wall/dump*.dat")
 
 d.tselect.all()
 t = d.time()
-#d.scale()
-# upper right corner of the babel
-#d.aselect.test("$x >= 0.5417 and $y >= 0.5417 and $type == 2")
 
 com_droplet = np.zeros([np.size(t), 2])
 d.aselect.test("$type == 2")

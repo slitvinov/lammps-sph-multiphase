@@ -46,10 +46,6 @@ group	     flow region rflow
 group	     boundary subtract all flow
 fix          wallim boundary setforce 0 0 0
 
-# set mass of the particles
-mass               ${d_type} ${sph_mass_d}
-mass               ${g_type} ${sph_mass_g}
-
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
 
@@ -92,7 +88,7 @@ pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         * * sph/heatconduction  0.01 ${h}
+pair_coeff         * * sph/heatconduction  0.02 ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
@@ -102,38 +98,55 @@ variable            natoms equal count(all)
 thermo_style        custom step v_time v_natoms
 thermo              10
 
-set               type ${g_type} meso_e 1.0
-set               type ${d_type} meso_e 1.0
-
 timestep           ${dt}
-variable          xpos equal ${xcenter}+0.5*${dx}
-variable          ypos equal ${ylow}-0.5*${dx}
-create_atoms      ${d_type} single  ${xpos} ${ypos} ${zcenter} units box
+variable          dseed equal 0.2
+variable          x1 equal ${xcenter}-${dseed}
+variable          x2 equal ${xcenter}+${dseed}
+variable          y1 equal ${ylow}
+variable          y2 equal ${ylow}+${dseed}
+if ${ndim}==3 then &
+"variable          z1 equal ${zcenter}-${dseed}" &
+"variable          z2 equal ${zcenter}+${dseed}" &
+"region	          rseed block ${x1} ${x2} ${y1} ${y2} ${z1} ${z2} units box" &
+else &
+"region	          rseed block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box"
 
-run               100
-velocity          all set 0 0 0
+group             gseed region rseed
+set               group gseed type ${d_type}
 
-region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
-variable           Ninsert equal 1000
-variable           insert_every equal 1
-variable           Tc equal 0.87
-variable           Tt equal 0.90
-variable           Cp equal 0.50
-variable           dr equal 0.5*${dx}
-fix                fdep all phase_change ${Tc} ${Tt} ${Cp} ${dr} ${h} ${g_type} ${d_type} ${insert_every} 1234 region rinsert units box
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+
+variable          nprev equal 0.2/${dt}
+# temperature of the wall
+fix             fidtemp boundary setmesode 0.0
 
 group              droplet type ${d_type}
+variable           Ninsert equal 1000
+variable           insert_every equal 1
+variable           Tc equal 0.95
+variable           Tt equal 0.97
+variable           Cp equal 1.00
+variable           dr equal 0.50*${dx}
+# fix                fdep droplet phase_change &
+#                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
+#                    ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
+
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
 compute            rg droplet gyration
 variable vrg equal c_rg
-variable vnd equal count(droplet)
+variable vnd equal count(droplet)*${dx}^${ndim}
 variable vmi equal (bound(droplet,ymin)-${ylow})/${dx}
-fix extra all print 1 "${vrg} ${vnd} ${vmi}" file ${dname}/rg.dat
+variable vcm equal xcm(droplet,y)-${ylow}
+fix extra all print 1 "${time} ${vrg} ${vnd} ${vmi} ${vcm}" file ${dname}/rg.dat screen no
 
-echo              none
+set                 type ${g_type} meso_e 1.0
+set                 type ${d_type} meso_e ${Tc}
+
+echo            none
 run               25000 pre no  post no every 1 &
+"set               group boundary meso_e 1.0" &
 "group droplet type ${d_type}" &
-"set               group boundary meso_e 1.0"
-"if ${vmi)>3 then quit"
+"if ${vmi}>2 then quit"
