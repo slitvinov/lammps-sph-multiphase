@@ -50,6 +50,7 @@ else &
 
 group	     flow region rflow
 group	     boundary subtract all flow
+fix          wallim boundary setforce 0 0 0
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
@@ -121,8 +122,8 @@ variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.95
 variable           Tt equal 0.97
-variable           Cp equal 2.00
-variable           dr equal 0.1*${dx}
+variable           Cp equal 0.02
+variable           dr equal 0.25*${dx}
 group              droplet type ${d_type}
 
 variable          volume atom mass/c_rho_peratom
