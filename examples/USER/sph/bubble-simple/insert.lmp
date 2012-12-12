@@ -123,7 +123,7 @@ variable           insert_every equal 1
 variable           Tc equal 0.95
 variable           Tt equal 0.97
 variable           Cp equal 0.02
-variable           dr equal 0.1*${dx}
+variable           dr equal 0.25*${dx}
 group              droplet type ${d_type}
 
 variable          volume atom mass/c_rho_peratom
