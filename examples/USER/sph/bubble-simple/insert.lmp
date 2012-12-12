@@ -108,7 +108,7 @@ variable            natoms equal count(all)
 #variable          ycenter_per equal ${ycenter}+0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.2 units box
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.1 units box
 set               region rsq type ${d_type}
 
 # variable          a_sq   equal 0.2
@@ -152,7 +152,7 @@ thermo              10
 
 variable          pre_step equal round(0.02/${dt})
 print             "running for  ${pre_step}"
-#run               ${pre_step}
+run               ${pre_step}
 set               type ${d_type} meso_e ${Tc}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
