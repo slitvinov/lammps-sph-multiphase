@@ -43,6 +43,7 @@ region	     rflow block ${x1} ${x2} EDGE EDGE EDGE EDGE units box
 
 group	     flow region rflow
 group	     boundary subtract all flow
+fix          wallim boundary setforce 0 0 0
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
@@ -111,7 +112,7 @@ variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.85
 variable           Tt equal 0.87
-variable           Cp equal 0.25
+variable           Cp equal 0.10
 variable           dr equal 0.1*${dx}
 group              droplet type ${d_type}
 
@@ -138,9 +139,9 @@ thermo              10
 
 set                type ${d_type} meso_e ${Tc}
 set                group ghalf    meso_e ${Tc}
-# fix                fdep droplet phase_change &
-#                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-#                    ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
+fix                fdep droplet phase_change &
+                   ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
+                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
 
 variable          nstep equal 3.0/${dt}
 run               ${nstep}
