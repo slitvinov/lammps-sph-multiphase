@@ -55,6 +55,8 @@ class FixPhaseChange : public Fix {
   double dr;
   // mass of a particle of a new phase
   double to_mass;
+  /// probability of phase change [0.0:1.0]
+  double change_chance;
 
   class RanPark *random;
 

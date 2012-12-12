@@ -43,7 +43,7 @@ using namespace FixConst;
 FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  int nnarg = 13;
+  int nnarg = 14;
   if (narg < nnarg) error->all(FLERR,"Illegal fix phase_change command");
 
   restart_global = 1;
@@ -61,9 +61,10 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   to_type = atoi(arg[m++]);
   nfreq = atoi(arg[m++]);
   seed = atoi(arg[m++]);
-  assert(m==nnarg);
-
   if (seed <= 0) error->all(FLERR,"Illegal value for seed");
+  change_chance = atof(arg[m++]);
+  if (change_chance <= 0) error->all(FLERR,"Illegal value for change_chance");
+  assert(m==nnarg);
 
   iregion = -1;
   idregion = NULL;
@@ -213,7 +214,7 @@ void FixPhaseChange::pre_exchange()
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    if ( (abscgi>1e-20) && (e[i]>Tt) && (type[i] == to_type) ) {
+    if ( (abscgi>1e-20) && (e[i]>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
       double coord[3];
       // place an atom in the directions of color gradient
       double eij[3];
