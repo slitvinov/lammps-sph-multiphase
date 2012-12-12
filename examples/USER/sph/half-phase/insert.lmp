@@ -1,5 +1,5 @@
-log                ${dname}/log.lammps
 echo               both
+log                ${dname}/log.lammps
 units              si
 atom_style         meso
 # periodic boundaries to have a correct density on the wall
@@ -38,19 +38,11 @@ create_atoms       ${g_type} region box
 
 # create walls on the top and on the bottom
 variable     x1  equal 3*${dx}
-variable     x2  equal ${Lx}-2.5*${dx}
-variable     y1 equal 3*${dx}
-variable     y2  equal ${Ly}-2.5*${dx}
-if ${ndim}==3 then &
-"variable     z1 equal 3*${dx}" &
-"variable     z2  equal ${Lz}-2.5*${dx}" &
-"region	     rflow block ${x1} ${x2} ${y1} ${y2} ${z1} ${z2} units box" &
-else &
-"region	     rflow block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box"
+variable     x2  equal ${Lx}-3.0*${dx}
+region	     rflow block ${x1} ${x2} EDGE EDGE EDGE EDGE units box
 
 group	     flow region rflow
 group	     boundary subtract all flow
-fix          wallim boundary setforce 0 0 0
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
@@ -92,22 +84,22 @@ pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         * * sph/heatconduction  ${D_heat} ${h}
+pair_coeff         ${g_type} ${g_type} sph/heatconduction  ${D_heat_g} ${h}
+variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
+pair_coeff         ${g_type} ${d_type} sph/heatconduction  ${D_heat_gd} ${h}
+pair_coeff         ${d_type} ${d_type} sph/heatconduction  ${D_heat_d} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
 
-variable            time equal step*dt
+timestep           ${dt}
+variable            time equal step*${dt}
 variable            natoms equal count(all)
 
-timestep           ${dt}
-variable          xcenter_per equal ${xcenter}+0.5*${dx}
-variable          ycenter_per equal ${ycenter}+0.5*${dx}
-#create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
-
-region            rsph sphere ${xcenter} ${ycenter} ${zcenter} 0.1 units box
-group             gsph region rsph
-set               region rsph type ${d_type}
+region            rsph block ${xcenter} ${Lx}  0.0 EDGE EDGE EDGE units box
+group             ghalf region rsph
+group             gsph  subtract ghalf boundary
+set               group gsph type ${d_type}
 
 set               type ${g_type} meso_e 1.0
 set               type ${d_type} mass ${sph_mass_d}
@@ -117,32 +109,38 @@ set               type ${g_type} meso_rho ${sph_rho_g}
 
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.80
-variable           Tt equal 0.85
-variable           Cp equal 1.00
-variable           dr equal 0.50*${dx}
+variable           Tc equal 0.85
+variable           Tt equal 0.87
+variable           Cp equal 0.25
+variable           dr equal 0.1*${dx}
 group              droplet type ${d_type}
 
-compute         crg droplet gyration
-compute         ied droplet reduce sum c_ie_atom
-variable        vied equal c_ied
+variable          volume atom mass/c_rho_peratom
+compute           dvol droplet reduce sum v_volume
+variable          vvol equal c_dvol
 
-variable vrg equal c_crg
+compute           crg droplet gyration
+compute           ied droplet reduce sum c_ie_atom
+variable          vied equal c_ied
+variable vrg equal c_crg/count(droplet)
 variable vnd equal count(droplet)*${dx}^${ndim}
+#variable vcount equal count(
 # time, volume of droplet, total energy, energy of droplet
-fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg}" file ${dname}/rg.dat screen no
+fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg} ${vvol}" file ${dname}/rg.dat screen no
 
 # set fix temperature on the wall
+#group           liquid  subtract all droplet
+#fix             fliquid  liquid  setmesode 0.0
 fix             fidtemp boundary setmesode 0.0
 
 thermo_style        custom step v_time v_natoms v_vnd
 thermo              10
 
+set                type ${d_type} meso_e ${Tc}
+set                group ghalf    meso_e ${Tc}
+# fix                fdep droplet phase_change &
+#                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
+#                    ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
 
-run               200
-set               type ${d_type} meso_e ${Tc}
-fix                fdep droplet phase_change &
-                   ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
-
-run               10000000
+variable          nstep equal 3.0/${dt}
+run               ${nstep}
