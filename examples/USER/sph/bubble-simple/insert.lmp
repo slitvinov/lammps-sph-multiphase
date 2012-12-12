@@ -38,9 +38,9 @@ create_atoms       ${g_type} region box
 
 # create walls on the top and on the bottom
 variable     x1  equal 3*${dx}
-variable     x2  equal ${Lx}-3.0*${dx}
+variable     x2  equal ${Lx}-3.5*${dx}
 variable     y1 equal 3*${dx}
-variable     y2  equal ${Ly}-3.0*${dx}
+variable     y2  equal ${Ly}-3.5*${dx}
 if ${ndim}==3 then &
 "variable     z1 equal 3*${dx}" &
 "variable     z2  equal ${Lz}-3.0*${dx}" &
@@ -50,7 +50,7 @@ else &
 
 group	     flow region rflow
 group	     boundary subtract all flow
-fix          wallim boundary setforce 0 0 0
+#fix          wallim boundary setforce 0 0 0
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
@@ -108,7 +108,7 @@ variable            natoms equal count(all)
 #variable          ycenter_per equal ${ycenter}+0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.1 units box
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.15 units box
 set               region rsq type ${d_type}
 
 # variable          a_sq   equal 0.2
@@ -126,7 +126,7 @@ variable           insert_every equal 1
 variable           Tc equal 0.95
 variable           Tt equal 0.97
 variable           Cp equal 0.02
-variable           dr equal 0.25*${dx}
+variable           dr equal 0.50*${dx}
 group              droplet type ${d_type}
 
 variable          volume atom mass/c_rho_peratom
@@ -145,7 +145,7 @@ fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vrg} ${vvol}" file ${dnam
 # set fix temperature on the wall
 #group           liquid  subtract all droplet
 #fix             fliquid  liquid  setmesode 0.0
-fix             fidtemp boundary setmesode 0.0
+#fix             fidtemp boundary setmesode 0.0
 
 thermo_style        custom step v_time v_natoms v_vnd
 thermo              10
@@ -158,5 +158,11 @@ fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
                    ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
 
-variable          nstep equal 3.0/${dt}
-run               ${nstep}
+variable          nstep equal 10.0/${dt}
+
+run               ${nstep} every 1 &
+"group gflow region rflow" &
+"group gboundary subtract all gflow" &
+"set group gboundary meso_e 1.0"
+
+
