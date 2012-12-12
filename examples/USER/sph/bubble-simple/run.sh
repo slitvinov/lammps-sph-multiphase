@@ -1,10 +1,10 @@
 #! /bin/bash
 
-nx=40
-np=8
-ndim=2
-D_heat_g=0.0005
-alpha=1.00
+nx=20
+np=1
+ndim=3
+D_heat_g=0.05
+alpha=0.01
 sph_c_g=10.0
 
 dname=data-nx${nx}-ndim${ndim}-np${np}-D_heat_g${D_heat_g}-alpha${alpha}-sph_c_g${sph_c_g}-cg

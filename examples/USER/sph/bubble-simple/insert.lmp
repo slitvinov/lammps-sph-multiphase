@@ -124,9 +124,10 @@ set               type ${g_type} meso_rho ${sph_rho_g}
 variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.95
-variable           Tt equal 0.97
+variable           Tt equal 0.96
 variable           Cp equal 0.02
 variable           dr equal 0.50*${dx}
+variable           prob equal 0.01
 group              droplet type ${d_type}
 
 variable          volume atom mass/c_rho_peratom
@@ -156,11 +157,11 @@ run               ${pre_step}
 set               type ${d_type} meso_e ${Tc}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
+                   ${h} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 
 variable          nstep equal 10.0/${dt}
 
-run               ${nstep} every 1 &
+run               ${nstep} post no pre no every 1 &
 "group gflow region rflow" &
 "group gboundary subtract all gflow" &
 "set group gboundary meso_e 1.0"
