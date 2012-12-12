@@ -108,9 +108,12 @@ variable            natoms equal count(all)
 #variable          ycenter_per equal ${ycenter}+0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsph sphere ${xcenter} ${ycenter} ${zcenter} 0.1 units box
-group             gsph region rsph
-set               region rsph type ${d_type}
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.2 units box
+set               region rsq type ${d_type}
+
+# variable          a_sq   equal 0.2
+# include           square.lmp
+# set               region rsq type ${d_type}
 
 set               type ${g_type} meso_e 1.0
 set               type ${d_type} mass ${sph_mass_d}
