@@ -1,6 +1,6 @@
 #! /bin/bash
 
-nx=40
+nx=20
 ndim=3
 np=8
 dname=data-nx${nx}-ndim${ndim}-np${np}a

@@ -105,6 +105,6 @@ write_restart     ${dname}/droplet.restart
 variable          time equal step*dt
 fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
 
-variable          nstep equal 0.1/${dt}
+variable          nstep equal 0.5/${dt}
 
 run               ${nstep}
