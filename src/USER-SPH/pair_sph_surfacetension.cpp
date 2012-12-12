@@ -114,7 +114,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
-        if (domain->dimension == 3) {
+        if (ndim == 3) {
 	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih * ih;
         } else {
@@ -122,13 +122,10 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
           wfd = wfd * ih * ih * ih;
         }
 
-        if (ndim==2) {
-	  eij[0]= delx/sqrt(rsq); 
-	  eij[1]= dely/sqrt(rsq);    
-	} else {
-	  eij[0]= delx/sqrt(rsq);
-	  eij[1]= dely/sqrt(rsq);
-	  eij[2]= delz/sqrt(rsq);
+	eij[0] = delx/sqrt(rsq); 
+	eij[1] = dely/sqrt(rsq);    
+	if (ndim==3) {
+	  eij[2] = delz/sqrt(rsq);
 	}
 
 	double SurfaceForcei[ndim];
@@ -139,55 +136,53 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	  SurfaceForcei[2]=0; SurfaceForcej[2]=0;
 	}
 
-
 	if (ndim==2) {
+	  /// TODO: can be moved outside of the jj loop
 	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1]);
 	  if (abscgi > epsilon) {
-	    SurfaceForcei[0] = - ( (eij[0]*cg[i][1]*cg[i][1]-2*cg[i][0]*eij[1]*cg[i][1]-eij[0]*cg[i][0]*cg[i][0])/2/abscgi );
-	    SurfaceForcei[1] = - ( -(eij[1]*cg[i][1]*cg[i][1]+2*eij[0]*cg[i][0]*cg[i][1]-cg[i][0]*cg[i][0]*eij[1])/2/abscgi );
+	    SurfaceForcei[0] = (eij[0]*((cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/2-cg[i][0]*cg[i][0])-cg[i][0]*eij[1]*cg[i][1])/abscgi;
+	    SurfaceForcei[1] = (eij[1]*((cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/2-cg[i][1]*cg[i][1])-eij[0]*cg[i][0]*cg[i][1])/abscgi;
 	  }
 
 	  if (abscgj > epsilon) {
-	    SurfaceForcej[0] = - ( (eij[0]*cg[j][1]*cg[j][1]-2*cg[j][0]*eij[1]*cg[j][1]-eij[0]*cg[j][0]*cg[j][0])/2/abscgj );
-	    SurfaceForcej[1] = - ( -(eij[1]*cg[j][1]*cg[j][1]+2*eij[0]*cg[j][0]*cg[j][1]-cg[j][0]*cg[j][0]*eij[1])/2/abscgj );
+	    SurfaceForcej[0] = (eij[0]*((cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/2-cg[j][0]*cg[j][0])-cg[j][0]*eij[1]*cg[j][1])/abscgj;
+	    SurfaceForcej[1] = (eij[1]*((cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/2-cg[j][1]*cg[j][1])-eij[0]*cg[j][0]*cg[j][1])/abscgj;
 	  }
 	} else {
-	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1] + cg[j][2]*cg[j][2]);
 	  if (abscgi > epsilon) {
-	    SurfaceForcei[0] = (3*cg[i][0]*cg[i][2]*eij[2]-eij[0]*cg[i][2]*cg[i][2]+3*cg[i][0]*cg[i][1]*eij[1]
-				-eij[0]*cg[i][1]*cg[i][1]+2*cg[i][0]*cg[i][0]*eij[0])/abscgi;
-	    SurfaceForcei[1] = (3*cg[i][1]*cg[i][2]*eij[2]-eij[1]*cg[i][2]*cg[i][2]+(2*cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]
-				+3*cg[i][0]*eij[0]*cg[i][1])/abscgi;
-	    SurfaceForcei[2] = ((2*cg[i][2]*cg[i][2]-cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[2]+(3*cg[i][1]*eij[1]+3*cg[i][0]*eij[0])
-				*cg[i][2])/1.0/abscgi;
+	    SurfaceForcei[0] = (eij[0]*((cg[i][2]*cg[i][2]+cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/3-cg[i][0]*cg[i][0])
+				-cg[i][0]*eij[2]*cg[i][2]-cg[i][0]*eij[1]*cg[i][1])/ abscgi;
+	    SurfaceForcei[1] = (eij[1]*((cg[i][2]*cg[i][2]+cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/3-cg[i][1]*cg[i][1])
+				-cg[i][1]*eij[2]*cg[i][2]-eij[0]*cg[i][0]*cg[i][1] ) / abscgi;
+	    SurfaceForcei[2] = ( eij[2]*((cg[i][2]*cg[i][2]+cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/3-cg[i][2]*cg[i][2])
+				 -eij[1]*cg[i][1]*cg[i][2]-eij[0]*cg[i][0]*cg[i][2] ) /abscgi;
 	  }
-
+	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1] + cg[j][2]*cg[j][2]);
 	  if (abscgj > epsilon) {
-	    SurfaceForcej[0] = (3*cg[j][0]*cg[j][2]*eij[2]-eij[0]*cg[j][2]*cg[j][2]+3*cg[j][0]*cg[j][1]*eij[1]
-				-eij[0]*cg[j][1]*cg[j][1]+2*cg[j][0]*cg[j][0]*eij[0])/abscgj;
-	    SurfaceForcej[1] = (3*cg[j][1]*cg[j][2]*eij[2]-eij[1]*cg[j][2]*cg[j][2]+(2*cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]
-				+3*cg[j][0]*eij[0]*cg[j][1])/abscgj ;
-	    SurfaceForcej[2] = ((2*cg[j][2]*cg[j][2]-cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[2]+(3*cg[j][1]*eij[1]+3*cg[j][0]*eij[0])
-				*cg[j][2])/1.0/abscgj;
+	    SurfaceForcej[0] = (eij[0]*((cg[j][2]*cg[j][2]+cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/3-cg[j][0]*cg[j][0])
+				-cg[j][0]*eij[2]*cg[j][2]-cg[j][0]*eij[1]*cg[j][1])/ abscgj;
+	    SurfaceForcej[1] = (eij[1]*((cg[j][2]*cg[j][2]+cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/3-cg[j][1]*cg[j][1])
+				-cg[j][1]*eij[2]*cg[j][2]-eij[0]*cg[j][0]*cg[j][1] ) / abscgj;
+	    SurfaceForcej[2] = ( eij[2]*((cg[j][2]*cg[j][2]+cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/3-cg[j][2]*cg[j][2])
+				 -eij[1]*cg[j][1]*cg[j][2]-eij[0]*cg[j][0]*cg[j][2] ) /abscgj;
 	  }
 	}
 
 	const double Vi = imass / rho[i];
 	const double Vj = jmass / rho[j];
 	const double rij = sqrt(rsq);	    
-        const double Fij = -wfd ;
 
-	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
-	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij;
+	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*wfd;
+	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*wfd;
 	if (ndim==3) {
-	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
+	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*wfd;
 	}
 
         if (newton_pair || j < nlocal) {
-	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
-	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij;
+	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*wfd;
+	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*wfd;
 	  if (ndim==3) {
-	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
+	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*wfd;
 	  }
         }
       }

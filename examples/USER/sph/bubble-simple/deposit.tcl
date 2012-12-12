@@ -8,7 +8,7 @@ mol modstyle 0 0 Points 16
 pbc set {1.0 1.0 1.0} -all
 
 set sel [atomselect top all]
-$sel set radius 0.01
+$sel set radius 0.05
 
 #  
 proc roi {dw} {
@@ -21,12 +21,11 @@ proc roi {dw} {
     mol modselect 0 0 (all) and user > 0 and x>$x1 and x<$x2 and y>$y1 and y<$y2 and z>$z1 and z<$z2
 }
 
-proc slice {dw} {
+proc slice {dw {dim x}} {
     set z1 [expr {0.5-$dw}]
     set z2 [expr {0.5+$dw}]
-    mol modselect 0 0 (all) and user > 0 and z>$z1 and z<$z2
+    mol modselect 0 0 (all) and user > 0 and ${dim}>$z1 and ${dim}<$z2
 }
-
 
 #mol modstyle 0 0 VDW 0.600000 12.000000
 pbc box
