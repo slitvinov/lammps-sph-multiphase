@@ -1,7 +1,7 @@
 #! /bin/bash
 
-nx=20
-ndim=2
+nx=40
+ndim=3
 np=1
 dname=data-nx${nx}-ndim${ndim}-np${np}a
 rm -rf ${dname}
