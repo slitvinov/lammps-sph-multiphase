@@ -11,5 +11,5 @@ p: dr - (dr.cg)*cg/(cg.cg);
 /* check if it perpendicular to the cg */
 fullratsimp(p.cg);
 
-/* if [px, py] is a vector in the plate what shoudl be its coordinates
+/* if [px, py] is a vector in the plate
 */
