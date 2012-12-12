@@ -1,1 +1,1 @@
-Testing 3D bubble in a simple situation.
+A test case with half a space filled with vapor.
