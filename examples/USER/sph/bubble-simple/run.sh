@@ -2,12 +2,12 @@
 
 nx=40
 np=8
-ndim=3
+ndim=2
 D_heat_g=0.0005
-alpha=0.50
+alpha=1.00
 sph_c_g=10.0
 
-dname=data-nx${nx}-ndim${ndim}-np${np}-D_heat_g${D_heat_g}-alpha${alpha}-sph_c_g${sph_c_g}
+dname=data-nx${nx}-ndim${ndim}-np${np}-D_heat_g${D_heat_g}-alpha${alpha}-sph_c_g${sph_c_g}-cg
 rm -rf ${dname}
 mkdir -p ${dname}
 mpirun -np ${np}  ../../../../src/lmp_linux -in insert.lmp \
