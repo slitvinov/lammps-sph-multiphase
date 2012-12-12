@@ -231,7 +231,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp + (Tc - e[i] + Tc)*rmass[i]/to_mass;
+	double energy_to_dist = cp + (Tc - e[i])*rmass[i]/to_mass;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
