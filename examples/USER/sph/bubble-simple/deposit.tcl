@@ -10,7 +10,7 @@ pbc set {1.0 1.0 1.0} -all
 set sel [atomselect top all]
 $sel set radius 0.05
 
-#  
+#  show region of interest in the center
 proc roi {dw} {
     set x1 [expr {0.5-$dw}]
     set x2 [expr {0.5+$dw}]
@@ -29,8 +29,6 @@ proc slice {dw {dim x}} {
 
 #mol modstyle 0 0 VDW 0.600000 12.000000
 pbc box
-
-
 
 # show only gas
 #mol modselect 0 0 (all) and user > 0 and name B
