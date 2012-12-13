@@ -1,8 +1,8 @@
 #! /bin/bash
 
-nx=40
-np=1
-ndim=3
+nx=160
+np=8
+ndim=2
 D_heat_g=0.05
 alpha=1.0
 sph_c_g=10.0

@@ -126,7 +126,7 @@ variable           insert_every equal 1
 variable           Tc equal 0.95
 variable           Tt equal 0.96
 variable           Cp equal 0.02
-variable           dr equal 0.50*${dx}
+variable           dr equal 0.40*${dx}
 variable           prob equal 0.01
 group              droplet type ${d_type}
 
@@ -161,6 +161,7 @@ fix                fdep droplet phase_change &
 
 variable          nstep equal 10.0/${dt}
 
+echo              log
 run               ${nstep} post no pre no every 1 &
 "group gflow region rflow" &
 "group gboundary subtract all gflow" &
