@@ -80,10 +80,9 @@ pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
 
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 
-variable           cg_cutoff equal 3.0*${dx}
-pair_coeff         ${d_type} ${d_type} sph/colorgradient ${cg_cutoff} 0
-pair_coeff         ${g_type} ${d_type} sph/colorgradient ${cg_cutoff} ${alpha}
-pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
 
 # harmonic mean of viscosities
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
@@ -104,7 +103,7 @@ timestep           ${dt}
 variable           Ninsert equal 1000
 variable           insert_every equal 1
 variable           Tc equal 0.95
-variable           Tt equal 0.96
+variable           Tt equal 0.951
 #variable           cp equal 0.00
 variable           dr equal 0.20*${dx}
 #variable           prob equal 1.0
@@ -126,8 +125,8 @@ set               region rsq type ${d_type}
 # set               region rsq type ${d_type}
 # set               type ${d_type} meso_e ${Tc}
 
-#set               type ${g_type} meso_e 1.0
-set               group all      meso_e ${Tc}
+set               type ${d_type} meso_e ${Tc}
+set               type ${g_type} meso_e 1.0
 set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
 set               type ${d_type} meso_rho ${sph_rho_d}

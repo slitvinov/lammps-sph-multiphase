@@ -5,12 +5,12 @@ if ${ndim}==3 then &
 "variable nz equal ${nx}"
 
 # size of the domain
-variable          Lx   equal  1.0
-variable          Ly   equal  1.0
+#variable          Lx   equal  1.5
+variable          Ly   equal  ${Lx}
 if ${ndim}==3 then &
 "variable         Lz   equal ${Lx}"
 
-variable          dx   equal  ${Lx}/${nx}
+variable          dx   equal  1.0/${nx}
 
 # density of gas phase
 variable          sph_rho_g equal 1.0
