@@ -196,6 +196,7 @@ void FixPhaseChange::pre_exchange()
   double **v = atom->v;
   double **cg = atom->colorgradient;
   double *rmass = atom->rmass;
+  double *rho = atom->rho;
   double *e   = atom->e;
   double *de   = atom->de;
   int *type = atom->type;
@@ -294,6 +295,7 @@ void FixPhaseChange::pre_exchange()
 	e[i] = Tc;
 	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
+	rho[atom->nlocal-1] = rho[i];
 	e[atom->nlocal-1] = Tc;
 	de[atom->nlocal-1] = 0.0;
 	v[atom->nlocal-1][0] = v[i][0];
