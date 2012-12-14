@@ -19,4 +19,6 @@ else &
 if "${dt}>${dt_alpha}" then &
 "variable dt equal ${dt_alpha}"
 
+variable dt equal ${dt}*${time_k}
+
 print "(settimestep) dt_c dt_eta dt_alpha dt ${dt_c} ${dt_eta} ${dt_alpha} ${dt}"
