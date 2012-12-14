@@ -1,15 +1,12 @@
 /* color gradient */
 cg: [cx, cy, cz];
 
-/* shift vector */
-dr: [rx, ry, rz];
-solve([cg.dr = 0], [rx, ry, rz]);
+/* vectors perpendicular to cg */
+v1: [-cy, cx, 0];
+v2: [0, -cz, cy];
 
-/* projection on the plate */
-p: dr - (dr.cg)*cg/(cg.cg);
+v1.cg;
+v2.cg;
+v1.v2;
 
-/* check if it perpendicular to the cg */
-fullratsimp(p.cg);
-
-/* if [px, py] is a vector in the plate
-*/
+a*v1 + b*v2;

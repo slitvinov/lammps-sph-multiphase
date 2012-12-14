@@ -210,7 +210,6 @@ void FixPhaseChange::pre_exchange()
 
   /// TODO: how to distribute to ghosts?
   for (int i = 0; i < nlocal; i++) {
-    // clear de, I will use it to transfer energy
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
@@ -221,9 +220,19 @@ void FixPhaseChange::pre_exchange()
       //eij[0] = random->uniform() - 0.5;
       //eij[1] = random->uniform() - 0.5;
       //eij[2] = random->uniform() - 0.5;
-      eij[0] = -cg[i][1];
-      eij[1] = cg[i][0];
-      eij[2] = 0.0;
+      if (domain->dimension==3) {
+	double atmp = random->uniform() - 0.5;
+	double btmp = random->uniform() - 0.5;
+	eij[0] = -atmp*cg[i][1];
+	eij[1] = atmp*cg[i][0] - btmp*cg[i][2];
+	eij[2] = btmp*cg[i][1];
+      } else {
+	// TODO: find direction of the vectors cheeper
+	double atmp = random->uniform() - 0.5;
+	eij[0] = -atmp*cg[i][1];
+	eij[1] = atmp*cg[i][0];
+	eij[2] = 0.0;
+      }
       double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
       coord[0] = x[i][0] + eij[0]*dr/eijabs;
       coord[1] = x[i][1] + eij[1]*dr/eijabs;
@@ -320,6 +329,11 @@ void FixPhaseChange::pre_exchange()
   comm->reverse_comm();
   for (int i = 0; i < nlocal; i++) {
     e[i] += de[i];
+  }
+  /// TODO: probably it is not needed
+  /// because it will be clean by clean_force()
+  for (int i = 0; i < nall; i++) {
+    de[i] = 0.0;
   }
 }
 

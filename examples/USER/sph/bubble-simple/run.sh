@@ -1,13 +1,13 @@
 #! /bin/bash
 
-nx=160
-np=8
-ndim=2
+nx=20
+np=1
+ndim=3
 D_heat_g=0.05
-alpha=1.0
+alpha=0.01
 sph_c_g=10.0
 
-dname=data-nx${nx}-ndim${ndim}-np${np}-D_heat_g${D_heat_g}-alpha${alpha}-sph_c_g${sph_c_g}-cg
+dname=data-nx${nx}-ndim${ndim}-np${np}-D_heat_g${D_heat_g}-alpha${alpha}-sph_c_g${sph_c_g}cp
 rm -rf ${dname}
 mkdir -p ${dname}
 mpirun -np ${np}  ../../../../src/lmp_linux -in insert.lmp \
