@@ -4,7 +4,7 @@ assume(a>0);
 assume(N>0);
 assume(t>0);
 eq1: N=a*t^(2/3);
-sol: last(solve(eq1, t));
+sol: first(solve(eq1, t));
 
 dN: diff(rhs(eq1), t);
 rate1: subst([sol, N=2*Nh], dN);

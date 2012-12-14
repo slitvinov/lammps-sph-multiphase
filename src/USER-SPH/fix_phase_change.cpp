@@ -63,7 +63,7 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   seed = atoi(arg[m++]);
   if (seed <= 0) error->all(FLERR,"Illegal value for seed");
   change_chance = atof(arg[m++]);
-  if (change_chance <= 0) error->all(FLERR,"Illegal value for change_chance");
+  if (change_chance < 0) error->all(FLERR,"Illegal value for change_chance");
   assert(m==nnarg);
 
   iregion = -1;
