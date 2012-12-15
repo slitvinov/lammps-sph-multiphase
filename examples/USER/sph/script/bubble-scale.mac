@@ -8,6 +8,22 @@ dT                :: Tv-Tsat
 Ja:               :: Jacob number, (dT*cp*rho_l)/(rho_g*H)
 */
 
+/*
+Water
+cp: 4.1855 [J/(g.K)]
+Vapor
+cp: 1.850 [kJ/(kg.K)]
+specific heat of vaporisation
+H:  2260 [kJ/kg]
+
+water (k) (intensive property)
+0.563 [W.K/m]
+
+vapor
+0.016 [W.K/m]
+
+*/
+
 kill(all);
 d: 3;
 eq1: dN = dE/Lp;
