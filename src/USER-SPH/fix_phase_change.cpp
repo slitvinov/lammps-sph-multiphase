@@ -197,6 +197,7 @@ void FixPhaseChange::pre_exchange()
   double **cg = atom->colorgradient;
   double *rmass = atom->rmass;
   double *rho = atom->rho;
+  double *cv = atom->cv;
   double *e   = atom->e;
   double *de   = atom->de;
   int *type = atom->type;
@@ -214,9 +215,9 @@ void FixPhaseChange::pre_exchange()
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    if ( (abscgi>1e-20) && (e[i]>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
+    double Ti = e[i]/cv[i];
+    if ( (abscgi>1e-20) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
       double coord[3];
-      // place an atom in the directions of color gradient
       double eij[3];
       //eij[0] = random->uniform() - 0.5;
       //eij[1] = random->uniform() - 0.5;
@@ -242,7 +243,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp + (Tc - e[i])*rmass[i]/to_mass;
+	double energy_to_dist = cp + (cv[i]*Tc - e[i])*rmass[i]/to_mass;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -258,7 +259,8 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if ( (type[j]==from_type) && (e[j]>e[i]) ) {
+	  double Tj = e[j]/cv[j];
+	  if ( (type[j]==from_type) && (Tj>Ti) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -269,7 +271,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    wtotal+=wfd*(e[j]-e[i]);
+	    wtotal+=wfd*(Tj-Ti);
 	  }
 	}
 
@@ -277,7 +279,8 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if ( (type[j]==from_type) && (e[j]>e[i]) ) {
+	  double Tj = e[j]/cv[j];
+	  if ( (type[j]==from_type) && (Tj>Ti) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -288,15 +291,15 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    de[j] -= energy_to_dist*wfd*(e[j]-e[i])/wtotal;
+	    de[j] -= energy_to_dist*wfd*(Tj-Ti)/wtotal;
 	  }
 	}
 	
-	e[i] = Tc;
+	e[i] = cv[i]*Tc;
 	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
 	rho[atom->nlocal-1] = rho[i];
-	e[atom->nlocal-1] = Tc;
+	e[atom->nlocal-1] = cv[i]*Tc;
 	de[atom->nlocal-1] = 0.0;
 	v[atom->nlocal-1][0] = v[i][0];
 	v[atom->nlocal-1][1] = v[i][1];

@@ -63,6 +63,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
   double *de = atom->de;
   double *rmass = atom->rmass;
   double *rho = atom->rho;
+  double *cv = atom->cv;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
@@ -115,7 +116,9 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
 
         deltaE = 2.0 * imass * jmass / (imass+jmass);
         deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
-        deltaE *= D * (e[i] - e[j]) * wfd;
+	double Ti = e[i]/cv[i];
+	double Tj = e[j]/cv[j];
+        deltaE *= D * (Ti - Tj) * wfd;
 
         de[i] += deltaE;
         if (newton_pair || j < nlocal) {

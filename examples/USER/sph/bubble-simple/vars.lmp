@@ -18,7 +18,7 @@ variable          sph_rho_g equal 1.0
 variable          sph_rho_d equal 1.0
 
 # sound speed 
-#variable          sph_c_g equal 20.0
+variable          sph_c_g equal 10.0
 variable          sph_c_d equal ${sph_c_g}
 
 # viscosity of droplet 
@@ -30,9 +30,9 @@ variable          sph_eta_g equal 5e-2
 # pressu ~ ( rho/rho0 - rbackground)^gamma
 variable          rbackground equal 0.0
 
-
 variable          h equal 3.0*${dx}
 variable          Nfreq equal 50
+
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
@@ -44,6 +44,13 @@ variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 #variable           D_heat_g equal 0.0005
 #variable           D_heat_g equal 0.0005
 variable           D_heat_d equal 0.1
+
+variable          cv_d      equal 1.0
+#variable          cv_g      equal 1.0
+variable           Tc equal 0.95
+variable           Tt equal 0.96
+variable          e_d       equal ${cv_d}*${Tc}
+variable          e_g       equal ${cv_g}*1.0
 
 # type of the gas particle
 variable          g_type equal 1
