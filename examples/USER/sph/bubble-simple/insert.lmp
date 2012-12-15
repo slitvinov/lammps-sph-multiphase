@@ -104,7 +104,7 @@ timestep           ${dt}
 variable           Ninsert equal 1000
 variable           insert_every equal 1
 #variable           cp equal 0.00
-variable           dr equal 0.40*${dx}
+variable           dr equal 0.15*${dx}
 #variable           prob equal 1.0
 
 variable            time equal step*${dt}

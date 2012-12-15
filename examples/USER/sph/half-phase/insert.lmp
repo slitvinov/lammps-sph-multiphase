@@ -110,8 +110,8 @@ set               type ${g_type} meso_rho ${sph_rho_g}
 
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.85
-variable           Tt equal 0.87
+variable           Tc equal 0.95
+variable           Tt equal 0.96
 variable           Cp equal 0.10
 variable           dr equal 0.1*${dx}
 group              droplet type ${d_type}
@@ -137,11 +137,12 @@ fix             fidtemp boundary setmesode 0.0
 thermo_style        custom step v_time v_natoms v_vnd
 thermo              10
 
-set                type ${d_type} meso_e ${Tc}
+set                type ${g_type} meso_e 1.0
 set                group ghalf    meso_e ${Tc}
+variable           prob               equal 1.0
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region box units box
+                   ${h} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 
 variable          nstep equal 3.0/${dt}
 run               ${nstep}

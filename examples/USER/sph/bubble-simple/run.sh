@@ -1,16 +1,16 @@
 #! /bin/bash
 
 
-Lx=1.5
+Lx=1.0
 nx=40
 ndim=3
 np=8
 D_heat_g=0.05
-cp=0.05
+cp=0.1
 alpha=0.5
-prob=1.0
+prob=0.1
 time_k=1.00
-cv_g=1.0
+cv_g=2.0
 
 dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_g${D_heat_g}-alpha${alpha}-cp${cp}-prob${prob}-time_k${time_k}-cv_g${cv_g}
 rm -rf ${dname}
