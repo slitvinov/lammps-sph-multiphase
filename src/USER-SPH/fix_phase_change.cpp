@@ -258,7 +258,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type) {
+	  if ( (type[j]==from_type) && (e[j]>e[i]) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -269,7 +269,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    wtotal+=wfd;
+	    wtotal+=wfd*(e[j]-e[i]);
 	  }
 	}
 
@@ -277,7 +277,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type) {
+	  if ( (type[j]==from_type) && (e[j]>e[i]) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -288,7 +288,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    de[j] -= energy_to_dist*wfd/wtotal;
+	    de[j] -= energy_to_dist*wfd*(e[j]-e[i])/wtotal;
 	  }
 	}
 	
