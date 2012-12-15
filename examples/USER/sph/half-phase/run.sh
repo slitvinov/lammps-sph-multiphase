@@ -1,8 +1,8 @@
 #! /bin/bash
 
-nx=$1
+nx=40
 ndim=2
-np=1
+np=8
 dname=data-nx${nx}-ndim${ndim}-np${np}-withTc
 rm -rf ${dname}
 mkdir -p ${dname}
