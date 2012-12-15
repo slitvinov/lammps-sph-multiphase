@@ -11,3 +11,4 @@ rate1: subst([sol, N=2*Nh], dN);
 rate2: 2*subst([sol, N=Nh], dN);
 
 rate1/rate2;
+
