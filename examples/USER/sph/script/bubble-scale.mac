@@ -1,0 +1,9 @@
+kill(all);
+eq1: dN = dE;
+eq2: dE = S*dt;
+eq3: dS = R*dR;
+eq4: R^2*dR = dN;
+eq5: S=R^2;
+eq6: N=R^3;
+
+solve([eq1, eq2, eq3, eq4, eq5, eq6], [N, dE, S, dS, dR, dN]);
