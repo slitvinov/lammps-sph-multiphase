@@ -9,7 +9,7 @@ D_heat_g=0.05
 cp=0.1
 alpha=0.5
 prob=0.1
-sph_rho_d=0.1
+sph_rho_d=1.0
 time_k=1.00
 cv_g=2.0
 

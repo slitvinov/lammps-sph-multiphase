@@ -110,13 +110,12 @@ variable           dr equal 0.15*${dx}
 variable            time equal step*${dt}
 variable            natoms equal count(all)
 
-# variable          xcenter_per equal ${xcenter}+0.5*${dx}
-# variable          ycenter_per equal ${ycenter}+0.5*${dx}
-# create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
-# set               type ${d_type} meso_e ${e_d}
+variable          xcenter_per equal ${xcenter}+0.5*${dx}
+variable          ycenter_per equal ${ycenter}+0.5*${dx}
+create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.12 units box
-set               region rsq type ${d_type}
+#region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.12 units box
+#set               region rsq type ${d_type}
 #set               type ${d_type} meso_e ${e_d}
 
 # variable          a_sq   equal 0.2
