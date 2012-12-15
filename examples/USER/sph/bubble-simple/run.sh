@@ -1,15 +1,16 @@
 #! /bin/bash
 
-Lx=1.50
+
+Lx=1.5
 nx=40
+ndim=3
 np=8
-ndim=2
-D_heat_g=0.01
-cp=10.0
-alpha=0.125
-prob=0.05
+D_heat_g=0.05
+cp=0.05
+alpha=0.5
+prob=1.0
 time_k=1.00
-cv_g=10.0
+cv_g=1.0
 
 dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_g${D_heat_g}-alpha${alpha}-cp${cp}-prob${prob}-time_k${time_k}-cv_g${cv_g}
 rm -rf ${dname}
@@ -19,4 +20,3 @@ mpirun -np ${np}  ../../../../src/lmp_linux -in insert.lmp \
     -var cp ${cp} -var prob ${prob} -var time_k ${time_k} \
     -var Lx ${Lx} -var cv_g ${cv_g} \
     -var dname ${dname}
-
