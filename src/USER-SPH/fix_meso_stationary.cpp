@@ -75,7 +75,6 @@ void FixMesoStationary::initial_integrate(int vflag) {
   double *e = atom->e;
   double *de = atom->de;
 
-  int *type = atom->type;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
   int i;
