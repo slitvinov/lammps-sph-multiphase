@@ -1,11 +1,11 @@
 #! /bin/bash
 
 Lx=1.0
-nx=160
-ndim=2
+nx=40
+ndim=3
 np=8
 D_heat_g=0.05
-dT=0.014
+dT=0.0283
 cp=0.4
 alpha=0.25
 #dprob=5.5e-4
