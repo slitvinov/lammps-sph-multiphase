@@ -231,7 +231,8 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp + (cv[i]*Tc - e[i])*rmass[i]/to_mass;
+	//double energy_to_dist = cp + (cv[i]*Tc - e[i])*rmass[i]/to_mass;
+	double energy_to_dist = 0.0;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -283,7 +284,7 @@ void FixPhaseChange::pre_exchange()
 	  }
 	}
 	
-	e[i] = cv[i]*Tc;
+	e[i] -= cp;
 	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
 	rho[atom->nlocal-1] = rho[i];
