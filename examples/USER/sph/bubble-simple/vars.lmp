@@ -46,7 +46,7 @@ variable           D_heat_d equal 0.1
 
 variable          cv_d      equal 1.0
 #variable          cv_g      equal 1.0
-variable           Tc equal 0.95
+variable           Tc equal 0.85
 variable           Tt equal ${Tc}+${dT}
 variable          e_d       equal ${cv_d}*${Tc}
 variable          e_g       equal ${cv_g}*1.0
