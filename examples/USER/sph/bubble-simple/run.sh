@@ -1,9 +1,9 @@
 #! /bin/bash
 
 Lx=1.0
-nx=40
+nx=20
 ndim=2
-np=4
+np=1
 D_heat_g=0.05
 cp=0.1
 alpha=0.5
