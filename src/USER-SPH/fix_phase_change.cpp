@@ -220,12 +220,14 @@ void FixPhaseChange::pre_exchange()
       double coord[3];
       bool ok;
       double delta = dr;
+      int natempt = 0;
       do { 
 	create_newpos(x[i], cg[i], delta, coord);
 	ok = insert_one_atom(coord, sublo, subhi);
 	// reduce dr
-	delta = 0.75*dr;
-      } while (!ok);
+	delta = 0.75*delta;
+	natempt++;
+      } while (!ok && natempt<10);
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
@@ -442,13 +444,30 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
 void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, double* coord) {
   double eij[3];
   if (domain->dimension==3) {
+    double b1[3];
+    b1[0] =  -cgone[1] ;
+    b1[1] =  cgone[0] ;
+    b1[2] =  0 ;
+    double b1abs = sqrt(b1[0]*b1[0] + b1[1]*b1[1] + b1[2]*b1[2]);
+    b1[0] = b1[0]/b1abs;     b1[1] = b1[1]/b1abs;     b1[2] = b1[2]/b1abs;
+    assert( b1[0]*cgone[0] + b1[1]*cgone[1] + b1[2]*cgone[2] < 1e-8);
+
+    double b2[3];
+    b2[0] =  -cgone[0]*cgone[1]*cgone[2]/(pow(cgone[1],2)+pow(cgone[0],2)) ;
+    b2[1] =  -cgone[2]*pow(cgone[1],2)/(pow(cgone[1],2)+pow(cgone[0],2)) ;
+    b2[2] =  cgone[1];
+    double b2abs = sqrt(b2[0]*b2[0] + b2[1]*b2[1] + b2[2]*b2[2]);
+    b2[0] = b2[0]/b2abs;     b2[1] = b2[1]/b2abs;     b2[2] = b2[2]/b2abs;
+    assert( b2[0]*cgone[0] + b2[1]*cgone[1] + b2[2]*cgone[2] < 1e-8);
+
     double atmp = random->uniform() - 0.5;
     double btmp = random->uniform() - 0.5;
-    eij[0] = -atmp*cgone[1];
-    eij[1] = atmp*cgone[0] - btmp*cgone[2];
-    eij[2] = btmp*cgone[1];
+    eij[0] = atmp*b1[0] + btmp*b2[0];
+    eij[1] = atmp*b1[1] + btmp*b2[1];
+    eij[2] = atmp*b1[2] + btmp*b2[2];
+    assert( eij[0]*cgone[0] + eij[1]*cgone[1] + eij[2]*cgone[2] < 1e-8);
   } else {
-    // TODO: find direction of the vectors cheeper
+    // TODO: find direction cheeper
     double atmp = random->uniform() - 0.5;
     eij[0] = -atmp*cgone[1];
     eij[1] = atmp*cgone[0];
