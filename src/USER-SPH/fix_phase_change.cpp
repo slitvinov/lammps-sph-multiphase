@@ -161,7 +161,7 @@ void FixPhaseChange::init()
   neighbor->requests[irequest]->full = 1;
 }
 
-void FixPhaseChange::init_list(int id, NeighList *ptr)
+void FixPhaseChange::init_list(int, NeighList *ptr)
 {
   list = ptr;
 }
@@ -191,8 +191,6 @@ void FixPhaseChange::pre_exchange()
     // choose random position for new atom within region
   int nins = 0;
   int nlocal = atom->nlocal;
-  int inum = list->inum;
-  int* ilist = list->ilist;
   int* numneigh = list->numneigh;
   double **x = atom->x;
   double **v = atom->v;
@@ -220,29 +218,14 @@ void FixPhaseChange::pre_exchange()
     double Ti = e[i]/cv[i];
     if ( (abscgi>CG_SMALL) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
       double coord[3];
-      double eij[3];
-      //eij[0] = random->uniform() - 0.5;
-      //eij[1] = random->uniform() - 0.5;
-      //eij[2] = random->uniform() - 0.5;
-      if (domain->dimension==3) {
-	double atmp = random->uniform() - 0.5;
-	double btmp = random->uniform() - 0.5;
-	eij[0] = -atmp*cg[i][1];
-	eij[1] = atmp*cg[i][0] - btmp*cg[i][2];
-	eij[2] = btmp*cg[i][1];
-      } else {
-	// TODO: find direction of the vectors cheeper
-	double atmp = random->uniform() - 0.5;
-	eij[0] = -atmp*cg[i][1];
-	eij[1] = atmp*cg[i][0];
-	eij[2] = 0.0;
-      }
-      double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
-      /// TODO: add scale
-      coord[0] = x[i][0] + eij[0]*dr/eijabs;
-      coord[1] = x[i][1] + eij[1]*dr/eijabs;
-      coord[2] = x[i][2] + eij[2]*dr/eijabs;
-      bool ok = insert_one_atom(coord, sublo, subhi);
+      bool ok;
+      double delta = dr;
+      do { 
+	create_newpos(x[i], cg[i], delta, coord);
+	ok = insert_one_atom(coord, sublo, subhi);
+	// reduce dr
+	delta = 0.75*dr;
+      } while (!ok);
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
@@ -413,16 +396,12 @@ void FixPhaseChange::restart(char *buf)
 
 bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi)
 {
-  int flagall, flag;
+  int flag;
   double lamda[3];
   double *newcoord;
 
-  int i, j;
   int nfix = modify->nfix;
   Fix **fix = modify->fix;
-
-  int nlocal = atom->nlocal;
-  int success = 1;
 
   // check if new atom is in my sub-box or above it if I'm highest proc
   // if so, add to my list via create_atom()
@@ -450,7 +429,7 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
     int m = atom->nlocal - 1;
     atom->type[m] = to_type;
     atom->mask[m] = 1 | groupbit;
-    for (j = 0; j < nfix; j++)
+    for (int j = 0; j < nfix; j++)
       if (fix[j]->create_attribute) fix[j]->set_arrays(m);
   }
   if (flag) {
@@ -460,3 +439,24 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
   }
 }
 
+void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, double* coord) {
+  double eij[3];
+  if (domain->dimension==3) {
+    double atmp = random->uniform() - 0.5;
+    double btmp = random->uniform() - 0.5;
+    eij[0] = -atmp*cgone[1];
+    eij[1] = atmp*cgone[0] - btmp*cgone[2];
+    eij[2] = btmp*cgone[1];
+  } else {
+    // TODO: find direction of the vectors cheeper
+    double atmp = random->uniform() - 0.5;
+    eij[0] = -atmp*cgone[1];
+    eij[1] = atmp*cgone[0];
+    eij[2] = 0.0;
+  }
+  double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
+  /// TODO: add scale
+  coord[0] = xone[0] + eij[0]*delta/eijabs;
+  coord[1] = xone[1] + eij[1]*delta/eijabs;
+  coord[2] = xone[2] + eij[2]*delta/eijabs;
+}
