@@ -1,9 +1,9 @@
 #! /bin/bash
 
 Lx=1.0
-nx=20
+nx=40
 ndim=2
-np=1
+np=4
 D_heat_g=0.05
 cp=0.1
 alpha=0.5
@@ -14,7 +14,7 @@ cv_g=2.0
 # parameters for kana
 lmp=../../../../src/lmp_linux
 mpirun=mpirun
-proc=-np ${np}
+proc="-np ${np}"
 
 dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_g${D_heat_g}-alpha${alpha}\
 -cp${cp}-prob${prob}-time_k${time_k}-cv_g${cv_g}-sph_rho_d${sph_rho_d}
