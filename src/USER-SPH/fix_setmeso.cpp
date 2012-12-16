@@ -13,7 +13,7 @@
 
 #include "string.h"
 #include "stdlib.h"
-#include "fix_setmesode.h"
+#include "fix_setmeso.h"
 #include "atom.h"
 #include "update.h"
 #include "modify.h"
@@ -32,37 +32,40 @@ enum{NONE,CONSTANT,EQUAL,ATOM};
 
 /* ---------------------------------------------------------------------- */
 
-FixSetMesodE::FixSetMesodE(LAMMPS *lmp, int narg, char **arg) :
+FixSetMeso::FixSetMeso(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  if (narg < 4) error->all(FLERR,"Illegal fix setmeso command");
+  if (narg < 5) error->all(FLERR,"Illegal fix setmeso command");
 
-  vector_flag = 1;
-  size_vector = 1;
   global_freq = 1;
-  extvector = 1;
-
   xstr = NULL;
-
-  if (strstr(arg[3],"v_") == arg[3]) {
-    int n = strlen(&arg[3][2]) + 1;
-    xstr = new char[n];
-    strcpy(xstr,&arg[3][2]);
-  } else if (strcmp(arg[3],"NULL") == 0) {
-    xstyle = NONE;
-  } else {
-    xvalue = atof(arg[3]);
-    xstyle = CONSTANT;
+  rhoflag = eflag = 0;
+  if (strcmp(arg[3],"meso_rho")==0) {
+    rhoflag = 1;
+  } else if (strcmp(arg[3],"meso_e")==0) {
+    eflag = 1;
+  } 
+  else {
+    error->all(FLERR,"Illegal fix setmeso command, meso_rho or meso_e must be given");
   }
 
+  if (strstr(arg[4],"v_") == arg[4]) {
+    int n = strlen(&arg[4][2]) + 1;
+    xstr = new char[n];
+    strcpy(xstr,&arg[4][2]);
+  } else {
+    xvalue = atof(arg[4]);
+    xstyle = CONSTANT;
+  }
   // optional args
 
   iregion = -1;
   idregion = NULL;
+  regionflag = 1;
 
-  int iarg = 4;
+  int iarg = 5;
   while (iarg < narg) {
-    if (strcmp(arg[iarg],"region") == 0) {
+    if ( (strcmp(arg[iarg],"region") == 0) || (strcmp(arg[iarg],"noregion") == 0) ) {
       if (iarg+2 > narg) error->all(FLERR,"Illegal fix setmesode command");
       iregion = domain->find_region(arg[iarg+1]);
       if (iregion == -1)
@@ -70,29 +73,32 @@ FixSetMesodE::FixSetMesodE(LAMMPS *lmp, int narg, char **arg) :
       int n = strlen(arg[iarg+1]) + 1;
       idregion = new char[n];
       strcpy(idregion,arg[iarg+1]);
+      if (strcmp(arg[iarg],"noregion") == 0) {
+	regionflag = 0;
+      } 
       iarg += 2;
     } else error->all(FLERR,"Illegal fix setmesode command");
   }
 
   force_flag = 0;
-  deoriginal = 0.0;
+  mesovarorg = 0.0;
 
   maxatom = 0;
-  sde = NULL;
+  smesovar = NULL;
 }
 
 /* ---------------------------------------------------------------------- */
 
-FixSetMesodE::~FixSetMesodE()
+FixSetMeso::~FixSetMeso()
 {
   delete [] xstr;
   delete [] idregion;
-  memory->destroy(sde);
+  memory->destroy(smesovar);
 }
 
 /* ---------------------------------------------------------------------- */
 
-int FixSetMesodE::setmask()
+int FixSetMeso::setmask()
 {
   int mask = 0;
   mask |= POST_FORCE;
@@ -103,7 +109,7 @@ int FixSetMesodE::setmask()
 
 /* ---------------------------------------------------------------------- */
 
-void FixSetMesodE::init()
+void FixSetMeso::init()
 {
   // check variables
 
@@ -147,7 +153,7 @@ void FixSetMesodE::init()
 
 /* ---------------------------------------------------------------------- */
 
-void FixSetMesodE::setup(int vflag)
+void FixSetMeso::setup(int vflag)
 {
   if (strstr(update->integrate_style,"verlet"))
     post_force(vflag);
@@ -161,40 +167,54 @@ void FixSetMesodE::setup(int vflag)
 
 /* ---------------------------------------------------------------------- */
 
-void FixSetMesodE::min_setup(int vflag)
+void FixSetMeso::min_setup(int vflag)
 {
   post_force(vflag);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void FixSetMesodE::post_force(int vflag)
+void FixSetMeso::post_force(int vflag)
 {
   double **x = atom->x;
-  double *de = atom->de;
+  double *mesovar;
+  if (rhoflag) {
+    mesovar = atom->rho;
+  } else if (eflag) {
+    mesovar = atom->e;
+  } else {
+    error->all(FLERR,"Illegal fix setmeso command");
+  }
+
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
-  // reallocate sde array if necessary
+  // reallocate smesovar array if necessary
 
   if (varflag == ATOM && nlocal > maxatom) {
     maxatom = atom->nmax;
-    memory->destroy(sde);
-    memory->create(sde,maxatom,"setmesode:sde");
+    memory->destroy(smesovar);
+    memory->create(smesovar,maxatom,"setmesode:smesovar");
   }
 
-  deoriginal = 0.0;
+  mesovarorg = 0.0;
   force_flag = 0;
 
   if (varflag == CONSTANT) {
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-        if (iregion >= 0 &&
-            !domain->regions[iregion]->match(x[i][0],x[i][1],x[i][2]))
+	if (iregion >= 0) {
+	  if ( (regionflag) && 
+	      !domain->regions[iregion]->match(x[i][0],x[i][1],x[i][2]))
           continue;
+	  /// applay fix outside of the region
+	  if ( (!regionflag) && 
+	      domain->regions[iregion]->match(x[i][0],x[i][1],x[i][2]))
+          continue;
+	}
 
-        deoriginal += de[i];
-        if (xstyle) de[i] = xvalue;
+        mesovarorg += mesovar[i];
+        if (xstyle) mesovar[i] = xvalue;
       }
 
   // variable force, wrap with clear/add
@@ -204,8 +224,8 @@ void FixSetMesodE::post_force(int vflag)
     modify->clearstep_compute();
 
     if (xstyle == EQUAL) xvalue = input->variable->compute_equal(xvar);
-    else if (xstyle == ATOM && sde)
-      input->variable->compute_atom(xvar,igroup,&sde[0],1,0);
+    else if (xstyle == ATOM && smesovar)
+      input->variable->compute_atom(xvar,igroup,&smesovar[0],1,0);
 
     modify->addstep_compute(update->ntimestep + 1);
 
@@ -215,35 +235,43 @@ void FixSetMesodE::post_force(int vflag)
             !domain->regions[iregion]->match(x[i][0],x[i][1],x[i][2]))
           continue;
 
-        deoriginal += de[i];
-        if (xstyle == ATOM) de[i] = sde[i];
-        else if (xstyle) de[i] = xvalue;
+        mesovarorg += mesovar[i];
+        if (xstyle == ATOM) mesovar[i] = smesovar[i];
+        else if (xstyle) mesovar[i] = xvalue;
       }
   }
 }
 
 /* ---------------------------------------------------------------------- */
 
-void FixSetMesodE::post_force_respa(int vflag, int ilevel, int iloop)
+void FixSetMeso::post_force_respa(int vflag, int ilevel, int iloop)
 {
   // set force to desired value on outermost level, 0.0 on other levels
 
   if (ilevel == nlevels_respa-1) post_force(vflag);
   else {
-    double *de = atom->de;
+    
+    double *mesovar;
+    if (rhoflag) {
+      mesovar = atom->rho;
+    } else if (eflag) {
+      mesovar = atom->e;
+    } else {
+      error->all(FLERR,"Illegal fix setmeso command");
+    }
     int *mask = atom->mask;
     int nlocal = atom->nlocal;
 
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-        if (xstyle) de[i] = 0.0;
+        if (xstyle) mesovar[i] = 0.0;
       }
   }
 }
 
 /* ---------------------------------------------------------------------- */
 
-void FixSetMesodE::min_post_force(int vflag)
+void FixSetMeso::min_post_force(int vflag)
 {
   post_force(vflag);
 }
@@ -252,22 +280,22 @@ void FixSetMesodE::min_post_force(int vflag)
    return components of total force on fix group before force was changed
 ------------------------------------------------------------------------- */
 
-double FixSetMesodE::compute_scalar()
+double FixSetMeso::compute_scalar()
 {
   // only sum across procs one time
 
   if (force_flag == 0) {
-    MPI_Allreduce(&deoriginal,&deoriginal_all,1,MPI_DOUBLE,MPI_SUM,world);
+    MPI_Allreduce(&mesovarorg,&mesovarorg_all,1,MPI_DOUBLE,MPI_SUM,world);
     force_flag = 1;
   }
-  return deoriginal_all;
+  return mesovarorg_all;
 }
 
 /* ----------------------------------------------------------------------
    memory usage of local atom-based array
 ------------------------------------------------------------------------- */
 
-double FixSetMesodE::memory_usage()
+double FixSetMeso::memory_usage()
 {
   double bytes = 0.0;
   if (varflag == ATOM) bytes = atom->nmax*3 * sizeof(double);
