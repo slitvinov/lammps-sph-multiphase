@@ -91,8 +91,9 @@ dump_modify        dump_xyz element A B
 timestep           ${dt}
 variable           insert_every equal 1
 #variable           cp equal 0.00
-variable           dr equal 0.50*${dx}
-#variable           prob equal 1.0
+variable           dr equal 0.5*${dx}
+#variable           prob equal ${dt}/${dprob}
+variable           prob equal ${dprob}
 
 variable            time equal step*${dt}
 variable            natoms equal count(all)

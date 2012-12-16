@@ -1,6 +1,12 @@
 #! /bin/bash
 
-dn=$(ls -1trd data* | tail -1)
+if [ $# -eq 2 ]; then
+    n=$2
+else
+    n=1
+fi
+
+dn=$(ls -1td data* | awk -v n=$n 'NR==n' )
 bash post.sh ${dn}
 
 if [ $1 == "b" ]; then
