@@ -38,6 +38,8 @@
 using namespace LAMMPS_NS;
 using namespace FixConst;
 
+#define CG_SMALL 1.0e-20
+
 /* ---------------------------------------------------------------------- */
 
 FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
@@ -216,7 +218,7 @@ void FixPhaseChange::pre_exchange()
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
     double Ti = e[i]/cv[i];
-    if ( (abscgi>1e-20) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
+    if ( (abscgi>CG_SMALL) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
       double coord[3];
       double eij[3];
       //eij[0] = random->uniform() - 0.5;
@@ -236,6 +238,7 @@ void FixPhaseChange::pre_exchange()
 	eij[2] = 0.0;
       }
       double eijabs = sqrt(eij[0]*eij[0] + eij[1]*eij[1] + eij[2]*eij[2]);
+      /// TODO: add scale
       coord[0] = x[i][0] + eij[0]*dr/eijabs;
       coord[1] = x[i][1] + eij[1]*dr/eijabs;
       coord[2] = x[i][2] + eij[2]*dr/eijabs;
