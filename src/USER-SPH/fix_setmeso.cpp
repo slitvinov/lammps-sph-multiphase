@@ -14,6 +14,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include "fix_setmeso.h"
+#include "sph_energy_equation.h"
 #include "atom.h"
 #include "update.h"
 #include "modify.h"
@@ -223,7 +224,8 @@ void FixSetMeso::post_force(int vflag)
         mesovarorg += mesovar[i];
         if (xstyle) {
 	  if (tflag) {
-	    mesovar[i] = cv[i]*rho[i]*xvalue;
+	    // xvalue is temperature and we set energy
+	    mesovar[i] = sph_t2energy(xvalue,cv[i]);
 	  } else {
 	    mesovar[i] = xvalue;
 	  }

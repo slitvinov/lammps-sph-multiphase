@@ -83,7 +83,7 @@ void ComputeMesoTAtom::compute_peratom()
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
 	if (cv[i] > 0.0) {
-	  tvector[i] = sph_energy2t(e[i], cv[i]);
+	  tvector[i] = sph_energy2t(e[i],cv[i]);
 	}
       }
       else {

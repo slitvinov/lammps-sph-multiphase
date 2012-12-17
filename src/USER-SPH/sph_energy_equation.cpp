@@ -14,11 +14,11 @@
 #include "math.h"
 #include "sph_energy_equation.h"
 
-double LAMMPS_NS::sph_t2energy(double e, double cv) {
-  return e/cv;
+double LAMMPS_NS::sph_t2energy(double t, double cv) {
+  return cv*t;
 }
 
-double LAMMPS_NS::sph_energy2t(double t, double cv) {
-  return cv*t;
+double LAMMPS_NS::sph_energy2t(double e, double cv) {
+  return e/cv;
 }
 

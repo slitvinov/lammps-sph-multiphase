@@ -138,7 +138,7 @@ variable        vnd equal count(droplet)*${dx}^${ndim}
 fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet}" file ${dname}/rg.dat screen no
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
-c_rho_peratom c_colorgradient_peratom c_it_atom
+                                                                  c_rho_peratom c_ie_atom c_it_atom
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd
