@@ -49,8 +49,8 @@ class FixPhaseChange : public Fix {
   double Tc;
   // temperature which triggers phase change
   double Tt;
-  // latent heat of evaporation
-  double cp;
+  // latent heat of evaporation (in energy per mass)
+  double Hwv;
   // how far a new atom should be placed
   double dr;
   // mass of a particle of a new phase
