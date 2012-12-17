@@ -3,12 +3,12 @@
 set -e
 set -u
 Lx=1.0
-nx=20
+nx=40
 ndim=2
-np=1
+np=8
 D_heat_g=0.04
 dT=0.01
-cp=0.25
+cp=1.00
 alpha=0.25
 dprob=0.1
 sph_rho_g=1.0
