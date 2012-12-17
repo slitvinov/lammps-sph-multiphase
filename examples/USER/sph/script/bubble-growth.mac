@@ -1,14 +1,7 @@
 kill(all);
-depends(N, t);
-assume(a>0);
-assume(N>0);
-assume(t>0);
-eq1: N=a*t^(2/3);
-sol: first(solve(eq1, t));
 
-dN: diff(rhs(eq1), t);
-rate1: subst([sol, N=2*Nh], dN);
-rate2: 2*subst([sol, N=Nh], dN);
+eq1: cv = E/m/T;
+eq2: Ef = E/V;
+eq3: rho = m/V;
 
-rate1/rate2;
-
+solve([eq1, eq2, eq3], [E, T, m]);

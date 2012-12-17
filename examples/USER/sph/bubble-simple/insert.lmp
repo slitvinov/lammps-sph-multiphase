@@ -124,7 +124,8 @@ group              droplet type ${d_type}
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
-compute         ie_atom all meso_t/atom
+compute         it_atom all meso_t/atom
+compute         ie_atom all meso_e/atom
 compute         ie all reduce sum c_ie_atom
 variable        vie equal c_ie
 variable        volume atom mass/c_rho_peratom
@@ -137,23 +138,24 @@ variable        vnd equal count(droplet)*${dx}^${ndim}
 fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet}" file ${dname}/rg.dat screen no
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
-c_rho_peratom c_colorgradient_peratom c_ie_atom
+c_rho_peratom c_colorgradient_peratom c_it_atom
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd
 thermo              10
 
+variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${cp} ${dr} ${sph_mass_d} &
-                   ${h} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
+                   ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 
 # outside of this sphere the temperature is 1.0
-variable          Rtemp equal ${xcenter}-0.10
+variable          Rtemp equal ${xcenter}-0.1
 region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
 
 echo              log
 variable          nstep equal 10.0/${dt}
 group gflow region rtemp
-fix sm      all setmeso meso_e ${e_g} noregion rtemp
+fix sm      all setmeso meso_t 1.0 noregion rtemp
 
 run               ${nstep}
