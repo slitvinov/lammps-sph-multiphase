@@ -58,7 +58,7 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   int m = 3;
   Tc = atof(arg[m++]);
   Tt = atof(arg[m++]);
-  cp = atof(arg[m++]);
+  Hwv = atof(arg[m++]);
   dr = atof(arg[m++]);
   to_mass = atof(arg[m++]);
   cutoff = atof(arg[m++]);
@@ -234,7 +234,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	//double energy_to_dist = cp  + (sph_t2energy(Tc,cv[i]) - e[i])*rmass[i]/to_mass;
+	//double energy_to_dist = Hwv  + (sph_t2energy(Tc,cv[i]) - e[i])*rmass[i]/to_mass;
 	double energy_to_dist  = 0.0;
 	nins++;
 	// look for the neighbors of the type from_type
@@ -301,7 +301,7 @@ void FixPhaseChange::pre_exchange()
 	v[atom->nlocal-1][2] = v[i][2];
 
 	//e[i] = sph_t2energy(Tc,cv[i]);
-	e[i] -= cp*to_mass/rmass[i];
+	e[i] -= Hwv*to_mass/rmass[i];
       }
     }
   }

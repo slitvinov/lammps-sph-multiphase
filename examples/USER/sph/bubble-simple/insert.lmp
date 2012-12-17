@@ -90,7 +90,7 @@ dump_modify        dump_xyz element A B
 
 timestep           ${dt}
 variable           insert_every equal 1
-#variable           cp equal 0.00
+#variable          Hwv equal 0.00
 variable           dr equal 0.5*${dx}
 #variable           prob equal ${dt}/${dprob}
 variable           prob equal ${dprob}
@@ -146,7 +146,7 @@ thermo              10
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
-                   ${Tc} ${Tt} ${cp} ${dr} ${sph_mass_d} &
+                   ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 
 # outside of this sphere the temperature is 1.0
