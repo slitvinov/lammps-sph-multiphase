@@ -232,10 +232,12 @@ void FixPhaseChange::pre_exchange()
 	natempt++;
       } while (!ok && natempt<10);
       if (ok) {
-	/// distribute energy to neighboring particles
-	/// latent heat + heat particle i + heat a new particle
-	//double energy_to_dist = Hwv  + (sph_t2energy(Tc,cv[i]) - e[i])*rmass[i]/to_mass;
-	double energy_to_dist  = 0.0;
+	/// create a new particle and cool down a particle i
+	/// we have some energy to distribute:
+	/// latent heat + change of energy of particle i
+	/// NOTE: this energy is in J and not in J/kg
+	//double energy_to_dist = Hwv*to_mass  + rmass[i]*(sph_t2energy(Tc,cv[i]) - e[i]);
+	double energy_to_dist = 0;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -284,7 +286,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    delocal[j] -= energy_to_dist*wfd*(Tj-Ti)/wtotal;
+	    delocal[j] -= (energy_to_dist/rmass[j]) * wfd*(Tj-Ti)/wtotal;
 	    assert(wfd*(Tj-Ti)>=0);
 	    assert(wtotal>=0);
 	  }
@@ -300,8 +302,8 @@ void FixPhaseChange::pre_exchange()
 	v[atom->nlocal-1][1] = v[i][1];
 	v[atom->nlocal-1][2] = v[i][2];
 
-	//e[i] = sph_t2energy(Tc,cv[i]);
-	e[i] -= Hwv*to_mass/rmass[i];
+	e[i] = sph_t2energy(Tc,cv[i]);
+	e[i] -= Hwv;
       }
     }
   }
@@ -332,10 +334,6 @@ void FixPhaseChange::pre_exchange()
         atom->map_set();
       }
     }
-  }
-  // TODO: remove it after debugging
-  for (int i = 0; i < nall; i++) {
-    delocal[i] = 0.0;
   }
 }
 

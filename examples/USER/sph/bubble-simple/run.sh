@@ -3,15 +3,15 @@
 set -e
 set -u
 Lx=1.0
-nx=160
-ndim=2
+nx=80
+ndim=3
 np=8
 D_heat_g=0.04
 dT=0.01
 Hwv=1.0
 alpha=0.25
-dprob=0.1
-sph_rho_g=10.0
+dprob=0.01
+sph_rho_g=100
 time_k=1.0
 cv_g=4.0
 # parameters for kana

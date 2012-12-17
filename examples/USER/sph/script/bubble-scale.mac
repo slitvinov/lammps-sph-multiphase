@@ -25,7 +25,7 @@ vapor
 */
 
 kill(all);
-d: 3;
+d: 2;
 eq1: dN = dE/Lp;
 eq2: dE = S*dt/R;
 eq3: S=R^(d-1);
