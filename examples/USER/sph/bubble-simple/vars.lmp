@@ -17,16 +17,16 @@ variable          dx   equal  1.0/${nx}
 # density of droplet
 variable          sph_rho_d equal 1.0
 
+# sound speed
 variable          sph_c_d equal 10/sqrt(${sph_rho_d})
 variable          sph_c_g equal 10/sqrt(${sph_rho_g})
 
-# viscosity of droplet 
+# viscosity
 variable          sph_eta_d equal 5e-2
-# viscosity of gas
 variable          sph_eta_g equal 5e-2
 
 # extract that rbackground in the equation of state
-# pressu ~ ( rho/rho0 - rbackground)^gamma
+# pressure ~ ( rho/rho0 - rbackground)^gamma
 variable          rbackground equal 0.0
 
 variable          h equal 3.0*${dx}
@@ -47,8 +47,9 @@ variable          cv_d      equal 1.0
 #variable          cv_g      equal 1.0
 variable           Tc equal 0.85
 variable           Tt equal ${Tc}+${dT}
-variable          e_d       equal ${cv_d}*${Tc}*${sph_rho_d}
-variable          e_g       equal ${cv_g}*1.0*${sph_rho_g}
+# energy
+variable          e_d       equal ${cv_d}*${Tc}
+variable          e_g       equal ${cv_g}*1.0
 
 # type of the gas particle
 variable          g_type equal 1

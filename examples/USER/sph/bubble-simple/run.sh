@@ -3,16 +3,16 @@
 set -e
 set -u
 Lx=1.0
-nx=40
+nx=20
 ndim=2
 np=1
 D_heat_g=0.04
 dT=0.01
-cp=2.5
+cp=0.25
 alpha=0.25
 dprob=0.1
-sph_rho_g=10.0
-time_k=1.00
+sph_rho_g=1.0
+time_k=1.0
 cv_g=4.0
 # parameters for kana
 lmp=../../../../src/lmp_linux

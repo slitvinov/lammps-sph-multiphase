@@ -16,6 +16,7 @@
 #include "string.h"
 #include "fix_phase_change.h"
 #include "sph_kernel_quintic.h"
+#include "sph_energy_equation.h"
 #include "neighbor.h"
 #include "neigh_list.h"
 #include "neigh_request.h"
@@ -217,7 +218,7 @@ void FixPhaseChange::pre_exchange()
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    double Ti = e[i]/(cv[i]*rho[i]);
+    double Ti = sph_energy2t(e[i], cv[i]);
     if ( (abscgi>CG_SMALL) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
       double coord[3];
       bool ok;
@@ -233,7 +234,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	//double energy_to_dist = cp  + (cv[i]*Tc*rho[i] - e[i])*rmass[i]/to_mass;
+	//double energy_to_dist = cp  + (sph_t2energy(Tc,cv[i]) - e[i])*rmass[i]/to_mass;
 	double energy_to_dist  = 0.0;
 	nins++;
 	// look for the neighbors of the type from_type
@@ -250,7 +251,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  double Tj = e[j]/(cv[j]*rho[j]);
+	  double Tj = sph_energy2t(e[j],cv[j]);
 	  if ( (type[j]==from_type) && (Tj>Ti) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
@@ -271,7 +272,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  double Tj = e[j]/(cv[j]*rho[j]);
+	  double Tj = sph_energy2t(e[j],cv[j]);
 	  if ( (type[j]==from_type) && (Tj>Ti) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
@@ -292,13 +293,14 @@ void FixPhaseChange::pre_exchange()
  	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
 	rho[atom->nlocal-1] = rho[i];
-	e[atom->nlocal-1] = cv[i]*Tc*rho[i];
+	e[atom->nlocal-1] = sph_t2energy(Tc,cv[i]);
+	cv[atom->nlocal-1] = cv[i];
 	de[atom->nlocal-1] = 0.0;
 	v[atom->nlocal-1][0] = v[i][0];
 	v[atom->nlocal-1][1] = v[i][1];
 	v[atom->nlocal-1][2] = v[i][2];
 
-	//e[i] = cv[i]*rho[i]*Tc;
+	//e[i] = sph_t2energy(Tc,cv[i]);
 	e[i] -= cp*to_mass/rmass[i];
       }
     }
