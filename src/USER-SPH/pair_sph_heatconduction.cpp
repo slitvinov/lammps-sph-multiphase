@@ -15,6 +15,7 @@
 #include "stdlib.h"
 #include "pair_sph_heatconduction.h"
 #include "sph_kernel_quintic.h"
+#include "sph_energy_equation.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -116,8 +117,8 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
 
         deltaE = 2.0 * imass * jmass / (imass+jmass);
         deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
-	double Ti = e[i]/cv[i];
-	double Tj = e[j]/cv[j];
+        double Ti = sph_energy2t(e[i], cv[i]);
+	double Tj = sph_energy2t(e[j], cv[j]);
         deltaE *= D * (Ti - Tj) * wfd;
 
         de[i] += deltaE;
