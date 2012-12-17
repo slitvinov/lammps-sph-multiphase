@@ -233,7 +233,8 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp  + (cv[i]*Tc*rho[i] - e[i])*rmass[i]/to_mass;
+	//double energy_to_dist = cp  + (cv[i]*Tc*rho[i] - e[i])*rmass[i]/to_mass;
+	double energy_to_dist  = 0.0;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -282,7 +283,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    //delocal[j] -= energy_to_dist*wfd*(Tj-Ti)/wtotal;
+	    delocal[j] -= energy_to_dist*wfd*(Tj-Ti)/wtotal;
 	    assert(wfd*(Tj-Ti)>=0);
 	    assert(wtotal>=0);
 	  }
@@ -298,7 +299,7 @@ void FixPhaseChange::pre_exchange()
 	v[atom->nlocal-1][2] = v[i][2];
 
 	//e[i] = cv[i]*rho[i]*Tc;
-	e[i] -= cp*rmass[i]/to_mass;
+	e[i] -= cp*to_mass/rmass[i];
       }
     }
   }
