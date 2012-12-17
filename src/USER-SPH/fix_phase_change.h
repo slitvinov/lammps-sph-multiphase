@@ -58,6 +58,11 @@ class FixPhaseChange : public Fix {
   /// probability of phase change [0.0:1.0]
   double change_chance;
 
+  // energy of phase change
+  double* delocal;
+  void unpack_reverse_comm(int n, int *list, double *buf);
+  int pack_reverse_comm(int n, int first, double *buf);
+
   class RanPark *random;
 
   void options(int, char **);

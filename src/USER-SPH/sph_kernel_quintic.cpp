@@ -48,8 +48,10 @@ double LAMMPS_NS::sph_dw_quintic3d(double r) {
     wfd = -50*pow(s,4)+120*pow(s,3)-120*s;
   } else if (s<2) {
     wfd = 25*pow(s,4)-180*pow(s,3)+450*pow(s,2)-420*s+75;
-  } else {
+  } else if (s<3) {
     wfd = -5*pow(s,4)+60*pow(s,3)-270*pow(s,2)+540*s-405;
+  } else {
+    wfd = 0.0;
   }
   return norm3d*wfd;
 }
@@ -62,8 +64,10 @@ double LAMMPS_NS::sph_dw_quintic2d(double r) {
     wfd = -50*pow(s,4)+120*pow(s,3)-120*s;
   } else if (s<2) {
     wfd = 25*pow(s,4)-180*pow(s,3)+450*pow(s,2)-420*s+75;
-  } else {
+  } else if (s<3) {
     wfd = -5*pow(s,4)+60*pow(s,3)-270*pow(s,2)+540*s-405;
+  } else {
+    wfd = 0.0;
   }
   return norm2d*wfd;
 }

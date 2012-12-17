@@ -45,6 +45,8 @@ using namespace FixConst;
 FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
+  // communicate energy change due to phase change
+  comm_reverse = 1;
   int nnarg = 14;
   if (narg < nnarg) error->all(FLERR,"Illegal fix phase_change command");
 
@@ -199,15 +201,15 @@ void FixPhaseChange::pre_exchange()
   double *rho = atom->rho;
   double *cv = atom->cv;
   double *e   = atom->e;
-  double *de   = atom->de;
+  double *de = atom->de;
+  delocal   = atom->de;
   int *type = atom->type;
   
-  /// TODO: clear de
   int nall;
   if (force->newton) nall = atom->nlocal + atom->nghost;
   else nall = atom->nlocal;
   for (int i = 0; i < nall; i++) {
-    de[i] = 0.0;
+    delocal[i] = 0.0;
   }
 
   /// TODO: how to distribute to ghosts?
@@ -215,7 +217,7 @@ void FixPhaseChange::pre_exchange()
     double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
-    double Ti = e[i]/cv[i];
+    double Ti = e[i]/(cv[i]*rho[i]);
     if ( (abscgi>CG_SMALL) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
       double coord[3];
       bool ok;
@@ -231,7 +233,7 @@ void FixPhaseChange::pre_exchange()
       if (ok) {
 	/// distribute energy to neighboring particles
 	/// latent heat + heat particle i + heat a new particle
-	double energy_to_dist = cp + (cv[i]*Tc - e[i])*rmass[i]/to_mass;
+	double energy_to_dist = cp  + (cv[i]*Tc*rho[i] - e[i])*rmass[i]/to_mass;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and extract energy from all of them
@@ -247,7 +249,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  double Tj = e[j]/cv[j];
+	  double Tj = e[j]/(cv[j]*rho[j]);
 	  if ( (type[j]==from_type) && (Tj>Ti) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
@@ -260,6 +262,7 @@ void FixPhaseChange::pre_exchange()
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
 	    wtotal+=wfd*(Tj-Ti);
+	    assert(wfd*(Tj-Ti)>=0);
 	  }
 	}
 
@@ -267,7 +270,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  double Tj = e[j]/cv[j];
+	  double Tj = e[j]/(cv[j]*rho[j]);
 	  if ( (type[j]==from_type) && (Tj>Ti) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
@@ -279,19 +282,23 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    de[j] -= energy_to_dist*wfd*(Tj-Ti)/wtotal;
+	    //delocal[j] -= energy_to_dist*wfd*(Tj-Ti)/wtotal;
+	    assert(wfd*(Tj-Ti)>=0);
+	    assert(wtotal>=0);
 	  }
 	}
 	
-	e[i] = cv[i]*Tc;
-	// for a new atom
+ 	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
 	rho[atom->nlocal-1] = rho[i];
-	e[atom->nlocal-1] = cv[i]*Tc;
+	e[atom->nlocal-1] = cv[i]*Tc*rho[i];
 	de[atom->nlocal-1] = 0.0;
 	v[atom->nlocal-1][0] = v[i][0];
 	v[atom->nlocal-1][1] = v[i][1];
 	v[atom->nlocal-1][2] = v[i][2];
+
+	//e[i] = cv[i]*rho[i]*Tc;
+	e[i] -= cp*rmass[i]/to_mass;
       }
     }
   }
@@ -300,6 +307,12 @@ void FixPhaseChange::pre_exchange()
   int ninsall;
   MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
   next_reneighbor += nfreq;
+
+  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
+  comm->reverse_comm_fix(this);
+  for (int i = 0; i < nlocal; i++) {
+    e[i] += delocal[i];
+  }
   
   // reset global natoms
   // set tag # of new particle beyond all previous atoms
@@ -317,16 +330,9 @@ void FixPhaseChange::pre_exchange()
       }
     }
   }
-
-  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
-  comm->reverse_comm();
-  for (int i = 0; i < nlocal; i++) {
-    e[i] += de[i];
-  }
-  /// TODO: probably it is not needed
-  /// because it will be clean by clean_force()
+  // TODO: remove it after debugging
   for (int i = 0; i < nall; i++) {
-    de[i] = 0.0;
+    delocal[i] = 0.0;
   }
 }
 
@@ -478,4 +484,30 @@ void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, do
   coord[0] = xone[0] + eij[0]*delta/eijabs;
   coord[1] = xone[1] + eij[1]*delta/eijabs;
   coord[2] = xone[2] + eij[2]*delta/eijabs;
+}
+
+int FixPhaseChange::pack_reverse_comm(int n, int first, double *buf)
+{
+  int i,m,last;
+
+  m = 0;
+  last = first + n;
+
+    for (i = first; i < last; i++) {
+      buf[m++] = delocal[i];
+    }
+  return comm_reverse;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void FixPhaseChange::unpack_reverse_comm(int n, int *list, double *buf)
+{
+  int i,j,m;
+
+  m = 0;
+  for (i = 0; i < n; i++) {
+    j = list[i];
+    delocal[j] += buf[m++];
+  }
 }
