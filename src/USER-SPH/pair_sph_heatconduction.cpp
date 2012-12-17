@@ -116,8 +116,9 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
 
         deltaE = 2.0 * imass * jmass / (imass+jmass);
         deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
-	double Ti = e[i]/cv[i];
-	double Tj = e[j]/cv[j];
+	// E=cv*rho*T
+	double Ti = e[i]/(cv[i]*rho[i]);
+	double Tj = e[j]/(cv[j]*rho[j]);
         deltaE *= D * (Ti - Tj) * wfd;
 
         de[i] += deltaE;

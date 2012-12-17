@@ -39,12 +39,14 @@ FixSetMeso::FixSetMeso(LAMMPS *lmp, int narg, char **arg) :
 
   global_freq = 1;
   xstr = NULL;
-  rhoflag = eflag = 0;
+  rhoflag = eflag = tflag = 0;
   if (strcmp(arg[3],"meso_rho")==0) {
     rhoflag = 1;
   } else if (strcmp(arg[3],"meso_e")==0) {
     eflag = 1;
-  } 
+  } else if (strcmp(arg[3],"meso_t")==0) {
+    tflag = 1;
+  }
   else {
     error->all(FLERR,"Illegal fix setmeso command, meso_rho or meso_e must be given");
   }
@@ -177,10 +179,15 @@ void FixSetMeso::min_setup(int vflag)
 void FixSetMeso::post_force(int vflag)
 {
   double **x = atom->x;
+  double *cv = atom->cv;
+  double *rho = atom->rho;
   double *mesovar;
   if (rhoflag) {
     mesovar = atom->rho;
   } else if (eflag) {
+    mesovar = atom->e;
+  } else if (tflag) {
+    // also use energy
     mesovar = atom->e;
   } else {
     error->all(FLERR,"Illegal fix setmeso command");
@@ -214,7 +221,13 @@ void FixSetMeso::post_force(int vflag)
 	}
 
         mesovarorg += mesovar[i];
-        if (xstyle) mesovar[i] = xvalue;
+        if (xstyle) {
+	  if (tflag) {
+	    mesovar[i] = cv[i]*rho[i]*xvalue;
+	  } else {
+	    mesovar[i] = xvalue;
+	  }
+	}
       }
 
   // variable force, wrap with clear/add
