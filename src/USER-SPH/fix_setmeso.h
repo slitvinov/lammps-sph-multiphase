@@ -46,7 +46,7 @@ class FixSetMeso : public Fix {
   int xvar,xstyle;
   double mesovarorg,mesovarorg_all;
   int varany,force_flag;
-  int rhoflag, eflag;
+  int rhoflag, eflag, tflag;
   int regionflag;
   int nlevels_respa;
 

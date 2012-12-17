@@ -75,6 +75,7 @@ void ComputeMesoTAtom::compute_peratom()
   }
 
   double *e = atom->e;
+  double *rho = atom->rho;
   double *cv = atom->cv;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
