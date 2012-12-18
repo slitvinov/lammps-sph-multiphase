@@ -2,14 +2,14 @@
 
 set -e
 set -u
-Lx=1.0
+Lx=1.5
 nx=$1
 ndim=2
 np=8
 D_heat_g=0.02
 dT=0.01
 Hwv=1.0
-alpha=0.50
+alpha=1.00
 dprob=0.01
 sph_rho_g=10.0
 time_k=1.0

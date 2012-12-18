@@ -5,7 +5,7 @@ if ${ndim}==3 then &
 "variable nz equal ${nx}"
 
 # size of the domain
-variable          Ly   equal  1.5*${Lx}
+variable          Ly   equal  ${Lx}
 if ${ndim}==3 then &
 "variable         Lz   equal ${Lx}"
 

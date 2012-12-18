@@ -1,7 +1,8 @@
 #! /bin/bash
 
+Rc=0.002
 function getnp_depart() {
-    awk '$8>1.0&&NR>1{print $6;exit}' $1
+    awk '$8>1.0&&NR>1{print $2;exit}' $1
 }
 
 function getg() {
@@ -9,7 +10,7 @@ function getg() {
 }
 
 
-for d in $(ls -d data*); do
+for d in $(ls -d data*nx80*); do
     g=$(getg $d)
     Np=$(getnp_depart $d/rg.dat)
     echo $g ${Np}
