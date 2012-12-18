@@ -7,9 +7,9 @@ atom_style         meso
 #variable          ndim equal 3 
 dimension         ${ndim}
 if ${ndim}==3 then &
-"boundary          p f p" &
+"boundary          p p p" &
 else &
-"boundary          p f p"
+"boundary          p p p"
 
 include           vars.lmp
 
@@ -52,9 +52,8 @@ region       rbottom block EDGE EDGE 0 ${y1} EDGE EDGE units box
 group        gbottom region rbottom
 
 # keep constant temperature and density on the top and on the bottom
-fix sm       boundary setmeso meso_t 1.0
+#fix sm       boundary setmeso meso_t 1.0
 fix bm       boundary setmeso meso_rho ${sph_rho_g}
-
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso

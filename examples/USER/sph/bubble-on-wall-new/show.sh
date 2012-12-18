@@ -1,7 +1,7 @@
 #! /bin/bash
 
 Tc=0.85
-B="0:0:0:1.0:1.0:1.0"
+B="0:0:0:1.0:1.5:1.0"
 if [ $# -eq 2 ]; then
     n=$2
 else
@@ -12,13 +12,17 @@ dn=$(ls -1td data* | awk -v n=$n 'NR==n' )
 bash post.sh ${dn}
 
 if [ $1 == "a" ]; then
-    punto -B ${B} -G ${Tc}:1.00 -s 2 -z 1:2:3:7 ${dn}/temp.dat
+    cd ${dn}
+    punto -B ${B} -G ${Tc}:1.00 -s 2 -z 1:2:3:7 temp.dat
 elif [ $1 == "b" ]; then
-    punto -B ${B} -G ${Tc}:1.00 -z 1:2:3:7 ${dn}/bubble.dat
+    cd ${dn}
+    punto -B ${B} -G ${Tc}:1.00 -z 1:2:3:7 bubble.dat
 elif [ $1 == "s" ]; then
-    punto -B ${B} -G ${Tc}:1.00 -z 1:2:3:7 ${dn}/slice.x.dat
+    cd ${dn}
+    punto -B ${B} -G ${Tc}:1.00 -z 1:2:3:7 slice.x.dat
 elif [ $1 == "c" ]; then
-    punto -B ${B} -c -z 1:2:3:8 -s 4 ${dn}/temp.dat
+    cd ${dn}
+    punto -B ${B} -c -z 1:2:3:8 -s 4 temp.dat
 fi
 
 echo ${dn}
