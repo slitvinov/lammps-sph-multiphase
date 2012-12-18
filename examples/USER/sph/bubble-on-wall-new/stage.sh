@@ -10,7 +10,7 @@ function getg() {
 }
 
 
-for d in $(ls -d data*nx80*); do
+for d in $(ls -d data*); do
     g=$(getg $d)
     Np=$(getnp_depart $d/rg.dat)
     echo $g ${Np}
