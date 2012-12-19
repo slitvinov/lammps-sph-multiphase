@@ -251,8 +251,21 @@ void FixSetMeso::post_force(int vflag)
           continue;
 
         mesovarorg += mesovar[i];
-        if (xstyle == ATOM) mesovar[i] = smesovar[i];
-        else if (xstyle) mesovar[i] = xvalue;
+        if (xstyle == ATOM) {
+	  if (tflag) {
+	    mesovar[i] = sph_t2energy(smesovar[i],cv[i]);
+	  } else {
+	    mesovar[i] = smesovar[i];	    
+	  }
+	}
+        else if (xstyle) {
+	  if (tflag) {
+	    // xvalue is temperature and we set energy
+	    mesovar[i] = sph_t2energy(xvalue,cv[i]);
+	  } else {
+	    mesovar[i] = xvalue;
+	  }
+	}
       }
   }
 }
