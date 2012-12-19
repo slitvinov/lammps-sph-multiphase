@@ -64,7 +64,7 @@ fix bm       boundary setmeso meso_rho ${sph_rho_g}
 fix                integrate_fix_full all meso
 
 #include            ${ndim}-image.lmp
-variable           sph_mu  equal ${sph_eta_g}/${sph_rho_g}
+variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
 neighbor           0 bin
