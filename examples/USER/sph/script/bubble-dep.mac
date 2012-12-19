@@ -1,0 +1,27 @@
+/* bubble departure diameter */
+kill(all);
+
+/* Fritz correlation is */
+/* theta is in angles */
+/* D= 0.0208 * theta * sqrt( sigma/(g*drho) ); */
+
+/* 1. assume the contact angle is %pi/2 */
+phi: %pi/2;
+
+/* contact line length */
+eq1: cl=2*%pi*R;
+
+/* force created by surface tension */
+eq2: F_s= cl * sigma * sin(phi);
+
+/* body force on the bubble */
+
+eq3: V=4/3*%pi*R^3/2;
+eq4: F_b=V*g * drho;
+eq5: F_b = F_s;
+sol: solve( [eq1, eq2, eq3, eq4, eq5], [F_b, F_s, cl, V, R]);
+
+eq6: V=4/3*%pi*(D/2)^3;
+eq6_aux: ev(eq6, sol[2]);
+
+float(solve(eq6_aux, D)[3])/90.0;
