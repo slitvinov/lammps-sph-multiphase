@@ -21,7 +21,7 @@ variable          sph_c_d equal 10/sqrt(${sph_rho_d})
 variable          sph_c_g equal 10/sqrt(${sph_rho_g})
 
 # viscosity
-variable          sph_eta_d equal 5e-2
+variable          sph_eta_d equal 5e-4
 variable          sph_eta_g equal 5e-2
 
 # extract that rbackground in the equation of state

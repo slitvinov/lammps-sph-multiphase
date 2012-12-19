@@ -64,7 +64,7 @@ fix bm       boundary setmeso meso_rho ${sph_rho_g}
 fix                integrate_fix_full all meso
 
 #include            ${ndim}-image.lmp
-variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
+variable           sph_mu  equal ${sph_eta_g}/${sph_rho_g}
 include            settimestep.lmp
 
 neighbor           0 bin
@@ -103,12 +103,13 @@ variable            time equal step*${dt}
 variable            natoms equal count(all)
 
 # create vapor atom in the center of the domain
-variable          xcenter_per equal ${xcenter}+0.5*${dx}
-variable          ycenter_per equal ${y1}-0.5*${dx}
-create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+#variable          xcenter_per equal ${xcenter}+0.5*${dx}
+#variable          ycenter_per equal ${y1}-0.5*${dx}
+#create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-#region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.12 units box
-#set               region rsq type ${d_type}
+region            rsq sphere ${xcenter} ${y1} ${zcenter} 0.1 units box
+set               region rsq type ${d_type}
+set               group boundary type ${g_type}
 
 # variable          a_sq   equal 0.2
 # include           square.lmp
@@ -165,7 +166,6 @@ variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
 echo              log
-variable          nstep equal 10.0/${dt}
-run               ${nstep} pre no  post no every 100 &
+run               10000000 pre no  post no every 100 &
 "if ${vmi}>2 then quit" &
 "if ${vnd}>1.0 then quit"

@@ -4,6 +4,6 @@ ma=5.0
 g = 1.0/np.linspace(1/ma, 1/mi, 100)
 
 np.random.shuffle(g)
-np.savetxt("g.dat", g, "%.2f")
+np.savetxt("g.dat", g, "%.3f")
 
 #parallel -a g.dat echo
