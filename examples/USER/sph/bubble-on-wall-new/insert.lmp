@@ -7,9 +7,9 @@ atom_style         meso
 #variable          ndim equal 3 
 dimension         ${ndim}
 if ${ndim}==3 then &
-"boundary          p p p" &
+"boundary          p f p" &
 else &
-"boundary          p p p"
+"boundary          p f p"
 
 include           vars.lmp
 
@@ -48,11 +48,16 @@ region	     rflow block EDGE EDGE ${y1} ${y2} EDGE EDGE units box
 group	     flow region rflow
 group	     boundary subtract all flow
 fix          wallim boundary setforce 0 0 0
+
 region       rbottom block EDGE EDGE 0 ${y1} EDGE EDGE units box
 group        gbottom region rbottom
 
+region       rupper block EDGE EDGE ${y2} EDGE EDGE EDGE units box
+group        gupper region rupper
+
 # keep constant temperature and density on the top and on the bottom
-#fix sm       boundary setmeso meso_t 1.0
+fix fbo      gbottom setmeso meso_t 1.0
+fix fup      gupper  setmeso meso_t ${Tc}
 fix bm       boundary setmeso meso_rho ${sph_rho_g}
 
 # do full time integration for all particles
@@ -112,7 +117,11 @@ create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} uni
 set               type ${d_type} meso_cv ${cv_d}
 set               type ${g_type} meso_cv ${cv_g}
 set               type ${d_type} meso_e ${e_d}
-set               type ${g_type} meso_e ${e_g}
+variable          dL   equal 0.25
+variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
+fix               tpr         flow setmeso meso_t v_tprofile
+run               0
+unfix             tpr
 set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
 set               type ${d_type} meso_rho ${sph_rho_d}
@@ -135,8 +144,9 @@ variable        vied equal c_ied
 variable        vdroplet equal count(droplet)
 variable        vnd equal count(droplet)*${dx}^${ndim}
 variable        vcm equal xcm(droplet,y)-${y1}
+variable        velcm equal vcm(droplet,y)
 variable        vmi equal (bound(droplet,ymin)-${y1})/${dx}
-fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${vcm} ${vmi}" &
+fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${vcm} ${vmi} ${velcm}" &
     file ${dname}/rg.dat screen no
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
@@ -158,4 +168,4 @@ echo              log
 variable          nstep equal 10.0/${dt}
 run               ${nstep} pre no  post no every 100 &
 "if ${vmi}>2 then quit" &
-"if ${vnd}>0.7 then quit"
+"if ${vnd}>1.0 then quit"

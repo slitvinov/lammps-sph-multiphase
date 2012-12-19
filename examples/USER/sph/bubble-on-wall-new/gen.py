@@ -1,7 +1,7 @@
 import numpy as np
-min=0.1
-max=100.0
-g = 1.0/np.linspace(1/100.0, 1/1.22, 100)
+mi=0.1
+ma=5.0
+g = 1.0/np.linspace(1/ma, 1/mi, 100)
 
 np.random.shuffle(g)
 np.savetxt("g.dat", g, "%.2f")
