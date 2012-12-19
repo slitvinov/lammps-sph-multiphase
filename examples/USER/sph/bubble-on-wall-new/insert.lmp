@@ -157,4 +157,5 @@ fix gravity droplet addforce 0.0 v_bodyfy 0.0
 echo              log
 variable          nstep equal 10.0/${dt}
 run               ${nstep} pre no  post no every 100 &
-"if ${vmi}>2 then quit"
+"if ${vmi}>2 then quit" &
+"if ${vnd}>0.7 then quit"
