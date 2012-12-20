@@ -1,0 +1,10 @@
+Testing 3D bubble in a simple situation.
+
+For gnuplot
+	User-Defined Functions:
+	file(D, Hwv, nx)=sprintf("data-nx%s-ndim3-np8-D_heat_g%s-alpha0.5-sph_c_g10.0-Hwv%s-prob1.0-time_k2.00dist/rg.dat", nx, D, Hwv)
+	g(x) = a*(x-b)**c
+	f is undefined
+	last(n) = sprintf("%s/rg.dat", system(flast(n)))
+	flast(n) = sprintf("ls -1td data* | awk -v n=%i 'NR==n'", n)
+
