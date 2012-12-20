@@ -5,18 +5,16 @@ kill(all);
 /* theta is in angles */
 /* D= 0.0208 * theta * sqrt( sigma/(g*drho) ); */
 /* integrate sphere */
-sp_3d(f, l):=
-integrate(integrate(integrate(f*r^2*sin(p),
-      t, 0, 2*%pi),
-    r, 1/sin(p), 1),
-  p, l, %pi/2);
-
 assume(phi>%pi/2);
 assume(phi<%pi);
-sp_2d(f, phi):=
-integrate(integrate(f*r,
-    r, sin(phi-%pi/2)/sin(p), 1),
-  p, phi-%pi/2, %pi - phi + %pi/2);
+sp_3d(phi):= block([h],
+  h: 1-sin(phi-%pi/2),
+  %pi*h^2*(1-h/3));
+
+sp_2d(phi):= block([alpha],
+  alpha: 2*%pi - 2*phi,
+  1/2*(alpha-sin(alpha)));
+
 
 /* volume of the sphere */
 /* sp_int(1, 0, %pi); */
@@ -35,8 +33,8 @@ eq1[2]: cl=1;
 eq2: F_s= cl * sigma * sin(phi);
 
 /* body force on the bubble */
-eq3[3]: V=sp_3d(1, %pi)*R^3;
-eq3[2]: V=sp_2d(1, phi)*R^2;
+eq3[3]: V=sp_3d(phi)*R^3;
+eq3[2]: V=sp_2d(phi)*R^2;
 eq4: F_b=V*g*drho;
 
 /* at departure forces must be equal */
@@ -46,7 +44,13 @@ sol: solve( [eq1[d], eq2, eq3[d], eq4, eq5], [F_b, F_s, cl, V, R]);
 /* get a formula for R*/
 idx[3]: 2;
 idx[2]: 1;
-s: assoc(R,sol[idx[d]]);
+vsol: assoc(V,sol[idx[d]]);
+if d=3 then (
+  saux: solve(vsol = 4/3*%pi*rsol^3, rsol),
+  s: rhs(saux[3]) )
+else (
+  saux: solve(vsol = %pi*rsol^2, rsol),
+  s: rhs(saux[2]) );
 
 /* plot only part depending of phi, compare with Fritz */
 ps: ev(s, [sigma=1, drho=1, g=1]);
