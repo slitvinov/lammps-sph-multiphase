@@ -177,8 +177,8 @@ variable           pcutoff equal ${h}
 #                    ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
 #                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 
-variable gforce equal ${gy}*step*${dt}
-variable bodyfy atom mass*${gforce}
+variable gforce equal ${gk}*(step*${dt}-${timec})*(step*${dt}>${timec})
+variable bodyfy atom v_gforce*mass
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
 fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${vcm} ${vmi} ${velcm} ${gforce}" &
