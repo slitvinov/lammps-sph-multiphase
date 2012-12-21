@@ -133,15 +133,20 @@ set               group boundary type ${w_type}
 set               type ${d_type} meso_cv ${cv_d}
 set               type ${g_type} meso_cv ${cv_g}
 set               type ${d_type} meso_e ${e_d}
+
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+set               type ${w_type} mass ${sph_mass_w}
+
+set               type ${d_type} meso_rho ${sph_rho_d}
+set               type ${g_type} meso_rho ${sph_rho_g}
+set               type ${w_type} meso_rho ${sph_rho_w}
+
 variable          dL   equal 0.25
 variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
 fix               tpr         flow setmeso meso_t v_tprofile
 run               0
 unfix             tpr
-set               type ${d_type} mass ${sph_mass_d}
-set               type ${g_type} mass ${sph_mass_g}
-set               type ${d_type} meso_rho ${sph_rho_d}
-set               type ${g_type} meso_rho ${sph_rho_g}
 
 group              droplet type ${d_type}
 
