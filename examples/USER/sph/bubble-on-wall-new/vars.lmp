@@ -15,14 +15,17 @@ variable          dx   equal  1.0/${nx}
 #variable          sph_rho_g equal 1.0
 # density of droplet
 variable          sph_rho_d equal 1.0
+variable          sph_rho_w equal ${sph_rho_g}
 
 # sound speed
 variable          sph_c_d equal 10/sqrt(${sph_rho_d})
 variable          sph_c_g equal 10/sqrt(${sph_rho_g})
+variable          sph_c_w equal ${sph_c_g}
 
 # viscosity
 variable          sph_eta_d equal 5e-2
-variable          sph_eta_g equal 5e-4
+variable          sph_eta_g equal 5e-2
+variable          sph_eta_w equal ${sph_eta_g}
 
 # extract that rbackground in the equation of state
 # pressure ~ ( rho/rho0 - rbackground)^gamma
@@ -35,20 +38,28 @@ variable          Nfreq equal 100
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
 # mass of gas particle
 variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
+variable          sph_mass_w equal ${sph_mass_g}
 
 # surface tension
 #variable          alpha equal 0.2
+variable           alpha_gd equal ${alpha}
+variable           alpha_gw equal ${alpha}
+variable           alpha_dw equal 1.5*${alpha}
 #variable           D_heat_g equal 0.0005
 #variable           D_heat_g equal 0.0005
 variable           D_heat_d equal 0.1
+variable           D_heat_w equal ${D_heat_g}
 
-variable          cv_d      equal 1.0
 #variable          cv_g      equal 1.0
+variable          cv_d      equal 1.0
+variable          cv_w      equal ${cv_g}
+
 #variable           Tc equal 0.85
 variable           Tt equal ${Tc}+${dT}
 # energy
 variable          e_d       equal ${cv_d}*${Tc}
 variable          e_g       equal ${cv_g}*1.0
+variable          e_w       equal ${e_g}
 
 # add an uplift force to the gas particles
 #variable          gy    equal 5.0
@@ -57,3 +68,4 @@ variable          e_g       equal ${cv_g}*1.0
 variable          g_type equal 1
 # type of the droplet particle
 variable          d_type equal 2
+variable          w_type equal 3
