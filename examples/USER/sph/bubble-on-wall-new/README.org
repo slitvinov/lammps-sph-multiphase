@@ -8,3 +8,9 @@ For gnuplot
 	last(n) = sprintf("%s/rg.dat", system(flast(n)))
 	flast(n) = sprintf("ls -1td data* | awk -v n=%i 'NR==n'", n)
 
+	order(n) = sprintf("%s/rg.dat", system(forder(n)))
+	forder(n) = sprintf("ls -1d data* | sort -g | awk -v n=%i 'NR==n'", n)
+	
+	fg(n) = sprintf("ls -1d data* | sort -g | awk -v n=%i 'NR==n' | awk -vRS='-' -vFS='gy' '/gy/{print $2}' ", n)
+	g(n) = system(fg(n))+0.0
+
