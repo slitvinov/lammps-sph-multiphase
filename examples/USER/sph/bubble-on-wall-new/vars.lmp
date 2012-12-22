@@ -5,7 +5,7 @@ if ${ndim}==3 then &
 "variable nz equal ${nx}"
 
 # size of the domain
-variable          Ly   equal  ${Lx}
+variable          Ly   equal  3*${Lx}
 if ${ndim}==3 then &
 "variable         Lz   equal ${Lx}"
 
@@ -23,7 +23,7 @@ variable          sph_c_g equal 20/sqrt(${sph_rho_g})
 variable          sph_c_w equal ${sph_c_g}
 
 # viscosity
-variable          sph_eta_d equal 5e-3
+variable          sph_eta_d equal 5e-2
 variable          sph_eta_g equal 5e-2
 variable          sph_eta_w equal ${sph_eta_g}
 

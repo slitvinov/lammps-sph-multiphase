@@ -15,11 +15,13 @@ g(n) = word(gidx,n)
 set style data line
 set macro
 dx=1.0/40.0
-x1='(sqrt($2)*g(i)**0.50)'
+xref='(sqrt($2)*g(i)**0.6666667)'
+x1='(sqrt($2)*g(i)**0.500000)'
+y1='($7)'
 #y1='($7/sqrt($2))'
-y1='($7/sqrt($2))'
-set term x11 1
-plot [][:] for [i=1:2] order(i) u @x1:@y1 t g(i)
 
-#set term x11 2
-#plot [][:1] for [i=20:54:5] order(i) u (sqrt($2)):@y1 t g(i)
+set term x11 1
+plot [][:] for [i=30:54:2] order(i) u @x1:@y1 t g(i)
+
+set term x11 2
+plot [][:] for [i=30:54:2] order(i) u @xref:@y1 t g(i)
