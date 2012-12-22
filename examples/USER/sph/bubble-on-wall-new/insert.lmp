@@ -110,7 +110,7 @@ dump_modify        dump_xyz element A B C
 timestep           ${dt}
 variable           insert_every equal 1
 #variable          Hwv equal 0.00
-variable           dr equal 0.40*${dx}
+variable           dr equal 0.25*${dx}
 #variable           prob equal ${dt}/${dprob}
 variable           prob equal ${dprob}
 
