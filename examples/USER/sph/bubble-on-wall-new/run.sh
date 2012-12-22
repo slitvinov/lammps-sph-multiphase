@@ -2,7 +2,7 @@
 
 set -e
 set -u
-Lx=2.0
+Lx=1.0
 nx=$1
 ndim=2
 np=8
@@ -10,7 +10,7 @@ D_heat_g=0.04
 dT=0.01
 Tc=0.95
 Hwv=4.0
-alpha=0.25
+alpha=0.125
 dprob=0.01
 sph_rho_g=10.0
 time_k=1.00
@@ -23,7 +23,7 @@ proc="-np ${np}"
 
 dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_g${D_heat_g}-alpha${alpha}\
 -Hwv${Hwv}-dprob${dprob}-time_k${time_k}-cv_g${cv_g}-sph_rho_g${sph_rho_g}-dT${dT}\
--gy${gy}-Tc${Tc}
+-gy${gy}-Tc${Tc}dr
 
 rm -rf ${dname}
 mkdir -p ${dname}
