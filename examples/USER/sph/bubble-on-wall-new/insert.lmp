@@ -1,6 +1,8 @@
+shell              mkdir -p ${dname}
 log                ${dname}/log.lammps
 units              si
 atom_style         meso
+echo               both
 
 
 #variable          ndim equal 3 
@@ -31,7 +33,7 @@ else &
 create_box         3 box
 
 # create gas particles
-variable lshift    equal 0.2*${dx}
+variable lshift    equal 0.5
 if ${ndim}==2 then &
 "lattice            sq ${dx} origin ${lshift} ${lshift} 0" &
 else &
@@ -41,7 +43,7 @@ create_atoms       ${g_type} region box
 
 # create walls on the top and on the bottom
 variable     y1 equal 3*${dx}
-variable     y2  equal ${Ly}-3.5*${dx}
+variable     y2  equal ${Ly}-3.0*${dx}
 region	     rflow block EDGE EDGE ${y1} ${y2} EDGE EDGE units box
 
 group	     flow region rflow
@@ -67,7 +69,7 @@ variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
 neighbor           0 bin
-neigh_modify       delay 0 every 1
+neigh_modify       delay 0 every 1 check no
 communicate        single vel yes
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
@@ -164,18 +166,21 @@ compute         ied droplet reduce sum c_ie_atom
 variable        vied equal c_ied
 variable        vdroplet equal count(droplet)
 variable        vnd equal count(droplet)*${dx}^${ndim}
-variable        vcm equal xcm(droplet,y)-${y1}
-variable        velcm equal vcm(droplet,y)
+variable        xvcm equal xcm(droplet,x)
+variable        yvcm equal xcm(droplet,y)-${y1}
+variable        velcmx equal vcm(droplet,x)
+variable        velcmy equal vcm(droplet,y)
 variable        vmi equal (bound(droplet,ymin)-${y1})/${dx}
-fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${vcm} ${vmi} ${velcm}" &
-    file ${dname}/rg.dat screen no
+fix extra all print 1 & 
+"${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${xvcm} ${yvcm} ${velcmx} ${velcmy} ${vmi}" &
+file ${dname}/rg.dat screen no
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
                                                                   c_rho_peratom c_ie_atom c_it_atom
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd
-thermo              10
+thermo              1
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
@@ -185,7 +190,11 @@ fix                fdep droplet phase_change &
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
-echo              log
+include rem-box.lmp
+fix fkeep all keepnumber remregion 49892
+#fix fdeptest all deposit 1 1 1 1 region rflow attempt 1
+#fix fkeep all evaporate 1 1 remregion 49892
+
 run               10000000 pre no  post no every 100 &
 "if ${vmi}>2 then quit" &
 "if ${vnd}>1.0 then quit"
