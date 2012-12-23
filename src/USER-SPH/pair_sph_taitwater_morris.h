@@ -35,7 +35,7 @@ class PairSPHTaitwaterMorris : public Pair {
   virtual double single(int, int, int, int, double, double, double, double &);
 
  protected:
-  double *rho0, *soundspeed, *B, *rbackground;
+  double *rho0, *soundspeed, *B, *rbackground, *gamma;
   double **cut,**viscosity;
   int first;
 
@@ -43,7 +43,7 @@ class PairSPHTaitwaterMorris : public Pair {
 };
 
   // equation of state (helper function)
-  double sph_pressure(double B, double rho0, double rbackground, double rho);
+  double sph_pressure(double B, double rho0, double gamma, double rbackground, double rho);
 }
 
 
