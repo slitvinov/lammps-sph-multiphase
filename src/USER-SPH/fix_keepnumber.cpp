@@ -175,8 +175,6 @@ void FixKeepNumber::pre_exchange()
 
   // delete the difference 
   int nflux = ncurrent - nkeep;
-  printf("nflux: %i\n", nflux);
-
 
   // grow list and mark arrays if necessary
 
