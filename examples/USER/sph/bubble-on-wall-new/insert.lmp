@@ -144,6 +144,8 @@ set               type ${w_type} meso_rho ${sph_rho_w}
 variable          dL   equal 0.25
 variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
 fix               tpr         flow setmeso meso_t v_tprofile
+if "${ndim}==2" then "fix e2d all enforce2d"
+
 run               0
 unfix             tpr
 
@@ -182,7 +184,7 @@ thermo              100
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
-                   ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
+                   ${pcutoff} ${g_type} ${d_type} ${insert_every} 12345 ${prob} region rflow units box
 
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
