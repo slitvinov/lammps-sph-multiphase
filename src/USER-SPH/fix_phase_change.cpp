@@ -310,10 +310,7 @@ void FixPhaseChange::pre_exchange()
 
   /// find a total number of inserted atoms
   int ninsall;
-  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
   next_reneighbor += nfreq;
-
-  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
   comm->reverse_comm_fix(this);
   for (int i = 0; i < nlocal; i++) {
     e[i] += delocal[i];
@@ -323,16 +320,16 @@ void FixPhaseChange::pre_exchange()
   // set tag # of new particle beyond all previous atoms
   // if global map exists, reset it now instead of waiting for comm
   // since deleting atoms messes up ghosts
-  int success = 1;
-  if (success) {
+  MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
+  if (ninsall>0) {
     atom->natoms += ninsall;
     if (atom->tag_enable) {
       atom->tag_extend();
-      if (atom->map_style) {
-        atom->nghost = 0;
-        atom->map_init();
-        atom->map_set();
-      }
+    }
+    atom->nghost = 0;
+    if (atom->map_style) {
+      atom->map_init();
+      atom->map_set();
     }
   }
 }
