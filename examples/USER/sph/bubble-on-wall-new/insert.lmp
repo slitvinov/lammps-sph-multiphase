@@ -121,7 +121,7 @@ variable            natoms equal count(all)
 #variable          ycenter_per equal ${y1}-0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere ${xcenter} ${y1} ${zcenter} 0.1 units box
+region            rsq sphere ${xcenter} ${y1} ${zcenter} 0.2 units box
 set               region rsq type ${d_type}
 set               group boundary type ${w_type}
 
@@ -191,6 +191,6 @@ fix gravity droplet addforce 0.0 v_bodyfy 0.0
 
 #include rem-box.lmp
 
-run               10000000 pre no  post no every 100 &
+run               10000000 pre no  post no every 1000 &
 "if ${vmi}>2 then quit" &
 "if ${vnd}>1.0 then quit"

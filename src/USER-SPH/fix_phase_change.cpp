@@ -220,7 +220,7 @@ void FixPhaseChange::pre_exchange()
 			 cg[i][1]*cg[i][1] +
 			 cg[i][2]*cg[i][2]);
     double Ti = sph_energy2t(e[i], cv[i]);
-    if ( (abscgi>CG_SMALL) && (Ti>Tt) && (type[i] == to_type) && (random->uniform()<change_chance) ) {
+    if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
       double coord[3];
       bool ok;
       double delta = dr;
@@ -519,4 +519,29 @@ void FixPhaseChange::unpack_reverse_comm(int n, int *list, double *buf)
     j = list[i];
     delocal[j] += buf[m++];
   }
+}
+
+bool FixPhaseChange::isfromphasearound(int i) {
+  int* numneigh = list->numneigh;
+  double **x = atom->x;
+  int *type = atom->type;
+  double cutoff2 = cutoff*cutoff;
+  double xtmp = x[i][0];
+  double ytmp = x[i][1];
+  double ztmp = x[i][2];
+  int** firstneigh = list->firstneigh;
+  int jnum = numneigh[i];
+  int* jlist = firstneigh[i];
+  for (int jj = 0; jj < jnum; jj++) {
+    int j = jlist[jj];
+    j &= NEIGHMASK;
+    if (type[j]==from_type) {
+	double delx = xtmp - x[j][0];
+	double dely = ytmp - x[j][1];
+	double delz = ztmp - x[j][2];
+	double rsq = delx * delx + dely * dely + delz * delz;
+	if (rsq<=cutoff2) return true;
+    }
+  }
+  return  false;
 }
