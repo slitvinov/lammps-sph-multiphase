@@ -18,12 +18,12 @@ variable          sph_rho_d equal 1.0
 variable          sph_rho_w equal ${sph_rho_g}
 
 # sound speed
-variable          sph_c_d equal 20/sqrt(${sph_rho_d})
-variable          sph_c_g equal 20/sqrt(${sph_rho_g})
+variable          sph_c_d equal 5/sqrt(${sph_rho_d})
+variable          sph_c_g equal 5/sqrt(${sph_rho_g})
 variable          sph_c_w equal ${sph_c_g}
 
 # viscosity
-variable          sph_eta_d equal 5e-4
+variable          sph_eta_d equal 5e-2
 variable          sph_eta_g equal 5e-2
 variable          sph_eta_w equal ${sph_eta_g}
 
@@ -43,8 +43,8 @@ variable          sph_mass_w equal ${sph_mass_g}
 # surface tension
 #variable          alpha equal 0.2
 variable           alpha_gd equal ${alpha}
-variable           alpha_gw equal ${alpha}
-variable           alpha_dw equal 1.5*${alpha}
+variable           alpha_gw equal 2*${alpha}
+variable           alpha_dw equal ${alpha}
 #variable           D_heat_g equal 0.0005
 #variable           D_heat_g equal 0.0005
 variable           D_heat_d equal 0.1
