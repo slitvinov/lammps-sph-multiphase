@@ -197,6 +197,7 @@ void FixPhaseChange::pre_exchange()
   int* numneigh = list->numneigh;
   double **x = atom->x;
   double **v = atom->v;
+  double **vest = atom->vest;
   double **cg = atom->colorgradient;
   double *rmass = atom->rmass;
   double *rho = atom->rho;
@@ -298,9 +299,16 @@ void FixPhaseChange::pre_exchange()
 	e[atom->nlocal-1] = sph_t2energy(Tc,cv[i]);
 	cv[atom->nlocal-1] = cv[i];
 	de[atom->nlocal-1] = 0.0;
-	v[atom->nlocal-1][0] = v[i][0];
-	v[atom->nlocal-1][1] = v[i][1];
-	v[atom->nlocal-1][2] = v[i][2];
+	// conserve momentum total momentum
+	double km = to_mass/(to_mass + rmass[i]);
+	v[atom->nlocal-1][0] = vest[atom->nlocal-1][0] = v[i][0]*km;
+	v[atom->nlocal-1][1] = vest[atom->nlocal-1][1] = v[i][1]*km;
+	v[atom->nlocal-1][2] = vest[atom->nlocal-1][2] = v[i][2]*km;
+
+	double ki = rmass[i]/(to_mass + rmass[i]);
+	v[i][0] = vest[i][0] = v[i][0]*ki;
+	v[i][1] = vest[i][1] = v[i][1]*ki;
+	v[i][2] = vest[i][2] = v[i][2]*ki;
 
 	e[i] = sph_t2energy(Tc,cv[i]);
 	e[i] -= Hwv;
