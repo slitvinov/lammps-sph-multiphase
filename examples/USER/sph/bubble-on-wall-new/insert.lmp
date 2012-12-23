@@ -63,9 +63,6 @@ fix bm       boundary setmeso meso_rho ${sph_rho_g}
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
-
-#include            ${ndim}-image.lmp
-variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
 neighbor           0 bin
@@ -180,7 +177,7 @@ dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z 
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd
-thermo              1
+thermo              100
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
@@ -190,10 +187,7 @@ fix                fdep droplet phase_change &
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
-include rem-box.lmp
-fix fkeep all keepnumber remregion 49892
-#fix fdeptest all deposit 1 1 1 1 region rflow attempt 1
-#fix fkeep all evaporate 1 1 remregion 49892
+#include rem-box.lmp
 
 run               10000000 pre no  post no every 100 &
 "if ${vmi}>2 then quit" &
