@@ -479,8 +479,11 @@ void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, do
     eij[2] = atmp*b1[2] + btmp*b2[2];
     assert( eij[0]*cgone[0] + eij[1]*cgone[1] + eij[2]*cgone[2] < 1e-8);
   } else {
-    // TODO: find direction cheeper
-    double atmp = random->uniform() - 0.5;
+    // TODO: find direction cheaper
+    double atmp = random->uniform();
+    assert(atmp<=1.0);
+    assert(atmp>=0.0);
+    if (atmp>0.5) atmp=1; else atmp=-1;
     eij[0] = -atmp*cgone[1];
     eij[1] = atmp*cgone[0];
     eij[2] = 0.0;
