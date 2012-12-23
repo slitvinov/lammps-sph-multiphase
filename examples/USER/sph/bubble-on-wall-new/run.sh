@@ -23,7 +23,7 @@ proc="-np ${np}"
 
 dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_g${D_heat_g}-alpha${alpha}\
 -Hwv${Hwv}-dprob${dprob}-time_k${time_k}-cv_g${cv_g}-sph_rho_g${sph_rho_g}-dT${dT}\
--gy${gy}-Tc${Tc}n
+-gy${gy}-Tc${Tc}q
 
 rm -rf ${dname}
 mkdir -p ${dname}
