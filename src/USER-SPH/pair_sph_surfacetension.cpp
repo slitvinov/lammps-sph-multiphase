@@ -170,22 +170,37 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
 	const double Vi = imass / rho[i];
 	const double Vj = jmass / rho[j];
-	const double rij = sqrt(rsq);	    
+	//	const double rij = sqrt(rsq);	    
 
-	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*wfd;
-	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*wfd;
+	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*wfd;
+	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*wfd;
 	if (ndim==3) {
-	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*wfd;
+	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*wfd;
 	}
 
         if (newton_pair || j < nlocal) {
-	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*wfd;
-	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*wfd;
+	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*wfd;
+	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*wfd;
 	  if (ndim==3) {
-	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*wfd;
+	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*wfd;
+
 	  }
         }
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
   }
 }
