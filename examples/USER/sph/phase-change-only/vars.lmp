@@ -17,10 +17,8 @@ variable          sph_rho_g equal 1.0
 # density of droplet
 variable          sph_rho_d equal 1.0
 
-
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 100
-variable          Nfreqimage equal 100
+variable          Nfreq equal 1
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
@@ -34,3 +32,6 @@ variable          alpha equal 1.0/${dx}
 variable          g_type equal 1
 # type of the droplet particle
 variable          d_type equal 2
+
+variable          cv_d      equal 1.0
+variable          cv_g      equal 1.0

@@ -15,7 +15,7 @@ variable          dx   equal  ${Lx}/${nx}
 # density of gas phase
 variable          sph_rho_g equal 1.0
 # density of droplet
-variable          sph_rho_d equal 1.0
+variable          sph_rho_d equal 10.0
 
 # sound speed 
 variable          sph_c_g equal 10.0

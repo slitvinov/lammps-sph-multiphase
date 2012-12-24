@@ -85,11 +85,8 @@ set               type ${g_type} mass ${sph_mass_g}
 set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
 
-
-thermo_style        custom step v_time
+variable           vie equal c_ie
+thermo_style        custom step v_time v_vie
 thermo              10
 
 run               1000
-
-
-

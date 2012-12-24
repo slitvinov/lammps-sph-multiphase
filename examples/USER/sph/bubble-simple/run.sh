@@ -3,10 +3,10 @@
 set -e
 set -u
 Lx=1.0
-nx=160
+nx=80
 ndim=2
 np=8
-D_heat_g=0.04
+D_heat_g=4.0
 dT=0.01
 Hwv=1.0
 alpha=0.25

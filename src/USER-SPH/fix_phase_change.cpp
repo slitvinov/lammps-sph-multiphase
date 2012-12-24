@@ -238,10 +238,10 @@ void FixPhaseChange::pre_exchange()
 	/// latent heat + change of energy of particle i
 	/// NOTE: this energy is in J and not in J/kg
 	//double energy_to_dist = Hwv*to_mass  + rmass[i]*(sph_t2energy(Tc,cv[i]) - e[i]);
-	double energy_to_dist = 0;
+	double energy_to_dist = 0.0;
 	nins++;
 	// look for the neighbors of the type from_type
-	// and extract energy from all of them
+	// and subtract energy from all of them
 	double xtmp = x[i][0];
 	double ytmp = x[i][1];
 	double ztmp = x[i][2];
@@ -287,7 +287,7 @@ void FixPhaseChange::pre_exchange()
 	    } else {
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
-	    delocal[j] -= (energy_to_dist/rmass[j]) * wfd*(Tj-Ti)/wtotal;
+ 	    delocal[j] -= (energy_to_dist/rmass[j]) * wfd*(Tj-Ti)/wtotal;
 	    assert(wfd*(Tj-Ti)>=0);
 	    assert(wtotal>=0);
 	  }
@@ -310,7 +310,7 @@ void FixPhaseChange::pre_exchange()
 	v[i][1] = vest[i][1] = v[i][1]*ki;
 	v[i][2] = vest[i][2] = v[i][2]*ki;
 
-	e[i] = sph_t2energy(Tc,cv[i]);
+	//e[i] = sph_t2energy(Tc,cv[i]);
 	e[i] -= Hwv;
       }
     }

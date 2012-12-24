@@ -65,8 +65,7 @@ fix bm       boundary setmeso meso_rho ${sph_rho_g}
 fix                integrate_fix_full all meso
 include            settimestep.lmp
 
-variable           bsize equal 0.5*${dx}
-neighbor           ${bsize} bin
+neighbor           0 bin
 neigh_modify       delay 0 every 1
 communicate        single vel yes
 
