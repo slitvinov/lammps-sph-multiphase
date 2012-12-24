@@ -65,16 +65,20 @@ is(J/mass=dimension(Hwv));
 Ja: dT*cv*rho_l/(rho_g*Hwv);
 is(dimension(Ja)=1);
 env: [dT=0.05, cv=4.0, rho_l=10, rho_g=1, Hwv=32, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-1];
+env_simple: [dT=0.85, cv=4.0, rho_l=100, rho_g=1, Hwv=1.0, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-2];
 ev(Ja, env);
+ev(Ja, env_simple);
 
 /* Eotvos number */
 put(l0, length, dimension);
 Eo: g*(rho_l-rho_g)*l0^2/alpha;
 dimension(Eo);
 ev(Eo, env);
+ev(Eo, env_simple);
 
 mu_l: eta_l*rho_l;
 /* Morton number */
 M: g*(rho_l-rho_g)*mu_l^4/(rho_l^2*alpha^3);
 dimension(M);
 ev(M, env);
+ev(M, env_simple);
