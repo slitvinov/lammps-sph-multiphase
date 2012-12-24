@@ -2,7 +2,7 @@
 
 set -e
 set -u
-Lx=1.0
+Lx=2.0
 nx=$1
 ndim=3
 np=8
