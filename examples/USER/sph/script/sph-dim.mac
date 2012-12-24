@@ -1,0 +1,80 @@
+/* units of SPH simulation */
+kill(all);
+load("dimension.mac");
+fundamental_dimensions: [mass, length, time, K];
+/* density */
+put(rho, mass/length^3, dimension);
+put(rho_l, dimension(rho), dimension);
+put(rho_g, dimension(rho), dimension);
+/* volume */
+put(V, dimension(mass/rho), dimension);
+/* reverse volume */
+put(sigma, dimension(1/V), dimension);
+  
+/* radious of the bubble */
+put(R, length, dimension);
+put(r, length, dimension);
+put(w, dimension(rho/mass), dimension);
+put(dw, dimension(w/r), dimension);
+put(m, mass, dimension);
+put(t, time, dimension);
+put(v, length/time, dimension);
+put(T, K, dimension);
+put(dT, K, dimension);
+/* force */
+put(F, dimension(m*v/t), dimension);
+/* gravity, F_g=mg */
+put(g, dimension(F/m), dimension);
+J: dimension(m*v^2);
+/* density */
+put(rho_g, mass/length^3, dimension);
+/* kinematic viscosity */
+put(eta_l, length^2/time, dimension);
+put(eta_g, length^2/time, dimension);
+/* energy of the particle, J/kg */
+put(en, length^2/time^2, dimension);
+/* heat capacity, meso_cv
+cv*T should give en */
+put(cv, length^2/time^2/K, dimension);
+/* heat conductivity */
+/* [e]/[dt] = [den] = [m/rho*D*T 1/r dw]
+   [e]/[dt] = [den] = [D*T 1/r^2 [w/(m/rho)] ]
+   [e]/[dt] = [den] = [D*T 1/r^2]
+   [e]/[dt] = [T] [1/r^2] [D] 
+   [D] = [e][r^2] /([T][t])
+*/
+put(D, dimension(en*R^2/(T*t)), dimension);
+/* this combination has units of thermal conductivity 
+/* kg*m/(time^3.K) */
+dimension(D*rho_l);
+
+/* units of alpha (surface tension) */
+/* eq. (27), (28) in Hu2006 */
+eq1: dimension(P)=dimension(alpha_aux/r);
+eq2: dimension(v/t) = dimension(1/m * dw *P/sigma^2);
+sol: solve([eq1, eq2], [dimension(alpha_aux), dimension(P)])[1];
+put(alpha, assoc(dimension(alpha_aux), sol), dimension);
+dimension(R=sqrt(alpha/(g*rho)));
+
+/* heat of evaporation */
+put(Hwv, dimension(en), dimension);
+/* check if it the same as J/kg */
+is(J/mass=dimension(Hwv));
+
+/* Jacobs number */
+Ja: dT*cv*rho_l/(rho_g*Hwv);
+is(dimension(Ja)=1);
+env: [dT=0.05, cv=4.0, rho_l=10, rho_g=1, Hwv=32, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-1];
+ev(Ja, env);
+
+/* Eotvos number */
+put(l0, length, dimension);
+Eo: g*(rho_l-rho_g)*l0^2/alpha;
+dimension(Eo);
+ev(Eo, env);
+
+mu_l: eta_l*rho_l;
+/* Morton number */
+M: g*(rho_l-rho_g)*mu_l^4/(rho_l^2*alpha^3);
+dimension(M);
+ev(M, env);
