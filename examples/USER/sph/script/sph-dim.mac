@@ -36,17 +36,10 @@ put(en, length^2/time^2, dimension);
 /* heat capacity, meso_cv
 cv*T should give en */
 put(cv, length^2/time^2/K, dimension);
-/* heat conductivity */
-/* [e]/[dt] = [den] = [m/rho*D*T 1/r dw]
-   [e]/[dt] = [den] = [D*T 1/r^2 [w/(m/rho)] ]
-   [e]/[dt] = [den] = [D*T 1/r^2]
-   [e]/[dt] = [T] [1/r^2] [D] 
-   [D] = [e][r^2] /([T][t])
-*/
-put(D, dimension(en*R^2/(T*t)), dimension);
-/* this combination has units of thermal conductivity 
-/* kg*m/(time^3.K) */
-dimension(D*rho_l);
+/* put(D, dimension(en*R^2/(T*t)), dimension); */
+
+eq1: dimension(en) = dimension(m/rho^2*D*dT*dw/r) * dimension(t);
+sol: solve(eq1, dimension(D))[1];
 
 /* units of alpha (surface tension) */
 /* eq. (27), (28) in Hu2006 */

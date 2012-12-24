@@ -4,7 +4,7 @@ set -e
 set -u
 Lx=2.0
 nx=$1
-ndim=3
+ndim=2
 np=1
 D_heat_g=0.04
 dT=0.01

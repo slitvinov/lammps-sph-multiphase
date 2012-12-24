@@ -13,7 +13,7 @@ lattice		sc 0.01
 region		box block 0 100 0 10 0 10 
 create_box	1 box
 create_atoms	1 box
-mass            1 1.0e-5
+set             group all mass 1e-5
 
 region          left  block EDGE 49.9  EDGE EDGE EDGE EDGE
 region          right block 50 EDGE EDGE EDGE EDGE EDGE
@@ -24,7 +24,7 @@ set             group all meso_rho 10.0 # mesoscopic density is also needed for 
 
 pair_style      sph/heatconduction
 #               i j diffusion coeff. cutoff
-pair_coeff      1 1 1.0e-4           2.0e-2
+pair_coeff      1 1 1.0e-3           2.0e-2
 neighbor	0.2e-2 bin
 neigh_modify	every 20 delay 0 check no
 

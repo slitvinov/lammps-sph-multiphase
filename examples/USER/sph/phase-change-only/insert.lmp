@@ -38,8 +38,10 @@ create_atoms       ${g_type} region box
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
 
-compute         ie_atom all meso_e/atom
-compute         ie all reduce sum c_ie_atom
+# compute energy
+compute            ie_atom all meso_e/atom
+# compute total energy
+compute            ie all reduce sum c_ie_atom
 
 fix                integrate_fix_full all meso/stationary
 
@@ -81,28 +83,34 @@ set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
 set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
-set               type ${g_type} meso_e 1.0
-set               type ${d_type} meso_e 1.0
+set               type ${d_type} meso_cv ${cv_d}
+set               type ${g_type} meso_cv ${cv_g}
 
 region             rinsert block EDGE EDGE EDGE EDGE EDGE EDGE units box
 variable           Ninsert equal 1000
 variable           insert_every equal 1
-variable           Tc equal 0.90
-variable           Tt equal 0.95
-variable           Cp equal 0.2
+variable           prob equal 1.0
+variable           Tc equal 0.5
+variable           Tt equal 0.5
+variable           Hwv equal 100.0
 variable           dr equal 0.5*${dx}
-fix                fdep all phase_change &
-                   ${Tc} ${Tt} ${Cp} ${dr} ${sph_mass_d} &
-                   ${h} ${g_type} ${d_type} ${insert_every} 123456 region rinsert units box
-
 group              droplet type ${d_type}
-compute            rg droplet gyration
+variable          e_g       equal ${cv_g}*1.0
+variable          e_d       equal ${cv_d}*${Tc}
+set               type ${g_type} meso_e ${e_g}
+set               type ${d_type} meso_e ${e_d}
 
-variable vrg equal c_rg
-variable vnd equal count(droplet)
-fix extra all print 1 "${vrg} ${vnd}" file ${dname}/rg.dat screen no
+compute cendroplot droplet reduce sum c_ie_atom
+variable numberofdroplet equal count(droplet)
+variable totalenergy equal c_ie
+variable endroplet  equal c_cendroplot
+fix extra all print 1 "${time} ${numberofdroplet} ${totalenergy} ${endroplet}" file ${dname}/rg.dat screen no
 
-run               100 pre no  post no every 1 &
-"group droplet type ${d_type}"
+run               1
+fix                fdep droplet phase_change &
+                   ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
+                   ${h} ${g_type} ${d_type} ${insert_every} 12345 ${prob} region box units box
+run               1
+
 
 
