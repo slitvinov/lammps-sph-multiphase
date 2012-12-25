@@ -9,7 +9,7 @@ units		si
 atom_style	meso
 boundary        f p p
 
-variable        dx equal 0.01
+variable        dx equal 0.02
 variable         h equal 3*${dx}
 variable        rho equal 0.1
 variable         k equal 1e-4

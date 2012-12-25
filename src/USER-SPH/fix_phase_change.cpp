@@ -216,9 +216,6 @@ void FixPhaseChange::pre_exchange()
 
   /// TODO: how to distribute to ghosts?
   for (int i = 0; i < nlocal; i++) {
-    double abscgi = sqrt(cg[i][0]*cg[i][0] +
-			 cg[i][1]*cg[i][1] +
-			 cg[i][2]*cg[i][2]);
     double Ti = sph_energy2t(e[i], cv[i]);
     if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
       double coord[3];

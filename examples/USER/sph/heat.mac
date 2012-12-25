@@ -1,0 +1,13 @@
+/* was */
+
+        deltaE = 2.0 * imass * jmass / (imass+jmass);
+        deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
+        de[i] += deltaE;
+
+1/rho*mass
+
+/* now */
+        double deltaE = 2.0/(rho[i]*rho[j]);
+        de[i] += deltaE*jmass;
+
+1/rho^2*mass
