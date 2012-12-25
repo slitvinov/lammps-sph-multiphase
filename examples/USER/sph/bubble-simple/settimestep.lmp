@@ -1,4 +1,8 @@
 variable BIG equal 1e20
+
+variable dt_temp_d equal 0.1*1.44*${sph_eta_d}*${cv_d}*${dx}^2/${D_heat_d}
+variable dt_temp_g equal 0.1*1.44*${sph_eta_g}*${cv_g}*${dx}^2/${D_heat_g}
+
 variable dt_eta_d equal 1/8.0*${dx}*${dx}/${sph_eta_d}*${sph_rho_d}
 variable dt_eta_g equal 1/8.0*${dx}*${dx}/${sph_eta_g}*${sph_rho_g}
 
@@ -10,6 +14,6 @@ else &
 variable dt_c_d equal 1/4.0*${dx}/${sph_c_d}
 variable dt_c_g equal 1/4.0*${dx}/${sph_c_g}
 
-shell ./min.sh dt ${dt_eta_d} ${dt_eta_g} ${dt_alpha} ${dt_c_d} ${dt_c_g}
+shell ./min.sh dt ${dt_eta_d} ${dt_eta_g} ${dt_alpha} ${dt_c_d} ${dt_c_g} ${dt_temp_g} ${dt_temp_d}
 include in.dt
 variable dt equal ${dt}*${time_k}
