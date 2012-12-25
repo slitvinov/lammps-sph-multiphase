@@ -156,6 +156,8 @@ region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units b
 echo              log
 variable          nstep equal 10.0/${dt}
 group gflow region rtemp
-fix sm      all setmeso meso_t ${Tinf} noregion rtemp
+fix smeso      all setmeso meso_t ${Tinf} noregion rtemp
+
+#fix tempbu     droplet setmesode 0.0
 
 run               ${nstep}

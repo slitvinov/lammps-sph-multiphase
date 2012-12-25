@@ -30,7 +30,7 @@ variable          sph_eta_g equal 1.0
 variable          rbackground equal 0.0
 
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 10
+variable          Nfreq equal 100
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
@@ -49,7 +49,7 @@ variable           Tc equal 0.0
 variable           Tt equal ${Tc}+${dT}
 # energy
 variable          e_d       equal ${cv_d}*${Tc}
-variable          e_g       equal ${cv_g}*1.0
+variable          e_g       equal ${cv_g}*${Tinf}
 
 # type of the gas particle
 variable          g_type equal 1

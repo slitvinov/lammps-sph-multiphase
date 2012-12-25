@@ -7,6 +7,7 @@ if (test $1 = 1) then
   cp -p pair_sph_colorgradient.cpp ..
   cp -p atom_vec_meso.cpp ..
   cp -p pair_sph_heatconduction.cpp ..
+  cp -p pair_sph_heatconduction_phasechange.cpp ..
   cp -p pair_sph_idealgas.cpp ..
   cp -p pair_sph_lj.cpp ..
   cp -p pair_sph_rhosum.cpp ..
@@ -30,6 +31,7 @@ if (test $1 = 1) then
   cp -p pair_sph_colorgradient.h ..
   cp -p atom_vec_meso.h ..
   cp -p pair_sph_heatconduction.h ..
+  cp -p pair_sph_heatconduction_phasechange.h ..
   cp -p pair_sph_idealgas.h ..
   cp -p pair_sph_lj.h ..
   cp -p pair_sph_rhosum.h ..
@@ -54,6 +56,7 @@ elif (test $1 = 0) then
   rm -f ../pair_sph_colorgradient.cpp
   rm -f ../atom_vec_meso.cpp
   rm -f ../pair_sph_heatconduction.cpp
+  rm -f ../pair_sph_heatconduction_phasechange.cpp
   rm -f ../pair_sph_idealgas.cpp
   rm -f ../pair_sph_lj.cpp
   rm -f ../pair_sph_rhosum.cpp
@@ -77,6 +80,7 @@ elif (test $1 = 0) then
   rm -f ../pair_sph_colorgradient.h
   rm -f ../atom_vec_meso.h
   rm -f ../pair_sph_heatconduction.h
+  rm -f ../pair_sph_heatconduction_phasechange.h
   rm -f ../pair_sph_idealgas.h
   rm -f ../pair_sph_lj.h
   rm -f ../pair_sph_rhosum.h
