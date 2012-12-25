@@ -13,12 +13,17 @@ put(sigma, dimension(1/V), dimension);
   
 /* radious of the bubble */
 put(R, length, dimension);
+put(L, length, dimension);
 put(r, length, dimension);
 put(w, dimension(rho/mass), dimension);
 put(dw, dimension(w/r), dimension);
 put(m, mass, dimension);
 put(t, time, dimension);
 put(v, length/time, dimension);
+/* sound speed */
+put(c_l, length/time, dimension);
+put(c_g, length/time, dimension);
+/* temperature */
 put(T, K, dimension);
 put(dT, K, dimension);
 /* force */
@@ -36,10 +41,19 @@ put(en, length^2/time^2, dimension);
 /* heat capacity, meso_cv
 cv*T should give en */
 put(cv, length^2/time^2/K, dimension);
+put(cv_l, dimension(cv), dimension);
+put(cv_g, dimension(cv), dimension);
 /* put(D, dimension(en*R^2/(T*t)), dimension); */
 
-eq1: dimension(en) = dimension(m/rho^2*D*dT*dw/r) * dimension(t);
+eq3: dimension(m^2/rho^2*k*dT/r*dw) = dimension(m * en/t);
+sol:solve(eq3, dimension(k))[1];
+put(D_l, rhs(sol), dimension);
+put(D_g, rhs(sol), dimension);
+
+eq1: dimension(en) = dimension(D*dT*dw/r/rho^2*m) * dimension(t);
+/* eq2: dimension(en) = dimension(m/rho^2*D*dT*dw/r) * dimension(t);*/
 sol: solve(eq1, dimension(D))[1];
+/* dimension(D) = length*mass/(time^3*K) */
 
 /* units of alpha (surface tension) */
 /* eq. (27), (28) in Hu2006 */
@@ -75,3 +89,22 @@ M: g*(rho_l-rho_g)*mu_l^4/(rho_l^2*alpha^3);
 dimension(M);
 ev(M, env);
 ev(M, env_simple);
+
+/* mechanical paramters */
+m_env: [rho_g, rho_l, eta_g, eta_l, L, alpha, c_g, c_l];
+/* thermal paramters */
+t_env: [dT, cv_l, cv_g, Hwv, D_g, D_l];
+
+dimensionless(m_env);
+assume_pos: true;
+ratsimp(sqrt(dimensionless(t_env)));
+
+dimensionless(append(m_env, t_env));
+length(m_env) + length(t_env);
+
+natural_unit(alpha, [L, rho_l, eta_l, dT]);
+natural_unit(cv_g, [L, rho_l, eta_l, dT]);
+natural_unit(Hwv, [L, rho_l, eta_l, dT]);
+natural_unit(D_g, [L, rho_l, eta_l, dT]);
+natural_unit(D_l, [L, rho_l, eta_l, dT]);
+natural_unit(rho_g, [L, rho_l, eta_l, dT]);

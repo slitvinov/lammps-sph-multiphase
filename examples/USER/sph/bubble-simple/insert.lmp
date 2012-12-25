@@ -32,7 +32,7 @@ else &
 create_box         2 box
 
 # create gas particles
-variable lshift    equal 0.2*${dx}
+variable lshift    equal 0.5
 if ${ndim}==2 then &
 "lattice            sq ${dx} origin ${lshift} ${lshift} 0" &
 else &
@@ -99,12 +99,12 @@ variable            time equal step*${dt}
 variable            natoms equal count(all)
 
 # create vapor atom in the center of the domain
-variable          xcenter_per equal ${xcenter}+0.5*${dx}
-variable          ycenter_per equal ${ycenter}+0.5*${dx}
-create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+# variable          xcenter_per equal ${xcenter}+0.5*${dx}
+# variable          ycenter_per equal ${ycenter}+0.5*${dx}
+# create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-#region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.12 units box
-#set               region rsq type ${d_type}
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.12 units box
+set               region rsq type ${d_type}
 
 # variable          a_sq   equal 0.2
 # include           square.lmp
@@ -156,6 +156,6 @@ region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units b
 echo              log
 variable          nstep equal 10.0/${dt}
 group gflow region rtemp
-fix sm      all setmeso meso_t 1.0 noregion rtemp
+fix sm      all setmeso meso_t ${Tinf} noregion rtemp
 
 run               ${nstep}
