@@ -234,8 +234,8 @@ void FixPhaseChange::pre_exchange()
 	/// we have some energy to distribute:
 	/// latent heat + change of energy of particle i
 	/// NOTE: this energy is in J and not in J/kg
-	//double energy_to_dist = Hwv*to_mass  + rmass[i]*(sph_t2energy(Tc,cv[i]) - e[i]);
-	double energy_to_dist = 0.0;
+	double energy_to_dist = Hwv*to_mass  + rmass[i]*(sph_t2energy(Tc,cv[i]) - e[i]);
+	//double energy_to_dist = 0.0;
 	nins++;
 	// look for the neighbors of the type from_type
 	// and subtract energy from all of them
@@ -307,8 +307,8 @@ void FixPhaseChange::pre_exchange()
 	v[i][1] = vest[i][1] = v[i][1]*ki;
 	v[i][2] = vest[i][2] = v[i][2]*ki;
 
-	//e[i] = sph_t2energy(Tc,cv[i]);
-	e[i] -= Hwv;
+	e[i] = sph_t2energy(Tc,cv[i]);
+	//e[i] -= Hwv;
       }
     }
   }
