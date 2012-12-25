@@ -10,7 +10,7 @@
 
  See the README file in the top-level LAMMPS directory.
  ------------------------------------------------------------------------- */
-
+#include "string.h"
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sph_heatconduction_phasechange.h"
@@ -41,6 +41,8 @@ PairSPHHeatConductionPhaseChange::~PairSPHHeatConductionPhaseChange() {
     memory->destroy(cutsq);
     memory->destroy(cut);
     memory->destroy(alpha);
+    memory->destroy(tc);
+    memory->destroy(fixflag);
   }
 }
 
@@ -115,8 +117,22 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
         jmass = rmass[j];
         D = alpha[itype][jtype]; // diffusion coefficient
 
-        double Ti = sph_energy2t(e[i], cv[i]);
-	double Tj = sph_energy2t(e[j], cv[j]);
+	double Ti;
+	if (fixflag[itype][jtype]==itype) {
+	  Ti = tc[itype][jtype];
+	  //printf("I am fixing temperature %i %i %e\n", itype, jtype, Ti);
+	} else {
+	  Ti = sph_energy2t(e[i], cv[i]);
+	}
+
+	double Tj;
+	if (fixflag[itype][jtype]==jtype) {
+	  Tj = tc[itype][jtype];
+	  //printf("I am fixing temperature %i %i %e\n", itype, jtype, Tj);
+	} else {
+	  Tj = sph_energy2t(e[j], cv[j]);
+	}
+
         double deltaE = 2.0*D*(Ti - Tj)*wfd/(rho[i]*rho[j]);
         de[i] += deltaE*jmass;
         if (newton_pair || j < nlocal) {
@@ -144,6 +160,8 @@ void PairSPHHeatConductionPhaseChange::allocate() {
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(alpha, n + 1, n + 1, "pair:alpha");
+  memory->create(tc, n + 1, n + 1, "pair:tc");
+  memory->create(fixflag, n + 1, n + 1, "pair:fixflag");
 }
 
 /* ----------------------------------------------------------------------
@@ -161,7 +179,7 @@ void PairSPHHeatConductionPhaseChange::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSPHHeatConductionPhaseChange::coeff(int narg, char **arg) {
-  if (narg != 4)
+  if ( (narg != 4) && (narg != 6) )
     error->all(FLERR,"Incorrect number of args for pair_style sph/heatconduction/phasechange coefficients");
   if (!allocated)
     allocate();
@@ -173,6 +191,22 @@ void PairSPHHeatConductionPhaseChange::coeff(int narg, char **arg) {
   double alpha_one = force->numeric(arg[2]);
   double cut_one   = force->numeric(arg[3]);
 
+  // default value
+  int fixflag_one = 0;
+  double tc_one = 0;
+  if (narg==6) {
+    // process "fix temperature" options
+    if (strcmp(arg[4],"NULL") == 0) {
+      fixflag_one = 2; // second type has fixed temperature
+      tc_one = force->numeric(arg[5]);
+    } else if (strcmp(arg[5],"NULL") == 0) {
+      fixflag_one = 1; // first type has fixed temperature
+      tc_one = force->numeric(arg[4]);
+    } else {
+      error->all(FLERR,"Incorrect args for pair coefficients");
+    }
+  }
+  
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
@@ -180,6 +214,13 @@ void PairSPHHeatConductionPhaseChange::coeff(int narg, char **arg) {
       cut[i][j] = cut_one;
       alpha[i][j] = alpha_one;
       setflag[i][j] = 1;
+      if (fixflag_one == 1) {
+	fixflag[i][j] = i;
+	tc[i][j] = tc_one;
+      } else if (fixflag_one==2) {
+	fixflag[i][j] = j;
+	tc[i][j] = tc_one;
+      }
       count++;
     }
   }
@@ -200,6 +241,8 @@ double PairSPHHeatConductionPhaseChange::init_one(int i, int j) {
 
   cut[j][i] = cut[i][j];
   alpha[j][i] = alpha[i][j];
+  tc[j][i] = tc[i][j];
+  fixflag[j][i] = fixflag[i][j];
 
   return cut[i][j];
 }

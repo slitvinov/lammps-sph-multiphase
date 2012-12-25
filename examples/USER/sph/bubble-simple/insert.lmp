@@ -82,7 +82,7 @@ pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c
 pair_coeff         * * sph/surfacetension ${h}
 pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
 variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
-pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
 pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
@@ -103,7 +103,7 @@ variable            natoms equal count(all)
 # variable          ycenter_per equal ${ycenter}+0.5*${dx}
 # create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.12 units box
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
 set               region rsq type ${d_type}
 
 # variable          a_sq   equal 0.2

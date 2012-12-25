@@ -35,7 +35,8 @@ class PairSPHHeatConductionPhaseChange : public Pair {
   virtual double single(int, int, int, int, double, double, double, double &);
 
  protected:
-  double **cut, **alpha;
+  double **cut, **alpha, **tc;
+  int    **fixflag;
   void allocate();
 };
 

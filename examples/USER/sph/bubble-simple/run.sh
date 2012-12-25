@@ -3,17 +3,17 @@
 set -e
 set -u
 Lx=1.0
-nx=40
+nx=80
 ndim=2
-np=1
-D_heat_d=1.0
-D_heat_g=0.25
+np=8
+D_heat_d=0.4
+D_heat_g=0.4
 cv_d=1.0
 cv_g=1.0
-dT=0.1
+dT=0.01
 Hwv=0.1
 alpha=100
-dprob=0.00
+dprob=0.01
 sph_rho_d=1
 time_k=1.0
 # parameters for kana
