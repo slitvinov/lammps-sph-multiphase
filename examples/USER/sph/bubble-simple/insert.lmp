@@ -143,7 +143,6 @@ dump_modify        dump_id first yes sort id pad 8
 thermo_style        custom step v_time v_natoms v_vnd
 thermo              10
 
-run                1
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
