@@ -70,8 +70,6 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *rho = atom->rho;
   double *rmass = atom->rmass;
-  double *de = atom->de;
-  double *drho = atom->drho;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
@@ -162,26 +160,15 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
 
         // total pair force & thermal energy increment
         fpair = - (imass*imass*fi + jmass*jmass*fj) * wfd;
-        deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
-
-       // printf("testvar= %f, %f \n", delx, dely);
 
         f[i][0] += delx * fpair + velx * fvisc;
         f[i][1] += dely * fpair + vely * fvisc;
         f[i][2] += delz * fpair + velz * fvisc;
 
-        // and change in density
-        drho[i] += jmass * delVdotDelR * wfd;
-
-        // change in thermal energy
-        de[i] += deltaE;
-
         if (newton_pair || j < nlocal) {
           f[j][0] -= delx * fpair + velx * fvisc;
           f[j][1] -= dely * fpair + vely * fvisc;
           f[j][2] -= delz * fpair + velz * fvisc;
-          de[j] += deltaE;
-          drho[j] += imass * delVdotDelR * wfd;
         }
 
         if (evflag)
