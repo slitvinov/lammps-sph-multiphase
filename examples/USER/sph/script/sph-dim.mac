@@ -3,7 +3,7 @@ kill(all);
 load("dimension.mac");
 fundamental_dimensions: [mass, length, time, K];
 /* density */
-put(rho, mass/length^2, dimension);
+put(rho, mass/length^3, dimension);
 put(rho_l, dimension(rho), dimension);
 put(rho_g, dimension(rho), dimension);
 /* volume */
@@ -71,12 +71,14 @@ put(Hwv, dimension(en), dimension);
 is(J/mass=dimension(Hwv));
 
 /* Jacobs number */
-Ja: dT*cv*rho_l/(rho_g*Hwv);
+Ja: dT*cv_l*rho_l/(rho_g*Hwv);
 is(dimension(Ja)=1);
-env: [dT=0.05, cv=4.0, rho_l=10, rho_g=1, Hwv=32, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-1];
-env_simple: [dT=0.85, cv=4.0, rho_l=100, rho_g=1, Hwv=1.0, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-2];
+env: [dT=0.05, cv_l=4.0, rho_l=10, rho_g=1, Hwv=32, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-1];
+env_water: [dT=5, cv_l=4.1855, rho_l=1000, rho_g=1, Hwv=2.260e6];
+env_simple: [dT=0.85, cv_l=4.0, rho_l=100, rho_g=1, Hwv=1.0, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-2];
 ev(Ja, env);
 ev(Ja, env_simple);
+ev(Ja, env_water);
 
 /* Eotvos number */
 put(l0, length, dimension);
