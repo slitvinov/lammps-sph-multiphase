@@ -1,0 +1,5 @@
+relt: 1 + sqrt(l/r);
+Tc: (Tr-Tl) * sqrt(l)/sqrt(r);
+
+Tlim: ratsimp(relt * Tc + Tl);
+ev(Tlim, Tl=0);

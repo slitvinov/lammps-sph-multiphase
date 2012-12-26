@@ -1,0 +1,10 @@
+#!/usr/bin/gnuplot
+
+# compare sph/heatconduction output with analytic solution to diffusion equation
+
+set ylabel "internal energy per particle"
+set xlabel "x position [m]"
+
+ref="<seq 0.0 0.01 1.0 | awk -v k_l=1e-3 -v k_r=1e-4 -v rho_l=0.1 -v cv_l=1 -v Tl=1 -v Tr=2 -v xm=0.5 -v t=0.8 -f infslab.awk"
+plot 'dump.last' u 3:6 ti "SPH simulation", ref ti "analytic solution" w lp
+
