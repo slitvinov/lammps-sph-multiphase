@@ -131,9 +131,9 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
 	assert(rho[i]>0);
 	assert(rho[j]>0);
         double deltaE = 2.0*D*(Ti - Tj)*wfd/(rho[i]*rho[j]);
-        //de[i] += deltaE*jmass;
+        de[i] += deltaE*jmass;
         if (newton_pair || j < nlocal) {
-          //de[j] -= deltaE*imass;
+          de[j] -= deltaE*imass;
         }
 
       }
