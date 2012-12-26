@@ -74,11 +74,9 @@ is(J/mass=dimension(Hwv));
 Ja: dT*cv_l*rho_l/(rho_g*Hwv);
 is(dimension(Ja)=1);
 env: [dT=0.05, cv_l=4.0, rho_l=10, rho_g=1, Hwv=32, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-1];
-env_water: [dT=5, cv_l=4.1855, rho_l=1000, rho_g=1, Hwv=2.260e6];
 env_simple: [dT=0.85, cv_l=4.0, rho_l=100, rho_g=1, Hwv=1.0, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-2];
 ev(Ja, env);
 ev(Ja, env_simple);
-ev(Ja, env_water);
 
 /* Eotvos number */
 put(l0, length, dimension);
@@ -112,3 +110,86 @@ natural_unit(Hwv, [L, rho_l, eta_l, dT]);
 natural_unit(D_g, [L, rho_l, eta_l, dT]);
 natural_unit(D_l, [L, rho_l, eta_l, dT]);
 natural_unit(rho_g, [L, rho_l, eta_l, dT]);
+
+/* get physical parameter */
+
+/* heat capacity of liquid water */
+/* http://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Type=JANAFL&Plot=on#JANAFL */
+/* http://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=1#Thermo-Gas */
+
+
+/* temperature is in K, cp in kg/mol.K */
+M_H20: 18.01e-3;
+cp_water(T) := block([A: -203.6060, B: 1523.290, C: -3196.413, D: 2474.455, E: 3.855326, t: T/1000],
+  cJ: A + B*t + C*t^2 + D*t^3 + E/t^2,
+  cJ/M_H20);
+
+cp_vapor(T) := block([A: 30.09200, B: 6.832514, C: 6.793435, D: -2.534480, E: 0.082139, t: T/1000],
+  cJ: A + B*t + C*t^2 + D*t^3 + E/t^2,
+  cJ/M_H20);
+
+dK: 273.15;
+cp_water(100+dK);
+cp_vapor(100+dK);
+
+/* dH0_kJ_mol: 241.83; /\* kJ/mol *\/ */
+/* dH0: dH0_kJ_mol/M_H20; /\* J/kg *\/ */
+/* /\* at 100C *\/ */
+/* dH: dH0 - integrate(cp_water(T)-cp_vapor(T), T, 20+dK, 100+dK); */
+
+/* take parameters from
+Narumanchi, Sreekant, et al. "Numerical simulations of nucleate
+boiling in impinging jets: Applications in power electronics cooling."
+International Journal of Heat and Mass Transfer 51.1 (2008): 1-12.
+*/
+
+is(dimension(alpha)=dimension(F/length));
+is(dimension(mu_l)=dimension(F*time/length^2));
+dimension(eta_l = mu_l/rho_l);
+
+env_water: [alpha=0.059, Hwv=2257000, rho_l=958, rho_g=0.6, cv_l=4219, cv_g=2010,
+            eta_l=2.83e-4/rho_l, eta_g=1.23e-5/rho_g,
+            D_l=0.68, D_g=0.025, dT=5, L=0.005];
+
+load ("lrats");
+
+to_sim(var, env, base):= block([var_units],
+  var_units: natural_unit(var, base),
+  float(fullratsubst(env, var/var_units)));
+
+env_sim: [alpha=0.059, Hwv=2257000, rho_l=958*0.1,
+          rho_g=0.6, cv_l=4219, cv_g=2010,
+          eta_l=2.83e-4/rho_l*1e6, eta_g=1.23e-5/rho_g*1e6,
+          D_l=0.68, D_g=0.025, dT=5, L=0.005, R=L/5, g=9.8*(rho_l-rho_g)];
+
+t_gravity: natural_unit(t, [rho_g, g, R]);
+t_heat: natural_unit(t, [rho_l, cv_l, dT, D_l]);
+t_phase: natural_unit(t, [rho_l, dT, D_l, Hwv]);
+t_surface: natural_unit(t, [rho_l, alpha, R]);
+t_ns: natural_unit(t, [rho_l, eta_l, R]);
+
+/* mechanical motion is very fast in comparison with heat conductivity */
+float(fullratsubst(env_sim, t_ns/t_heat));
+float(fullratsubst(env_sim, t_surface/t_heat));
+float(fullratsubst(env_sim, t_gravity/t_heat));
+
+to_sim(cv_l,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(cv_g,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(Hwv,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(D_l,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(D_g,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(alpha,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(eta_g,  env_sim, [L, rho_l, eta_l, dT]);
+
+ev(Ja, env_sim);
+
+B: (12/%pi*Ja^2 / (rho_l*cv_l)*D_l )^(1/2) ;
+R: B*t^(1/2);
+V: 4/3*%pi*R^3;
+float(ev(V, [cv_l=3.0, cv_g=1.0, D_l=1.0, D_g=1.0, rho_l=1.0, rho_g=1.0, dT=1.0, Hwv=10]));
+
+a_l: D_l/(rho_l*cv_l);
+B: (12/%pi*a_l)**0.5*Ja;
+R: B*t^(1/2);
+V: 4/3*%pi*R^3;
+float(ev(V, [cv_l=3.0, cv_g=1.0, D_l=1.0, D_g=1.0, rho_l=1.0, rho_g=1.0, dT=1.0, Hwv=10]));
