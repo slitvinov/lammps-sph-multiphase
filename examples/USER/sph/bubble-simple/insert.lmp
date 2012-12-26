@@ -97,13 +97,13 @@ variable           prob equal ${dprob}
 variable            time equal step*${dt}
 variable            natoms equal count(all)
 
-# create vapor atom in the center of the domain
-# variable          xcenter_per equal ${xcenter}
-# variable          ycenter_per equal ${ycenter}
-# create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+#create vapor atom in the center of the domain
+variable          xcenter_per equal ${xcenter}
+variable          ycenter_per equal ${ycenter}
+create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
-set               region rsq type ${d_type}
+# region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
+# set               region rsq type ${d_type}
 
 # variable          a_sq   equal 0.2
 # include           square.lmp

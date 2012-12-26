@@ -25,11 +25,12 @@ vapor
 
 
 kill(all);
-d: 2;
+d: 3;
 eq1: dN = dE/Hwv;
 eq2: dE = S*dt/R;
 eq3: S=R^(d-1);
 eq4: dN = R^(d-1)*dR;
 
 solve([eq1, eq2, eq3, eq4], [dE, S, dR, dN]);
+
 
