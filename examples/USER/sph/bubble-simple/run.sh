@@ -4,13 +4,13 @@ set -e
 set -u
 Lx=1.0
 nx=60
-ndim=3
+ndim=2
 np=8
 D_heat_d=1.0
 D_heat_g=1.0
 sph_eta_d=0.69395
 cv_d=1.0
-cv_g=3.0
+cv_g=1.0
 dT=0.0
 Hwv=10.0
 alpha=200
