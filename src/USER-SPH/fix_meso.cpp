@@ -10,7 +10,6 @@
 
  See the README file in the top-level LAMMPS directory.
  ------------------------------------------------------------------------- */
-
 #include "stdio.h"
 #include "string.h"
 #include "fix_meso.h"
@@ -154,6 +153,9 @@ void FixMeso::final_integrate() {
       v[i][2] += dtfm * f[i][2];
 
       e[i] += dtf * de[i];
+      if (fabs(de[i]>1e-8)) {
+	printf("preved de[i], type[i]: %e %i\n", de[i], type[i]);
+      }
       rho[i] += dtf * drho[i];
     }
   }

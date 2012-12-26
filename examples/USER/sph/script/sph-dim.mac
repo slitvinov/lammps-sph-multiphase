@@ -3,7 +3,7 @@ kill(all);
 load("dimension.mac");
 fundamental_dimensions: [mass, length, time, K];
 /* density */
-put(rho, mass/length^3, dimension);
+put(rho, mass/length^2, dimension);
 put(rho_l, dimension(rho), dimension);
 put(rho_g, dimension(rho), dimension);
 /* volume */
@@ -13,8 +13,10 @@ put(sigma, dimension(1/V), dimension);
   
 /* radious of the bubble */
 put(R, length, dimension);
+/* domain size */
 put(L, length, dimension);
 put(r, length, dimension);
+/* kernel */
 put(w, dimension(rho/mass), dimension);
 put(dw, dimension(w/r), dimension);
 put(m, mass, dimension);
@@ -30,17 +32,17 @@ put(dT, K, dimension);
 put(F, dimension(m*v/t), dimension);
 /* gravity, F_g=mg */
 put(g, dimension(F/m), dimension);
+/* Joule */
 J: dimension(m*v^2);
 /* density */
-put(rho_g, mass/length^3, dimension);
 /* kinematic viscosity */
 put(eta_l, length^2/time, dimension);
 put(eta_g, length^2/time, dimension);
 /* energy of the particle, J/kg */
-put(en, length^2/time^2, dimension);
+put(en, J/mass, dimension);
 /* heat capacity, meso_cv
 cv*T should give en */
-put(cv, length^2/time^2/K, dimension);
+put(cv, dimension(en)/K, dimension);
 put(cv_l, dimension(cv), dimension);
 put(cv_g, dimension(cv), dimension);
 /* put(D, dimension(en*R^2/(T*t)), dimension); */

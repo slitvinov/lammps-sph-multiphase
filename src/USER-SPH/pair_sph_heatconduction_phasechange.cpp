@@ -10,6 +10,7 @@
 
  See the README file in the top-level LAMMPS directory.
  ------------------------------------------------------------------------- */
+#include "assert.h"
 #include "string.h"
 #include "math.h"
 #include "stdlib.h"
@@ -49,11 +50,11 @@ PairSPHHeatConductionPhaseChange::~PairSPHHeatConductionPhaseChange() {
 /* ---------------------------------------------------------------------- */
 
 void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
-  int i, j, ii, jj, inum, jnum, itype, jtype;
+  int ii, jj, inum, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
 
   int *ilist, *jlist, *numneigh, **firstneigh;
-  double imass, jmass, h, ih, ihsq;
+  double imass, jmass, h, ih;
   double rsq, wfd, D;
 
   if (eflag || vflag)
@@ -79,7 +80,7 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
   // loop over neighbors of my atoms and do heat diffusion
 
   for (ii = 0; ii < inum; ii++) {
-    i = ilist[ii];
+    int i = ilist[ii];
     itype = type[i];
 
     xtmp = x[i][0];
@@ -92,7 +93,7 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
     imass = rmass[i];
 
     for (jj = 0; jj < jnum; jj++) {
-      j = jlist[jj];
+      int j = jlist[jj];
       j &= NEIGHMASK;
 
       delx = xtmp - x[j][0];
@@ -100,7 +101,6 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
@@ -115,28 +115,25 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
         }
 
         jmass = rmass[j];
+	assert(jmass>0);
         D = alpha[itype][jtype]; // diffusion coefficient
 
-	double Ti;
-	if (fixflag[itype][jtype]==itype) {
+	double Ti = sph_energy2t(e[i], cv[i]);
+	if ((fixflag[itype][jtype]==itype) && (Ti<tc[itype][jtype]) ) {
 	  Ti = tc[itype][jtype];
-	  //printf("I am fixing temperature %i %i %e\n", itype, jtype, Ti);
-	} else {
-	  Ti = sph_energy2t(e[i], cv[i]);
 	}
 
-	double Tj;
-	if (fixflag[itype][jtype]==jtype) {
+	double Tj = sph_energy2t(e[j], cv[j]);
+	if ((fixflag[itype][jtype]==jtype) && (Tj<tc[itype][jtype]) ) {
 	  Tj = tc[itype][jtype];
-	  //printf("I am fixing temperature %i %i %e\n", itype, jtype, Tj);
-	} else {
-	  Tj = sph_energy2t(e[j], cv[j]);
 	}
 
+	assert(rho[i]>0);
+	assert(rho[j]>0);
         double deltaE = 2.0*D*(Ti - Tj)*wfd/(rho[i]*rho[j]);
-        de[i] += deltaE*jmass;
+        //de[i] += deltaE*jmass;
         if (newton_pair || j < nlocal) {
-          de[j] -= deltaE*imass;
+          //de[j] -= deltaE*imass;
         }
 
       }
