@@ -42,9 +42,9 @@ create_atoms       ${g_type} region box
 
 # create walls on the top and on the bottom
 variable     x1  equal 3*${dx}
-variable     x2  equal ${Lx}-3.5*${dx}
+variable     x2  equal ${Lx}-3*${dx}
 variable     y1 equal 3*${dx}
-variable     y2  equal ${Ly}-3.5*${dx}
+variable     y2  equal ${Ly}-3*${dx}
 if ${ndim}==3 then &
 "variable     z1 equal 3*${dx}" &
 "variable     z2  equal ${Lz}-3.0*${dx}" &
@@ -63,12 +63,12 @@ fix                integrate_fix_full all meso
 variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
-neighbor           0 bin
+neighbor           ${dx} bin
 neigh_modify       delay 0 every 1
 communicate        single vel yes
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
-                   sph/taitwater/morris sph/surfacetension sph/heatconduction/phasechange
+                   sph/taitwater/morris sph/surfacetension sph/heatconduction
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
 pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha}
@@ -80,10 +80,10 @@ pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c
 pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d}  ${sph_eta_d} 7.0 ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
+pair_coeff         ${g_type} ${g_type} sph/heatconduction  ${D_heat_g} ${h}
 variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
-pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
-pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction  ${D_heat_gd} ${h}
+pair_coeff         ${d_type} ${d_type} sph/heatconduction  ${D_heat_d} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
@@ -92,15 +92,14 @@ timestep           ${dt}
 variable           insert_every equal 1
 #variable          Hwv equal 0.00
 variable           dr equal 0.5*${dx}
-#variable           prob equal ${dt}/${dprob}
 variable           prob equal ${dprob}
 
 variable            time equal step*${dt}
 variable            natoms equal count(all)
 
 # create vapor atom in the center of the domain
-# variable          xcenter_per equal ${xcenter}+0.5*${dx}
-# variable          ycenter_per equal ${ycenter}+0.5*${dx}
+# variable          xcenter_per equal ${xcenter}
+# variable          ycenter_per equal ${ycenter}
 # create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
 region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
@@ -144,6 +143,7 @@ dump_modify        dump_id first yes sort id pad 8
 thermo_style        custom step v_time v_natoms v_vnd
 thermo              10
 
+run                1
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
@@ -157,7 +157,5 @@ echo              log
 variable          nstep equal 10.0/${dt}
 group gflow region rtemp
 fix smeso      all setmeso meso_t ${Tinf} noregion rtemp
-
-#fix tempbu     droplet setmesode 0.0
 
 run               ${nstep}

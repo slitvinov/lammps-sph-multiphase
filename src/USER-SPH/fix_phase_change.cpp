@@ -188,9 +188,6 @@ void FixPhaseChange::pre_exchange()
     subhi = domain->subhi_lamda;
   }
 
-  // attempt an insertion until successful
-
-
     // choose random position for new atom within region
   int nins = 0;
   int nlocal = atom->nlocal;
@@ -217,8 +214,7 @@ void FixPhaseChange::pre_exchange()
   /// TODO: how to distribute to ghosts?
   for (int i = 0; i < nlocal; i++) {
     double Ti = sph_energy2t(e[i], cv[i]);
-    if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) ) {
-    //if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
+    if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
       double coord[3];
       bool ok;
       double delta = dr;
@@ -240,56 +236,56 @@ void FixPhaseChange::pre_exchange()
 	nins++;
 	// look for the neighbors of the type from_type
 	// and subtract energy from all of them
-	// double xtmp = x[i][0];
-	// double ytmp = x[i][1];
-	// double ztmp = x[i][2];
-	// int** firstneigh = list->firstneigh;
-	// int jnum = numneigh[i];
-	// int* jlist = firstneigh[i];
-	// // collect
-	// double wtotal = 0.0;
-	//   /// TODO: make it run in parallel
-	// for (int jj = 0; jj < jnum; jj++) {
-	//   int j = jlist[jj];
-	//   j &= NEIGHMASK;
-	//   double Tj = sph_energy2t(e[j],cv[j]);
-	//   if ( (type[j]==from_type) && (Tj>Ti) ) {
-	//     double delx = xtmp - x[j][0];
-	//     double dely = ytmp - x[j][1];
-	//     double delz = ztmp - x[j][2];
-	//     double rsq = delx * delx + dely * dely + delz * delz;
-	//     double wfd;
-	//     if (domain->dimension == 3) {
-	//       wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
-	//     } else {
-	//       wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
-	//     }
-	//     wtotal+=wfd*(Tj-Ti);
-	//     assert(wfd*(Tj-Ti)>=0);
-	//   }
-	// }
+	double xtmp = x[i][0];
+	double ytmp = x[i][1];
+	double ztmp = x[i][2];
+	int** firstneigh = list->firstneigh;
+	int jnum = numneigh[i];
+	int* jlist = firstneigh[i];
+	// collect
+	double wtotal = 0.0;
+	  /// TODO: make it run in parallel
+	for (int jj = 0; jj < jnum; jj++) {
+	  int j = jlist[jj];
+	  j &= NEIGHMASK;
+	  double Tj = sph_energy2t(e[j],cv[j]);
+	  if ( (type[j]==from_type) && (Tj>Ti) ) {
+	    double delx = xtmp - x[j][0];
+	    double dely = ytmp - x[j][1];
+	    double delz = ztmp - x[j][2];
+	    double rsq = delx * delx + dely * dely + delz * delz;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
+	    } else {
+	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
+	    }
+	    wtotal+=wfd*(Tj-Ti);
+	    assert(wfd*(Tj-Ti)>=0);
+	  }
+	}
 
-	// // distribute
-	// for (int jj = 0; jj < jnum; jj++) {
-	//   int j = jlist[jj];
-	//   j &= NEIGHMASK;
-	//   double Tj = sph_energy2t(e[j],cv[j]);
-	//   if ( (type[j]==from_type) && (Tj>Ti) ) {
-	//     double delx = xtmp - x[j][0];
-	//     double dely = ytmp - x[j][1];
-	//     double delz = ztmp - x[j][2];
-	//     double rsq = delx * delx + dely * dely + delz * delz;
-	//     double wfd;
-	//     if (domain->dimension == 3) {
-	//       wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
-	//     } else {
-	//       wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
-	//     }
- 	//     delocal[j] -= (energy_to_dist/rmass[j]) * wfd*(Tj-Ti)/wtotal;
-	//     assert(wfd*(Tj-Ti)>=0);
-	//     assert(wtotal>=0);
-	//   }
-	// }
+	// distribute
+	for (int jj = 0; jj < jnum; jj++) {
+	  int j = jlist[jj];
+	  j &= NEIGHMASK;
+	  double Tj = sph_energy2t(e[j],cv[j]);
+	  if ( (type[j]==from_type) && (Tj>Ti) ) {
+	    double delx = xtmp - x[j][0];
+	    double dely = ytmp - x[j][1];
+	    double delz = ztmp - x[j][2];
+	    double rsq = delx * delx + dely * dely + delz * delz;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
+	    } else {
+	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
+	    }
+ 	    delocal[j] -= (energy_to_dist/rmass[j]) * wfd*(Tj-Ti)/wtotal;
+	    assert(wfd*(Tj-Ti)>=0);
+	    assert(wtotal>=0);
+	  }
+	}
 	
  	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
@@ -319,6 +315,9 @@ void FixPhaseChange::pre_exchange()
   next_reneighbor += nfreq;
   comm->reverse_comm_fix(this);
   for (int i = 0; i < nlocal; i++) {
+    if (fabs(delocal[i])>0) {
+      printf("preved");
+    }
     e[i] += delocal[i];
   }
   
@@ -460,6 +459,7 @@ void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, do
     b1[2] =  0 ;
     double b1abs = sqrt(b1[0]*b1[0] + b1[1]*b1[1] + b1[2]*b1[2]);
     b1[0] = b1[0]/b1abs;     b1[1] = b1[1]/b1abs;     b1[2] = b1[2]/b1abs;
+    assert( b1[0]*cgone[0] + b1[1]*cgone[1] + b1[2]*cgone[2] < 1e-8);
 
     double b2[3];
     b2[0] =  -cgone[0]*cgone[1]*cgone[2]/(pow(cgone[1],2)+pow(cgone[0],2)) ;
@@ -467,15 +467,19 @@ void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, do
     b2[2] =  cgone[1];
     double b2abs = sqrt(b2[0]*b2[0] + b2[1]*b2[1] + b2[2]*b2[2]);
     b2[0] = b2[0]/b2abs;     b2[1] = b2[1]/b2abs;     b2[2] = b2[2]/b2abs;
+    assert( b2[0]*cgone[0] + b2[1]*cgone[1] + b2[2]*cgone[2] < 1e-8);
 
     double atmp = random->uniform() - 0.5;
     double btmp = random->uniform() - 0.5;
     eij[0] = atmp*b1[0] + btmp*b2[0];
     eij[1] = atmp*b1[1] + btmp*b2[1];
     eij[2] = atmp*b1[2] + btmp*b2[2];
+    assert( eij[0]*cgone[0] + eij[1]*cgone[1] + eij[2]*cgone[2] < 1e-8);
   } else {
     // TODO: find direction cheaper
     double atmp = random->uniform();
+    assert(atmp<=1.0);
+    assert(atmp>=0.0);
     if (atmp>0.5) atmp=1; else atmp=-1;
     eij[0] = -atmp*cgone[1];
     eij[1] = atmp*cgone[0];
