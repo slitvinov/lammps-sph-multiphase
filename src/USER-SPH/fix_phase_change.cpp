@@ -201,16 +201,8 @@ void FixPhaseChange::pre_exchange()
   double *cv = atom->cv;
   double *e   = atom->e;
   double *de = atom->de;
-  delocal   = atom->de;
   int *type = atom->type;
   
-  int nall;
-  if (force->newton) nall = atom->nlocal + atom->nghost;
-  else nall = atom->nlocal;
-  for (int i = 0; i < nall; i++) {
-    delocal[i] = 0.0;
-  }
-
   /// TODO: how to distribute to ghosts?
   for (int i = 0; i < nlocal; i++) {
     double Ti = sph_energy2t(e[i], cv[i]);
@@ -234,58 +226,6 @@ void FixPhaseChange::pre_exchange()
 	//double energy_to_dist = Hwv*to_mass  + rmass[i]*(sph_t2energy(Tc,cv[i]) - e[i]);
 	double energy_to_dist = 0.0;
 	nins++;
-	// look for the neighbors of the type from_type
-	// and subtract energy from all of them
-	double xtmp = x[i][0];
-	double ytmp = x[i][1];
-	double ztmp = x[i][2];
-	int** firstneigh = list->firstneigh;
-	int jnum = numneigh[i];
-	int* jlist = firstneigh[i];
-	// collect
-	double wtotal = 0.0;
-	  /// TODO: make it run in parallel
-	for (int jj = 0; jj < jnum; jj++) {
-	  int j = jlist[jj];
-	  j &= NEIGHMASK;
-	  double Tj = sph_energy2t(e[j],cv[j]);
-	  if ( (type[j]==from_type) && (Tj>Ti) ) {
-	    double delx = xtmp - x[j][0];
-	    double dely = ytmp - x[j][1];
-	    double delz = ztmp - x[j][2];
-	    double rsq = delx * delx + dely * dely + delz * delz;
-	    double wfd;
-	    if (domain->dimension == 3) {
-	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
-	    } else {
-	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
-	    }
-	    wtotal+=wfd*(Tj-Ti);
-	    assert(wfd*(Tj-Ti)>=0);
-	  }
-	}
-
-	// distribute
-	for (int jj = 0; jj < jnum; jj++) {
-	  int j = jlist[jj];
-	  j &= NEIGHMASK;
-	  double Tj = sph_energy2t(e[j],cv[j]);
-	  if ( (type[j]==from_type) && (Tj>Ti) ) {
-	    double delx = xtmp - x[j][0];
-	    double dely = ytmp - x[j][1];
-	    double delz = ztmp - x[j][2];
-	    double rsq = delx * delx + dely * dely + delz * delz;
-	    double wfd;
-	    if (domain->dimension == 3) {
-	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
-	    } else {
-	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
-	    }
- 	    delocal[j] -= (energy_to_dist/rmass[j]) * wfd*(Tj-Ti)/wtotal;
-	    assert(wfd*(Tj-Ti)>=0);
-	    assert(wtotal>=0);
-	  }
-	}
 	
  	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
@@ -313,14 +253,6 @@ void FixPhaseChange::pre_exchange()
   /// find a total number of inserted atoms
   int ninsall;
   next_reneighbor += nfreq;
-  comm->reverse_comm_fix(this);
-  for (int i = 0; i < nlocal; i++) {
-    if (fabs(delocal[i])>0) {
-      printf("preved");
-    }
-    e[i] += delocal[i];
-  }
-  
   // reset global natoms
   // set tag # of new particle beyond all previous atoms
   // if global map exists, reset it now instead of waiting for comm
