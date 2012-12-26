@@ -3,9 +3,9 @@
 set -e
 set -u
 Lx=1.0
-nx=20
+nx=80
 ndim=3
-np=1
+np=8
 D_heat_d=0.5
 D_heat_g=0.5
 cv_d=1.0
