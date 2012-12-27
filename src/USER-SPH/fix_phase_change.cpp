@@ -275,7 +275,7 @@ void FixPhaseChange::pre_exchange()
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
 	    double dmass_aux = to_mass*wfd/wtotal;
- 	    dmass[j] -= dmass_aux;
+ 	    dmass[j] += dmass_aux;
 	    denergy += e[j]*dmass_aux;
 	    dmom[0] += v[j][0]*dmass_aux;
 	    dmom[1] += v[j][1]*dmass_aux;
@@ -311,7 +311,8 @@ void FixPhaseChange::pre_exchange()
   /// substract mass
   comm->reverse_comm_fix(this);
   for (int i = 0; i < nlocal; i++) {
-    rmass[i] += dmass[i];
+    rmass[i] -= dmass[i];
+    dmass[i] = 0;
   }
   
   // reset global natoms
