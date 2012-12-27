@@ -33,9 +33,9 @@ variable          h equal 3.0*${dx}
 variable          Nfreq equal 100
 
 # mass of droplet particle
-variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
+variable          mass_d equal ${dx}^${ndim}*${sph_rho_d}
 # mass of gas particle
-variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
+variable          mass_g equal ${dx}^${ndim}*${sph_rho_g}
 
 # surface tension
 #variable          alpha equal 0.2

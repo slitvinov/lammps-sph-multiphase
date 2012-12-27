@@ -53,8 +53,6 @@ else &
 "region	     rflow block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box"
 
 group	     flow region rflow
-group	     boundary subtract all flow
-#fix          wallim boundary setforce 0 0 0
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
@@ -82,7 +80,7 @@ pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c
 pair_coeff         * * sph/surfacetension ${h}
 pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
 variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
-pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} #NULL ${Tc}
 pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
@@ -98,7 +96,7 @@ variable            time equal step*${dt}
 variable            natoms equal count(all)
 
 #create vapor atom in the center of the domain
-variable          xcenter_per equal ${xcenter}
+variable          xcenter_per equal ${xcenter}+0.25*${dx}
 variable          ycenter_per equal ${ycenter}
 create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
@@ -113,29 +111,31 @@ set               type ${d_type} meso_cv ${cv_d}
 set               type ${g_type} meso_cv ${cv_g}
 set               type ${d_type} meso_e ${e_d}
 set               type ${g_type} meso_e ${e_g}
-set               type ${d_type} mass ${sph_mass_d}
-set               type ${g_type} mass ${sph_mass_g}
+set               type ${d_type} mass ${mass_d}
+set               type ${g_type} mass ${mass_g}
 set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
 
 group              droplet type ${d_type}
 
 
-compute            rho_peratom all meso_rho/atom
-compute            colorgradient_peratom all meso_colorgradient/atom
+compute         rho_peratom all meso_rho/atom
 compute         it_atom all meso_t/atom
 compute         ie_atom all meso_e/atom
 compute         ie all reduce sum c_ie_atom
+
+variable        energ atom c_ie_atom*mass
+compute         cenerg   all reduce sum v_energ
+variable        vcons equal c_cenerg+${Hwv}*${mass_d}*count(droplet)
+
 variable        vmx atom mass*vx
 variable        vmy atom mass*vy
 variable        vmz atom mass*vz
 variable        vmass atom mass
 compute         im all reduce sum v_vmass
-
 compute         imx all reduce sum v_vmx
 compute         imy all reduce sum v_vmy
 compute         imz all reduce sum v_vmz
-
 variable        vie equal c_ie
 variable        volume atom mass/c_rho_peratom
 compute         dvol droplet reduce sum v_volume
@@ -151,21 +151,22 @@ dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z 
 								  
 dump_modify        dump_id first yes sort id pad 8
 
-thermo_style        custom step v_time v_natoms v_vnd c_im c_imx c_imy c_imz
-thermo              10
+thermo_style        custom step v_time v_natoms v_vnd c_im c_imx c_imy c_imz v_vcons
+thermo              100
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
-                   ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
+                   ${Tc} ${Tt} ${Hwv} ${dr} ${mass_d} &
                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 
 # outside of this sphere the temperature is 1.0
 variable          Rtemp equal ${xcenter}-2.6*${dx}
 region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
+fix smeso      all setmeso meso_t ${Tinf} noregion rtemp
 
 echo              log
 variable          nstep equal 10.0/${dt}
 group gflow region rtemp
-fix smeso      all setmeso meso_t ${Tinf} noregion rtemp
+
 
 run               ${nstep}

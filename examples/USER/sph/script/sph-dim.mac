@@ -191,6 +191,6 @@ float(ev(V, [cv_l=3.0, cv_g=1.0, D_l=1.0, D_g=1.0, rho_l=1.0, rho_g=1.0, dT=1.0,
 a_l: D_l/(rho_l*cv_l);
 B: (12/%pi*a_l)**0.5*Ja;
 R: B*t^(1/2);
-/*V: 4/3*%pi*R^3;*/
+/* V: 4/3*%pi*R^3;*/
 V: %pi*R^2;
-float(ev(V, [cv_l=3.0, cv_g=1.0, D_l=1.0, D_g=1.0, rho_l=1.0, rho_g=1.0, dT=1.0, Hwv=10]));
+float(ev(V, [cv_l=1.0, cv_g=2.0, D_l=1.0, D_g=1.0, rho_l=1.0, rho_g=0.1, dT=1.0, Hwv=32]));
