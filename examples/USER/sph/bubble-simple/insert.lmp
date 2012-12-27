@@ -126,6 +126,8 @@ compute            colorgradient_peratom all meso_colorgradient/atom
 compute         it_atom all meso_t/atom
 compute         ie_atom all meso_e/atom
 compute         ie all reduce sum c_ie_atom
+variable        vmass atom mass
+compute         im all reduce sum v_vmass
 variable        vie equal c_ie
 variable        volume atom mass/c_rho_peratom
 compute         dvol droplet reduce sum v_volume
@@ -138,9 +140,10 @@ fix extra all print 1 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet}" file $
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
                                                                   c_rho_peratom c_ie_atom c_it_atom
+								  
 dump_modify        dump_id first yes sort id pad 8
 
-thermo_style        custom step v_time v_natoms v_vnd
+thermo_style        custom step v_time v_natoms v_vnd c_im
 thermo              10
 
 variable           pcutoff equal ${h}
