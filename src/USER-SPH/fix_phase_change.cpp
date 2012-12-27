@@ -254,8 +254,12 @@ void FixPhaseChange::pre_exchange()
 	}
 
 	// take mass
-	// and keep energy we are taking
-	double denergy = 0.0; /* J */
+	// and keep energy and momentum we are taking
+	double dmom[3];
+	double dmomest[3];
+	dmom[0]=0.0; dmom[1]=0.0; dmom[2]=0.0;
+	dmomest[0]=0.0; dmomest[1]=0.0; dmomest[2]=0.0;
+	double denergy;
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
@@ -273,28 +277,33 @@ void FixPhaseChange::pre_exchange()
 	    double dmass_aux = to_mass*wfd/wtotal;
  	    dmass[j] -= dmass_aux;
 	    denergy += e[j]*dmass_aux;
+	    dmom[0] += v[j][0]*dmass_aux;
+	    dmom[1] += v[j][1]*dmass_aux;
+	    dmom[2] += v[j][2]*dmass_aux;
+
+	    dmomest[0] += vest[j][0]*dmass_aux;
+	    dmomest[1] += vest[j][1]*dmass_aux;
+	    dmomest[2] += vest[j][2]*dmass_aux;
 	  }
 	}
 	
  	// for a new atom
-	rmass[atom->nlocal-1] = to_mass;
-	rho[atom->nlocal-1] = rho[i];
-	cv[atom->nlocal-1] = cv[i];
-	// conserve momentum total momentum
-	double km = to_mass/(to_mass + rmass[i]);
-	v[atom->nlocal-1][0] = vest[atom->nlocal-1][0] = v[i][0]*km;
-	v[atom->nlocal-1][1] = vest[atom->nlocal-1][1] = v[i][1]*km;
-	v[atom->nlocal-1][2] = vest[atom->nlocal-1][2] = v[i][2]*km;
-
-	double ki = rmass[i]/(to_mass + rmass[i]);
-	v[i][0] = vest[i][0] = v[i][0]*ki;
-	v[i][1] = vest[i][1] = v[i][1]*ki;
-	v[i][2] = vest[i][2] = v[i][2]*ki;
+	int m = atom->nlocal-1;
+	rmass[m] = to_mass;
+	rho[m] = rho[i];
+	cv[m] = cv[i];
+	// TODO: think about a better momentum conservation
+	v[m][0] = dmom[0]/to_mass;
+	v[m][1] = dmom[1]/to_mass;
+	v[m][2] = dmom[2]/to_mass;
+	vest[m][0] = dmomest[0]/to_mass;
+	vest[m][1] = dmomest[1]/to_mass;
+	vest[m][2] = dmomest[2]/to_mass;
 
 	// conserve energy
 	double energy_aux = 0.5*(e[i] + denergy/to_mass - Hwv);
 	e[i] = energy_aux;
-	e[atom->nlocal] = energy_aux;
+	e[m] = energy_aux;
       }
     }
   }
