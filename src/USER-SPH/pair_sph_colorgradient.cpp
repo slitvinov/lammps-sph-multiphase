@@ -136,7 +136,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
         itype = type[i];
         jlist = firstneigh[i];
         jnum = numneigh[i];
-
+	double Vi = rmass[i]/rho[i]; 
         for (jj = 0; jj < jnum; jj++) {
           j = jlist[jj];
           j &= NEIGHMASK;
@@ -148,14 +148,14 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
           rsq = delx * delx + dely * dely + delz * delz;
 
 	  if (rsq < cutsq[itype][jtype]) {
-
+	    double r = sqrt(rsq);
 	    if (ndim==2) {
-	      eij[0]= delx/sqrt(rsq); 
-	      eij[1]= dely/sqrt(rsq);    
+	      eij[0]= delx/r; 
+	      eij[1]= dely/r;
 	    } else {
-	      eij[0]= delx/sqrt(rsq);
-	      eij[1]= dely/sqrt(rsq);
-	      eij[2]= delz/sqrt(rsq);
+	      eij[0]= delx/r;
+	      eij[1]= dely/r;
+	      eij[2]= delz/r;
 	    }
 
 	    h = cut[itype][jtype];
@@ -164,23 +164,20 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    double wfd;
 	    if (domain->dimension == 3) {
 	      // Quintic spline
-	      wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+	      wfd = sph_dw_quintic3d(r*ih);
 	      wfd = wfd * ih * ih * ih * ih;
 	    } else {
-	      wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+	      wfd = sph_dw_quintic2d(r*ih);
 	      wfd = wfd * ih * ih * ih;
 	    }
-	    double Vi = rmass[i]/rho[i]; 
 	    double Vj = rmass[j]/rho[j];
-	    double Vi2 = Vi*Vi;
 	    double Vj2 = Vj*Vj;
-
-	    double dphi = -wfd*alpha[itype][jtype];
+	    double dphi = -wfd*alpha[itype][jtype]*dphi*Vj2/Vi;
 	    
-	    colorgradient[i][0] += dphi*Vj2/Vi*eij[0];
-	    colorgradient[i][1] += dphi*Vj2/Vi*eij[1];
+	    colorgradient[i][0] += dphi*eij[0];
+	    colorgradient[i][1] += dphi*eij[1];
 	    if (ndim==3) {
-	      colorgradient[i][2] += dphi*Vj2/Vi*eij[2];
+	      colorgradient[i][2] += dphi*eij[2];
 	    }
           } // rsq < cutsq
 	  
