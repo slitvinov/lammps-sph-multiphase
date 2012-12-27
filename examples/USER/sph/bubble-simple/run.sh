@@ -3,9 +3,9 @@
 set -e
 set -u
 Lx=1.0
-nx=60
-ndim=2
-np=8
+nx=20
+ndim=3
+np=1
 D_heat_d=3.0
 D_heat_g=1.0
 sph_eta_d=0.69395
@@ -28,7 +28,7 @@ dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_d${D_heat_d}-alpha${alpha}\
 
 rm -rf ${dname}
 mkdir -p ${dname}
-${mpirun} ${proc} ${lmp} -in insert.lmp \
+${lmp} -in insert.lmp \
     -var alpha ${alpha} -var D_heat_d ${D_heat_d} -var ndim ${ndim} -var nx ${nx} \
     -var Hwv ${Hwv} -var dprob ${dprob} -var time_k ${time_k} \
     -var Lx ${Lx} -var cv_d ${cv_d} -var sph_rho_d ${sph_rho_d} -var dT ${dT} \
