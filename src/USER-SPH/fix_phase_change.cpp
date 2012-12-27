@@ -200,14 +200,19 @@ void FixPhaseChange::pre_exchange()
   double *rho = atom->rho;
   double *cv = atom->cv;
   double *e   = atom->e;
-  double *de = atom->de;
+  dmass   = atom->de;
   int *type = atom->type;
   
-  /// TODO: how to distribute to ghosts?
+  int nall;
+  if (force->newton) nall = atom->nlocal + atom->nghost;
+  else nall = atom->nlocal;
+  for (int i = 0; i < nall; i++) {
+    dmass[i] = 0.0;
+  }
+
   for (int i = 0; i < nlocal; i++) {
     double Ti = sph_energy2t(e[i], cv[i]);
-    if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) )  {
-    //if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
+    if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
       double coord[3];
       bool ok;
       double delta = dr;
@@ -220,20 +225,61 @@ void FixPhaseChange::pre_exchange()
 	natempt++;
       } while (!ok && natempt<10);
       if (ok) {
-	/// create a new particle and cool down a particle i
-	/// we have some energy to distribute:
-	/// latent heat + change of energy of particle i
-	/// NOTE: this energy is in J and not in J/kg
-	//double energy_to_dist = Hwv*to_mass  + rmass[i]*(sph_t2energy(Tc,cv[i]) - e[i]);
-	double energy_to_dist = 0.0;
 	nins++;
+	/// we should take mass from neighboring from_type atoms
+	double xtmp = x[i][0];
+	double ytmp = x[i][1];
+	double ztmp = x[i][2];
+	int** firstneigh = list->firstneigh;
+	int jnum = numneigh[i];
+	int* jlist = firstneigh[i];
+	// collect wights
+	double wtotal = 0.0;
+	for (int jj = 0; jj < jnum; jj++) {
+	  int j = jlist[jj];
+	  j &= NEIGHMASK;
+	  if (type[j]==from_type) {
+	    double delx = xtmp - x[j][0];
+	    double dely = ytmp - x[j][1];
+	    double delz = ztmp - x[j][2];
+	    double rsq = delx * delx + dely * dely + delz * delz;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
+	    } else {
+	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
+	    }
+	    wtotal+=wfd;
+	  }
+	}
+
+	// take mass
+	// and keep energy we are taking
+	double denergy = 0.0; /* J */
+	for (int jj = 0; jj < jnum; jj++) {
+	  int j = jlist[jj];
+	  j &= NEIGHMASK;
+	  if (type[j]==from_type) {
+	    double delx = xtmp - x[j][0];
+	    double dely = ytmp - x[j][1];
+	    double delz = ztmp - x[j][2];
+	    double rsq = delx * delx + dely * dely + delz * delz;
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      wfd = sph_kernel_quintic3d(sqrt(rsq)*cutoff);
+	    } else {
+	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
+	    }
+	    double dmass_aux = to_mass*wfd/wtotal;
+ 	    dmass[j] -= dmass_aux;
+	    denergy += e[j]*dmass_aux;
+	  }
+	}
 	
  	// for a new atom
 	rmass[atom->nlocal-1] = to_mass;
 	rho[atom->nlocal-1] = rho[i];
-	e[atom->nlocal-1] = sph_t2energy(Tc,cv[i]);
 	cv[atom->nlocal-1] = cv[i];
-	de[atom->nlocal-1] = 0.0;
 	// conserve momentum total momentum
 	double km = to_mass/(to_mass + rmass[i]);
 	v[atom->nlocal-1][0] = vest[atom->nlocal-1][0] = v[i][0]*km;
@@ -245,19 +291,26 @@ void FixPhaseChange::pre_exchange()
 	v[i][1] = vest[i][1] = v[i][1]*ki;
 	v[i][2] = vest[i][2] = v[i][2]*ki;
 
-	//e[i] = sph_t2energy(Tc,cv[i]);
-	e[i] -= Hwv;
+	// conserve energy
+	double energy_aux = 0.5*(e[i] + denergy/to_mass - Hwv);
+	e[i] = energy_aux;
+	e[atom->nlocal] = energy_aux;
       }
     }
   }
 
-  /// find a total number of inserted atoms
-  int ninsall;
-  next_reneighbor += nfreq;
+  /// substract mass
+  comm->reverse_comm_fix(this);
+  for (int i = 0; i < nlocal; i++) {
+    rmass[i] += dmass[i];
+  }
+  
   // reset global natoms
   // set tag # of new particle beyond all previous atoms
   // if global map exists, reset it now instead of waiting for comm
   // since deleting atoms messes up ghosts
+  next_reneighbor += nfreq;
+  int ninsall;
   MPI_Allreduce(&nins,&ninsall,1,MPI_INT,MPI_SUM,world);
   if (ninsall>0) {
     atom->natoms += ninsall;
@@ -433,7 +486,7 @@ int FixPhaseChange::pack_reverse_comm(int n, int first, double *buf)
   last = first + n;
 
     for (i = first; i < last; i++) {
-      buf[m++] = delocal[i];
+      buf[m++] = dmass[i];
     }
   return comm_reverse;
 }
@@ -447,7 +500,7 @@ void FixPhaseChange::unpack_reverse_comm(int n, int *list, double *buf)
   m = 0;
   for (i = 0; i < n; i++) {
     j = list[i];
-    delocal[j] += buf[m++];
+    dmass[j] += buf[m++];
   }
 }
 

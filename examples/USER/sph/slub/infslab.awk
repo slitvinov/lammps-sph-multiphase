@@ -101,7 +101,7 @@ BEGIN {
     alpha_r=k_r/(rho_r*cv_r)
     printf("alpha_l = %e\n", alpha_l) > "/dev/stderr"
     printf("alpha_r = %e\n", alpha_r) > "/dev/stderr"
-    Tc = (Tr-Tl) * sqrt(alpha_l) / ( sqrt(alpha_l) + sqrt(alpha_r) )
+    Tc = (Tr-Tl) * (k_l/sqrt(alpha_l)) / ( (k_l/sqrt(alpha_l)) + (k_r/sqrt(alpha_r)) )
     printf("Tc = %e\n", Tc) > "/dev/stderr"
     printf("xm = %e\n", xm) > "/dev/stderr"
 }
@@ -111,7 +111,7 @@ NF{
     if (x<xm) {
 	relT= erfc( (xm - x)/ sqrt(alpha_l) / sqrt(t) / 2  )
     } else {
-	relT= 1 + sqrt(alpha_l/alpha_r) * erf( (x - xm)/ sqrt(alpha_r)  / sqrt(t) / 2 )
+	relT= 1 + (k_l/k_r)*sqrt(alpha_l/alpha_r) * erf( (x - xm)/ sqrt(alpha_r)  / sqrt(t) / 2 )
     }
     print x, relT*Tc + Tl
 }

@@ -1,5 +1,6 @@
-relt: 1 + sqrt(l/r);
-Tc: (Tr-Tl) * sqrt(l)/sqrt(r);
-
+assume(l>0);
+assume(r>0);
+relt: 1 + sqrt(l)/sqrt(r);
+Tc: (Tr-Tl) * sqrt(r)/(sqrt(r) + sqrt(l));
 Tlim: ratsimp(relt * Tc + Tl);
-ev(Tlim, Tl=0);
+
