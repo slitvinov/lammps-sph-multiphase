@@ -3,16 +3,16 @@
 set -e
 set -u
 Lx=1.0
-nx=60
-ndim=2
-np=1
+nx=40
+ndim=3
+np=8
 D_heat_d=1.0
 D_heat_g=1.0
 sph_eta_d=0.69395
 cv_d=1.0
 cv_g=2.0
 dT=0.0
-Hwv=32.0
+Hwv=16.0
 alpha=200
 dprob=0.01
 sph_rho_d=0.1
