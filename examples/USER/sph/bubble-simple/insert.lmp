@@ -80,7 +80,7 @@ pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c
 pair_coeff         * * sph/surfacetension ${h}
 pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
 variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
-pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} #NULL ${Tc}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
 pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
