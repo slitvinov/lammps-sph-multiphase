@@ -302,6 +302,8 @@ void FixPhaseChange::pre_exchange()
 
 	// conserve energy
 	double energy_aux = 0.5*(e[i] + denergy/to_mass - Hwv);
+	// must be biggger than critical temperature
+	assert(energy_aux<sph_t2energy(Tc, cv[i]));
 	e[i] = energy_aux;
 	e[m] = energy_aux;
       }

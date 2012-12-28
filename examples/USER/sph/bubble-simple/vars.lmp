@@ -18,8 +18,8 @@ variable          sph_rho_g equal 1.0
 #variable          sph_rho_d equal 1.0
 
 # sound speed
-variable          sph_c_d equal 200/sqrt(${sph_rho_d})
-variable          sph_c_g equal 200/sqrt(${sph_rho_g})
+variable          sph_c_d equal 0.01/sqrt(${sph_rho_d})
+variable          sph_c_g equal 0.01/sqrt(${sph_rho_g})
 
 # viscosity
 #variable          sph_eta_d equal 1.0
@@ -30,7 +30,7 @@ variable          sph_eta_g equal 1.0
 variable          rbackground equal 0.0
 
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 100
+variable          Nfreq equal 1
 
 # mass of droplet particle
 variable          mass_d equal ${dx}^${ndim}*${sph_rho_d}

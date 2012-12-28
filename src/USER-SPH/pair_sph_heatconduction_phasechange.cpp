@@ -119,12 +119,12 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
         D = alpha[itype][jtype]; // diffusion coefficient
 
 	double Ti = sph_energy2t(e[i], cv[i]);
-	double Tj = sph_energy2t(e[j], cv[j]);
-	
-	if ( (fixflag[itype][jtype]==itype) && (Ti<Tj))  {
+	if ((fixflag[itype][jtype]==itype) && (Ti<tc[itype][jtype]) ) {
 	  Ti = tc[itype][jtype];
 	}
-	if ( (fixflag[itype][jtype]==jtype ) && (Tj<Ti)){
+
+	double Tj = sph_energy2t(e[j], cv[j]);
+	if ((fixflag[itype][jtype]==jtype) && (Tj<tc[itype][jtype]) ) {
 	  Tj = tc[itype][jtype];
 	}
 
