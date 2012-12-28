@@ -193,5 +193,4 @@ B: (12/%pi*a_l)**0.5*Ja;
 R: B*t^(1/2);
 V: 4/3*%pi*R^3;
 /* V: %pi*R^2; */
-float(ev(V, [cv_l=4.0, cv_g=1.0, D_l=1.0, D_g=3.0, rho_l=1.0, rho_g=0.01, dT=1.0, Hwv=100]));
-float(ev(V^(2/3), [cv_l=4.0, cv_g=1.0, D_l=1.0, D_g=3.0, rho_l=1.0, rho_g=0.01, dT=1.0, Hwv=100]));
+float(ev(V^(2/3), [D_l=1.0, D_g=3.0, cv_g=1.0, cv_l=4.0, rho_l=1.0, rho_g=0.1, dT=1.0, Hwv=100]));
