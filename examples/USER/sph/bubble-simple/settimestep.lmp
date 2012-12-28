@@ -1,6 +1,6 @@
 variable BIG equal 1e20
 
-variable beta equal 1.0
+variable beta equal 0.1
 if "${D_heat_d}>0" then &
 "variable dt_temp_d equal ${beta}*1.44*${sph_rho_d}*${cv_d}*${dx}^2/${D_heat_d}" &
 else &
@@ -24,8 +24,15 @@ if "${alpha}>0" then  &
 else &
 "variable dt_alpha_g equal ${BIG}"
 
-variable dt_c_d equal 1/4.0*${dx}/${sph_c_d}
-variable dt_c_g equal 1/4.0*${dx}/${sph_c_g}
+if "${sph_rho_d}>0" then &
+"variable dt_c_d equal 1/4.0*${dx}/${sph_c_d}" &
+else &
+"variable dt_c_d equal ${BIG}"
+
+if "${sph_rho_g}>0" then &
+"variable dt_c_g equal 1/4.0*${dx}/${sph_c_g}" &
+else &
+"variable dt_c_g equal ${BIG}"
 
 shell ./min.sh dt ${dt_eta_d} ${dt_eta_g} ${dt_alpha_d} ${dt_alpha_g} ${dt_c_d} ${dt_c_g} ${dt_temp_g} ${dt_temp_d}
 include in.dt
