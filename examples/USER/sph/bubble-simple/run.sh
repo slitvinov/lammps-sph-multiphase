@@ -28,7 +28,7 @@ dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_d${D_heat_d}-alpha${alpha}\
 
 rm -rf ${dname}
 mkdir -p ${dname}
-${mpirun} ${proc} ${lmp} -in insert.lmp \
+${lmp} -in insert.lmp \
     -var alpha ${alpha} -var D_heat_d ${D_heat_d} -var ndim ${ndim} -var nx ${nx} \
     -var Hwv ${Hwv} -var dprob ${dprob} -var time_k ${time_k} \
     -var Lx ${Lx} -var cv_d ${cv_d} -var sph_rho_d ${sph_rho_d} -var dT ${dT} \

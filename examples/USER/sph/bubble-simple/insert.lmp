@@ -168,5 +168,4 @@ echo              log
 variable          nstep equal 10.0/${dt}
 group gflow region rtemp
 
-
 run               ${nstep}
