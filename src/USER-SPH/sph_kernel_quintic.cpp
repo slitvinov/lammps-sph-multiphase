@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------
- LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
+ LAMMPS-Large-scale Atomic/Molecular Massively Parallel Simulator
  http://lammps.sandia.gov, Sandia National Laboratories
  Steve Plimpton, sjplimp@sandia.gov
 
@@ -15,34 +15,34 @@
 #include "sph_kernel_quintic.h"
 
 double LAMMPS_NS::sph_kernel_quintic3d(double r) {
-  double norm3d = 0.0716197243913529;
-  double s = 3.0*r;
+  const double norm3d = 0.0716197243913529;
+  const double s = 3.0*r;
   if (s<1.0) {
-    return norm3d*(pow(3 - s, 5) - 6*pow(2 - s, 5) + 15*pow(1 - s, 5));
+    return norm3d*(pow(3-s,5)-6*pow(2-s,5) + 15*pow(1-s,5));
   } else if (s<2.0) {
-    return norm3d*(pow(3 - s, 5) - 6*pow(2 - s, 5));
+    return norm3d*(pow(3-s,5)-6*pow(2-s,5));
   } else if (s<3.0) {
-    return norm3d*pow(3 - s, 5);
+    return norm3d*pow(3-s,5);
   }
   return 0.0;
 }
 
 double LAMMPS_NS::sph_kernel_quintic2d(double r) {
-  double norm2d = 0.04195297663091802;
-  double s = 3.0*r;
+  const double norm2d = 0.04195297663091802;
+  const double s = 3.0*r;
   if (s<1.0) {
-    return norm2d*(pow(3 - s, 5) - 6*pow(2 - s, 5) + 15*pow(1 - s, 5));
+    return norm2d*(pow(3-s,5)-6*pow(2-s,5) + 15*pow(1-s,5));
   } else if (s<2.0) {
-    return norm2d*(pow(3 - s, 5) - 6*pow(2 - s, 5));
+    return norm2d*(pow(3-s,5)-6*pow(2-s,5));
   } else if (s<3.0) {
-    return norm2d*pow(3 - s, 5);
+    return norm2d*pow(3-s,5);
   }
   return 0.0;
 }
 
 double LAMMPS_NS::sph_dw_quintic3d(double r) {
-  double norm3d = 3.0*0.0716197243913529;
-  double s = 3.0*r;
+  const double norm3d = 3.0*0.0716197243913529;
+  const double s = 3.0*r;
   double wfd;
   if (s<1) {
     wfd = -50*pow(s,4)+120*pow(s,3)-120*s;
@@ -57,8 +57,8 @@ double LAMMPS_NS::sph_dw_quintic3d(double r) {
 }
 
 double LAMMPS_NS::sph_dw_quintic2d(double r) {
-  double norm2d = 3.0*0.04195297663091802;
-  double s = 3.0*r;
+  const double norm2d = 3.0*0.04195297663091802;
+  const double s = 3.0*r;
   double wfd;
   if (s<1) {
     wfd = -50*pow(s,4)+120*pow(s,3)-120*s;
