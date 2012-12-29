@@ -98,10 +98,10 @@ variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_he
 variable           D_heat_gw equal 2*${D_heat_g}*${D_heat_w}/(${D_heat_w}+${D_heat_g})
 variable           D_heat_dw equal 2*${D_heat_d}*${D_heat_w}/(${D_heat_d}+${D_heat_w})
 pair_coeff         ${g_type} ${g_type} sph/heatconduction  ${D_heat_g} ${h}
-pair_coeff         ${g_type} ${d_type} sph/heatconduction  ${D_heat_gd} ${h}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction  ${D_heat_gd} ${h} NULL ${Tc}
 pair_coeff         ${d_type} ${d_type} sph/heatconduction  ${D_heat_d} ${h}
 pair_coeff         ${g_type} ${w_type} sph/heatconduction  ${D_heat_gw} ${h}
-pair_coeff         ${d_type} ${w_type} sph/heatconduction  ${D_heat_dw} ${h}
+pair_coeff         ${d_type} ${w_type} sph/heatconduction  ${D_heat_dw} ${h} ${Tc} NULL
 pair_coeff         ${w_type} ${w_type} sph/heatconduction  ${D_heat_w} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz

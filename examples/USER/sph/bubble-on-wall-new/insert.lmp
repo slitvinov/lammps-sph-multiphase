@@ -70,7 +70,7 @@ neigh_modify       delay 0 every 1
 communicate        single vel yes
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
-                   sph/taitwater/morris sph/surfacetension sph/heatconduction
+                   sph/taitwater/morris sph/surfacetension sph/heatconduction/phasechange
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
 pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha_gd}
@@ -91,16 +91,16 @@ pair_coeff         ${w_type} ${w_type} sph/taitwater/morris ${sph_rho_w} ${sph_c
 
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         ${g_type} ${g_type} sph/heatconduction  ${D_heat_g} ${h}
+pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
 variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
 variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
 variable           D_heat_gw equal 2*${D_heat_g}*${D_heat_w}/(${D_heat_w}+${D_heat_g})
 variable           D_heat_dw equal 2*${D_heat_d}*${D_heat_w}/(${D_heat_d}+${D_heat_w})
-pair_coeff         ${g_type} ${d_type} sph/heatconduction  ${D_heat_gd} ${h}
-pair_coeff         ${d_type} ${d_type} sph/heatconduction  ${D_heat_d} ${h}
-pair_coeff         ${g_type} ${w_type} sph/heatconduction  ${D_heat_gw} ${h}
-pair_coeff         ${d_type} ${w_type} sph/heatconduction  ${D_heat_dw} ${h}
-pair_coeff         ${w_type} ${w_type} sph/heatconduction  ${D_heat_w} ${h}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
+pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h} 
+pair_coeff         ${g_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_gw} ${h}
+pair_coeff         ${d_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_dw} ${h} ${Tc} NULL
+pair_coeff         ${w_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_w} ${h}
 
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
@@ -179,7 +179,7 @@ dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z 
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd
-thermo              100
+thermo              10
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
