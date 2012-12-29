@@ -152,7 +152,7 @@ dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z 
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd c_im c_imx c_imy c_imz v_vcons
-thermo              100
+thermo              1
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
