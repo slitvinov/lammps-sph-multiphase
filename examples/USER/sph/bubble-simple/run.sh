@@ -3,22 +3,18 @@
 set -e
 set -u
 Lx=1.0
-nx=30
-ndim=2
+nx=40
+ndim=3
 np=1
-D_heat_d=3.0
-D_heat_g=1.0
+D_heat_d=0.6
+D_heat_g=0.1
 sph_eta_d=0.69395
 cv_d=1.0
-cv_g=4.0
+cv_g=0.04
 dT=0.1
-Hwv=1.0
+Hwv=4.0
 alpha=100
-<<<<<<< HEAD
 dprob=0.01
-=======
-dprob=0.1
->>>>>>> fae8f7622deccdd3abf64a5844ccc92d99db2ada
 sph_rho_d=0.01
 time_k=1.0
 # parameters for kana
