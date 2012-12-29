@@ -219,7 +219,7 @@ void PairSPHTaitwaterMorris::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
-  if (!( (narg == 7 ) || (narg == 8) ))
+  if (narg != 8)
     error->all(FLERR,
         "Incorrect args for pair_style sph/taitwater/morris coefficients (expect 5 or 6)");
   if (!allocated)
@@ -235,13 +235,7 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   double gamma_one = force->numeric(arg[5]);
   double cut_one = force->numeric(arg[6]);
   double B_one = soundspeed_one * soundspeed_one  * rho0_one / gamma_one;
-  double rbackground_one;
-  if (narg == 7) {
-    rbackground_one  = 0.0;
-  } else {
-    rbackground_one  = force->numeric(arg[6]);
-  }
-
+  double rbackground_one = force->numeric(arg[7]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
