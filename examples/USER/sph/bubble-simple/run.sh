@@ -5,7 +5,7 @@ set -u
 Lx=1.0
 nx=40
 ndim=3
-np=1
+np=8
 D_heat_d=0.6
 D_heat_g=0.1
 sph_eta_d=0.69395
