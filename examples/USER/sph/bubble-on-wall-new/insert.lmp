@@ -141,7 +141,7 @@ set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
 set               type ${w_type} meso_rho ${sph_rho_w}
 
-variable          dL   equal 0.25
+variable          dL   equal 1.0
 variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
 fix               tpr         flow setmeso meso_t v_tprofile
 if "${ndim}==2" then "fix e2d all enforce2d"
@@ -175,7 +175,7 @@ fix extra all print 1 &
 file ${dname}/rg.dat screen no
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
-                                                                  c_rho_peratom c_ie_atom c_it_atom
+                                                                  c_rho_peratom c_ie_atom mass c_it_atom
 dump_modify        dump_id first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd

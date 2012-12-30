@@ -2,22 +2,22 @@
 
 set -e
 set -u
-Lx=1.0
+Lx=2.0
 nx=40
 ndim=2
 np=1
 D_heat_d=0.6
 D_heat_g=0.1
-sph_eta_d=0.69395
+sph_eta_d=0.069395
 cv_d=1.0
 cv_g=0.04
 dT=0.1
-Hwv=8.0
-alpha=100
+Hwv=32.0
+alpha=300
 dprob=0.01
 sph_rho_d=0.01
 time_k=1.0
-gy=1e5
+gy=$1
 # parameters for kana
 lmp=../../../../src/lmp_linux
 mpirun=mpirun
@@ -29,7 +29,7 @@ dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_d${D_heat_d}-alpha${alpha}\
 
 rm -rf ${dname}
 mkdir -p ${dname}
-${lmp} -in insert.lmp \
+${mpirun} ${proc} ${lmp} -in insert.lmp \
     -var alpha ${alpha} -var D_heat_d ${D_heat_d} -var ndim ${ndim} -var nx ${nx} \
     -var Hwv ${Hwv} -var dprob ${dprob} -var time_k ${time_k} \
     -var Lx ${Lx} -var cv_d ${cv_d} -var sph_rho_d ${sph_rho_d} -var dT ${dT} \
