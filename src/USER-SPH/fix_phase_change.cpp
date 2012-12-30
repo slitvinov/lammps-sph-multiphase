@@ -238,7 +238,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type) {
+	  if  ( (type[j]==from_type) && (rmass[j]>0.5*to_mass) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
@@ -263,7 +263,7 @@ void FixPhaseChange::pre_exchange()
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
-	  if (type[j]==from_type) {
+	  if  ( (type[j]==from_type) && (rmass[j]>0.5*to_mass) ) {
 	    double delx = xtmp - x[j][0];
 	    double dely = ytmp - x[j][1];
 	    double delz = ztmp - x[j][2];
