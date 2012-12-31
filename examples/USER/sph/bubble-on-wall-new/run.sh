@@ -3,8 +3,8 @@
 set -e
 set -u
 Lx=2.0
-nx=40
-ndim=2
+nx=30
+ndim=3
 np=1
 D_heat_d=0.6
 D_heat_g=0.1
