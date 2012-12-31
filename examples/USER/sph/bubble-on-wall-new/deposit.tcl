@@ -3,7 +3,7 @@ log vmd.tcl
 user add key q exit
 
 # read variable number of atoms
-topo readvarxyz [lindex $argv 0]/data.xyz
+topo readvarxyz [lindex $argv 0]
 mol modstyle 0 0 Points 16
 pbc set {1.0 1.0 1.0} -all
 
