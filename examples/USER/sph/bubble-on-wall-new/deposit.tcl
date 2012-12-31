@@ -3,9 +3,14 @@ log vmd.tcl
 user add key q exit
 
 # read variable number of atoms
-topo readvarxyz [lindex $argv 0]
+set filename [lindex $argv 0]
+topo readvarxyz $filename
 mol modstyle 0 0 Points 16
-pbc set {1.0 1.0 1.0} -all
+
+set xmax 2.0
+set ymax 2.0
+set zmax 2.0
+pbc set [list ${xmax} ${ymax} ${zmax}] -all
 
 set sel [atomselect top all]
 $sel set radius 0.05
@@ -26,6 +31,52 @@ proc slice {dw {dim x}} {
     set z2 [expr {0.5+$dw}]
     mol modselect 0 0 (all) and user > 0 and ${dim}>$z1 and ${dim}<$z2
 }
+
+proc getn {} {
+    global sel
+    global ypos
+    set n 0
+    set vals [$sel get user]
+    set ycoords [$sel get y]
+    foreach u $vals y $ycoords {
+	if {$u>0 && $y>${ypos}} {
+	    incr n
+	}
+    }
+    puts $n
+}
+
+set linelist {}
+proc putline {} {
+    global xmax ymax zmax
+    global linelist
+    global ypos
+    foreach id $linelist {
+	graphics top delete $id
+    }
+    set linelist {}
+    lappend linelist [graphics top line [list 0 ${ypos} ${zmax}] [list ${xmax} ${ypos} ${zmax}]]
+    lappend linelist [graphics top line [list 0 ${ypos} 0] [list ${xmax} ${ypos} 0]]
+    lappend linelist [graphics top line [list ${xmax} ${ypos} 0] [list ${xmax} ${ypos} ${zmax}]]
+    lappend linelist [graphics top line [list 0 ${ypos} 0] [list 0 ${ypos} ${zmax}]]
+}
+
+proc incrypos {} {
+    global ypos
+    set ypos [expr {$ypos + 0.1}]
+    putline
+}
+
+proc decrypos {} {
+    global ypos
+    set ypos [expr {$ypos - 0.1}]
+    putline
+}
+
+set ypos 0.0
+user add key s getn
+user add key n decrypos
+user add key p incrypos
 
 #mol modstyle 0 0 VDW 0.600000 12.000000
 pbc box
