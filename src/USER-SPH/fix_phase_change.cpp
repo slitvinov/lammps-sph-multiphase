@@ -260,6 +260,7 @@ void FixPhaseChange::pre_exchange()
 	dmom[0]=0.0; dmom[1]=0.0; dmom[2]=0.0;
 	dmomest[0]=0.0; dmomest[1]=0.0; dmomest[2]=0.0;
 	double denergy = 0.0;
+	double deav = 0.0;
 	for (int jj = 0; jj < jnum; jj++) {
 	  int j = jlist[jj];
 	  j &= NEIGHMASK;
@@ -275,6 +276,7 @@ void FixPhaseChange::pre_exchange()
 	      wfd = sph_kernel_quintic2d(sqrt(rsq)*cutoff);
 	    }
 	    double dmass_aux = to_mass*wfd/wtotal;
+	    deav += dmass_aux*(sph_t2energy(Tc, cv[j]) - e[j]);
  	    dmass[j] += dmass_aux;
 	    denergy += e[j]*dmass_aux;
 	    dmom[0] += v[j][0]*dmass_aux;
@@ -301,15 +303,15 @@ void FixPhaseChange::pre_exchange()
 	vest[m][2] = dmomest[2]/to_mass;
 
 	// conserve energy
-	double energy_aux = 0.5*(e[i] - Hwv);
+	//double energy_aux = 0.e[i] - Hwv);
 	// must be biggger than critical temperature
 	// if (energy_aux>sph_t2energy(Tc, cv[i])) {
 	//   printf("denergy/to_mass, e[i], Hwv: %e %e %e\n", denergy/to_mass, e[i], Hwv);
 	//   assert(false);
 	// }
 
-	e[i] = energy_aux;
-	e[m] = energy_aux;
+	e[i] = e[i] - Hwv - deav;
+	e[m] = sph_t2energy(Tc, cv[m]);
       }
     }
   }
@@ -320,7 +322,7 @@ void FixPhaseChange::pre_exchange()
     double mold = rmass[i];
     rmass[i] -= dmass[i];
     // renormalize energy
-    e[i] = e[i]*mold/rmass[i];
+    //e[i] = e[i]*mold/rmass[i];
     dmass[i] = 0;
   }
   

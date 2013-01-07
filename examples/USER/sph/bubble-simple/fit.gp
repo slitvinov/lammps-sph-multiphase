@@ -1,22 +1,15 @@
-set fit errorvariables
-f(x) = ((x-x0)*(x>x0)*A)**B + C
-A = 1.05867741953623
-B = 1.5
-C = 0.007
-x0= 0.0642258364284927
+system("./aux.sh")
 
-set macros
-t1=0.2
-lim="[t1:]"
-file20="data-nx20-ndim3-np1-D_heat_g0.05-alpha0.5-sph_c_g10.0newplace/rg.dat"
-file40="data-nx40-ndim3-np1-D_heat_g0.05-alpha0.5-sph_c_g10.0newplace/rg.dat"
-fit @lim f(x) file40 via C, B, x0, A
+dx(nx)=1.0/nx
+R(V,nx) = (3.0/(4.0*pi))**(0.33333)*V**(0.3333)*dx(nx)
+Rcor(V,nx) =  (3.0/(4.0*pi))**(0.33333)*V**(0.3333)*dx(nx) - dx(nx)
 
-set xlabel "t, time"
-set ylabel "Volume of bubble"
+file40="~/tmp/3d/data-nx40-ndim3-Lx1.0-D_heat_d0.6-alpha100-Hwv4.0-dprob0.01-time_k1.0-cv_d1.0-sph_rho_d0.01-dT0.1-cv_g0.04-D_heat_g0.1-sph_eta_d0.69395/rg.dat"
+file80="~/tmp/3d/data-nx80-ndim3-Lx1.0-D_heat_d0.6-alpha100-Hwv4.0-dprob0.01-time_k1.0-cv_d1.0-sph_rho_d0.01-dT0.1-cv_g0.04-D_heat_g0.1-sph_eta_d0.69395/rg.dat"
 
+set style data l
+plot [][:] \
+     nx=20, "last1/rg.dat" u 1:(R($6,nx)**2), \
+     (9.549296585513725*x-0.01)*1.0
 
-set key left
-plot [:] file20 u 1:2 w l lw 3, \
-     file40 u 1:2 w l lw 3, \
-     f(x) t sprintf("~ t^(%.2f +/ %.3f)", B, B_err)
+     #plot "last1/rg.dat" u ($3/$6), 1.0, 1.5

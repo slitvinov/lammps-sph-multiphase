@@ -24,11 +24,11 @@ proc="-np ${np}"
 
 dname=data-nx${nx}-ndim${ndim}-Lx${Lx}-D_heat_d${D_heat_d}-alpha${alpha}\
 -Hwv${Hwv}-dprob${dprob}-time_k${time_k}-cv_d${cv_d}-sph_rho_d${sph_rho_d}-dT${dT}\
--cv_g${cv_g}-D_heat_g${D_heat_g}-sph_eta_d${sph_eta_d}bug
+-cv_g${cv_g}-D_heat_g${D_heat_g}-sph_eta_d${sph_eta_d}m
 
 rm -rf ${dname}
 mkdir -p ${dname}
-${lmp} -in insert.lmp \
+${mpirun} ${proc} ${lmp} -in insert.lmp \
     -var alpha ${alpha} -var D_heat_d ${D_heat_d} -var ndim ${ndim} -var nx ${nx} \
     -var Hwv ${Hwv} -var dprob ${dprob} -var time_k ${time_k} \
     -var Lx ${Lx} -var cv_d ${cv_d} -var sph_rho_d ${sph_rho_d} -var dT ${dT} \

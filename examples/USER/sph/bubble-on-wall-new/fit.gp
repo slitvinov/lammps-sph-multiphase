@@ -15,3 +15,5 @@ set term x11 2
 set xlabel "1/g"
 set ylabel "R^2"
 plot "vgy.3d.dat" u (1/$1):(R($2)**2) w p pt 7 ps 3, f(1/x)**2
+
+print m
