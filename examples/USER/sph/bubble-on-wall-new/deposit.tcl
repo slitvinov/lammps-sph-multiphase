@@ -8,7 +8,13 @@ mol modstyle 0 0 Points 16
 pbc set {1.0 1.0 1.0} -all
 
 set sel [atomselect top all]
-$sel set radius 0.05
+set nx 30
+set dx [expr {1.0/${nx}}]
+set V  [expr {pow($dx,3)}]
+set pi 3.1415926
+set r  [expr pow($V/(4.0/3.0*$pi), 1.0/3.0)]
+$sel set radius $r
+
 
 #  show region of interest in the center
 proc roi {dw} {
