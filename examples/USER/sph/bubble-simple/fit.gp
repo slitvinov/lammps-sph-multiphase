@@ -9,7 +9,8 @@ file80="~/tmp/3d/data-nx80-ndim3-Lx1.0-D_heat_d0.6-alpha100-Hwv4.0-dprob0.01-tim
 
 set style data l
 plot [][:] \
+     nx=20, "last3/rg.dat" u 1:(R($6,nx)**2), \
      nx=20, "last1/rg.dat" u 1:(R($6,nx)**2), \
-     (9.549296585513725*x-0.01)*1.0
+     9.549296585513725*x
 
      #plot "last1/rg.dat" u ($3/$6), 1.0, 1.5
