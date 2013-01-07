@@ -23,7 +23,7 @@ sp_2d(phi):= block([alpha],
 assume(g>0);
 assume(drho>0);
 assume(sigma>0);
-d: 2;
+d: 3;
 
 /* contact line length */
 eq1[3]: cl=2*%pi*R*sin(phi);
@@ -57,5 +57,3 @@ ps: ev(s, [sigma=1, drho=1, g=1]);
 fritz: 0.0208/%pi*180;
 plot2d([ps, fritz*phi], [phi, 0, %pi/4], [legend, "ours", "Fritz1936"]);
 taylor(ps, phi, 0, 1);
-
-
