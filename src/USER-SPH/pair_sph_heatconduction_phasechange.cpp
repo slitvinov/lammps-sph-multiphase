@@ -120,10 +120,10 @@ void PairSPHHeatConductionPhaseChange::compute(int eflag, int vflag) {
 
 	double Ti = sph_energy2t(e[i], cv[i]);
 	double Tj = sph_energy2t(e[j], cv[j]);
-	if ((fixflag[itype][jtype]==itype) && (Ti<Tj) ) {
+	if ((fixflag[itype][jtype]==itype) ) {
 	  Ti = tc[itype][jtype];
 	}
-	if ((fixflag[itype][jtype]==jtype) && (Tj<Ti) ) {
+	if ((fixflag[itype][jtype]==jtype) ) {
 	  Tj = tc[itype][jtype];
 	}
 	assert(rho[i]>0);
