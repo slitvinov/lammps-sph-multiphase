@@ -72,11 +72,10 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
     printf("ENERGY flag is used\n");
     energy_chance_flag = true;
     phase_change_rate = atof(arg[m++]);
-    printf("Phase change rate is %e\n", phase_change_rate);
     nnarg = 15;
   } else {
     energy_chance_flag = false;
-    change_chance = atof(arg[m]);
+    change_chance = atof(arg[m-1]);
     if (change_chance < 0) error->all(FLERR,"Illegal value for change_chance");
   }
   assert(m==nnarg);
