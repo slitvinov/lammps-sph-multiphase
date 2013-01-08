@@ -7,9 +7,9 @@ set filename [lindex $argv 0]
 topo readvarxyz $filename
 mol modstyle 0 0 Points 16
 
-set xmax 2.0
-set ymax 2.0
-set zmax 2.0
+set xmax 4.0
+set ymax 1.0
+set zmax 1.0
 pbc set [list ${xmax} ${ymax} ${zmax}] -all
 
 set sel [atomselect top all]
@@ -85,7 +85,18 @@ user add key n decrypos
 user add key p incrypos
 
 #mol modstyle 0 0 VDW 0.600000 12.000000
-#pbc box
+pbc box
 
 # show only gas
-#mol modselect 0 0 (all) and user > 0 and name B
+mol modselect 0 0 (all) and user > 0 and (name B or name C) and z<[expr {${zmax}-0.14}]
+
+
+
+
+    set frame 0
+    while {${frame} < 49} {
+	set filename snap.[format "%04d" $frame].tga
+	incr frame
+        animate goto ${frame}
+	render snapshot ${filename}
+    }
