@@ -2,7 +2,7 @@
 
 Tc=0.0
 #B="0:0:0:.75:3:2"
-B="0:0:0:5:1.5:2"
+B="0:0:0:8:1.5:2"
 if [ $# -eq 2 ]; then
     n=$2
 else
@@ -15,6 +15,9 @@ bash post.sh ${dn}
 if [ $1 == "a" ]; then
     cd ${dn}
     punto -B ${B} -G 1.00:${Tc} -s 2 -z 1:2:3:7 temp.dat
+elif [ $1 == "z" ]; then
+    cd ${dn}
+    punto -B ${B} -G 0.14:${Tc} -s 2 -z 1:2:3:7 temp-tc.dat
 elif [ $1 == "b" ]; then
     cd ${dn}
     punto -B ${B} -G 1.00:${Tc} -z 1:2:3:7 bubble.dat
