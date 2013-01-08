@@ -56,9 +56,8 @@ group        gbottom region rbottom
 region       rupper block EDGE EDGE ${y2} EDGE EDGE EDGE units box
 group        gupper region rupper
 
-# keep constant temperature and density on the top and on the bottom
-fix fbo      gbottom setmeso meso_t 1.0
-fix fup      gupper  setmeso meso_t ${Tc}
+# keep constant temperature on the top
+fix fup      gupper  setmeso meso_t ${Tm}
 fix bm       boundary setmeso meso_rho ${sph_rho_g}
 
 # do full time integration for all particles
@@ -121,9 +120,24 @@ variable            natoms equal count(all)
 #variable          ycenter_per equal ${y1}-0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
-region            rsq sphere 0.5 ${y1} ${zcenter} 0.1 units box
+variable          seed_x equal 2.0
+region            rsq sphere ${seed_x} ${y1} ${zcenter} 0.1 units box
 set               region rsq type ${d_type}
 set               group boundary type ${w_type}
+
+# crate a heating spot
+variable           spot_xmin equal ${seed_x}-0.2
+variable           spot_xmax equal ${seed_x}+0.2
+variable           spot_ymax equal ${y1}
+variable           spot_zmin equal ${zcenter}-0.2
+variable           spot_zmax equal ${zcenter}+0.2
+region             rspot block ${spot_xmin} ${spot_xmax} EDGE ${spot_ymax} ${spot_zmin} ${spot_zmax} units box
+group              gspot region rspot
+group              gnotspot  subtract gbottom gspot
+
+fix nsp            gnotspot setmeso meso_t ${Tm}
+variable           e_spot equal 10.0*${cv_g}
+fix spt            gspot setmeso meso_t 1.0
 
 # variable          a_sq   equal 0.2
 # include           square.lmp
@@ -132,6 +146,8 @@ set               group boundary type ${w_type}
 set               type ${d_type} meso_cv ${cv_d}
 set               type ${g_type} meso_cv ${cv_g}
 set               type ${d_type} meso_e ${e_d}
+set               type ${g_type} meso_e ${e_g}
+
 
 set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
@@ -141,14 +157,11 @@ set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
 set               type ${w_type} meso_rho ${sph_rho_w}
 
-variable          dL   equal 0.1
-variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
-fix               tpr         flow setmeso meso_t v_tprofile
+# variable          dL   equal 0.1
+# variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
+# fix               tpr         flow setmeso meso_t v_tprofile
+
 if "${ndim}==2" then "fix e2d all enforce2d"
-
-run               0
-unfix             tpr
-
 group              droplet type ${d_type}
 
 
@@ -192,6 +205,5 @@ fix gravity_d droplet addforce v_bodyfy 0.0 0.0
 
 #include rem-box.lmp
 
-run               10000000 pre no  post no every 1000 &
-"if ${vmi}>2 then quit" &
-"if ${vnd}>1.0 then quit"
+run               10000000
+

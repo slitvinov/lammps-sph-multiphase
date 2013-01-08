@@ -2,17 +2,17 @@
 
 set -e
 set -u
-Lx=5.0
+Lx=8.0
 nx=20
 ndim=2
 np=8
-D_heat_d=0.6
+D_heat_d=1.0
 D_heat_g=0.1
 sph_eta_d=0.69395
 cv_d=0.4
 cv_g=0.04
 dT=0.0
-Hwv=40.0
+Hwv=10.0
 alpha=100
 dprob=1.0
 sph_rho_d=0.01
