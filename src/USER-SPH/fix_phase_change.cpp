@@ -67,8 +67,18 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   nfreq = atoi(arg[m++]);
   seed = atoi(arg[m++]);
   if (seed <= 0) error->all(FLERR,"Illegal value for seed");
-  change_chance = atof(arg[m++]);
-  if (change_chance < 0) error->all(FLERR,"Illegal value for change_chance");
+  // chance is based on energy
+  if (strcmp(arg[m++],"ENERGY") == 0) {
+    printf("ENERGY flag is used\n");
+    energy_chance_flag = true;
+    phase_change_rate = atof(arg[m++]);
+    printf("Phase change rate is %e\n", phase_change_rate);
+    nnarg = 15;
+  } else {
+    energy_chance_flag = false;
+    change_chance = atof(arg[m]);
+    if (change_chance < 0) error->all(FLERR,"Illegal value for change_chance");
+  }
   assert(m==nnarg);
 
   iregion = -1;
@@ -212,7 +222,16 @@ void FixPhaseChange::pre_exchange()
 
   for (int i = 0; i < nlocal; i++) {
     double Ti = sph_energy2t(e[i], cv[i]);
-    if  ( (random->uniform()<change_chance) && (Ti>Tt) && (type[i] == to_type) && isfromphasearound(i) )  {
+    bool isphasechange;
+    if ( (Ti<Tc) || (type[i] != to_type) ) {
+      isphasechange = false;
+    } else if (energy_chance_flag) {
+      double threshold  = (e[i] - sph_t2energy(Tc, cv[i]))/Hwv*update->dt*phase_change_rate;
+      isphasechange = (random->uniform()<threshold) && isfromphasearound(i);
+    } else {
+      isphasechange = (random->uniform()<change_chance) && (Ti>Tt) && isfromphasearound(i);
+    }
+    if  (isphasechange)  {
       double coord[3];
       bool ok;
       double delta = dr;

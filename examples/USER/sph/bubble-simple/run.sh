@@ -3,9 +3,9 @@
 set -e
 set -u
 Lx=1.0
-nx=20
+nx=40
 ndim=3
-np=8
+np=2
 D_heat_d=0.6
 D_heat_g=0.1
 sph_eta_d=0.69395

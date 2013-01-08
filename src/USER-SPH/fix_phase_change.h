@@ -57,6 +57,10 @@ class FixPhaseChange : public Fix {
   double to_mass;
   /// probability of phase change [0.0:1.0]
   double change_chance;
+  
+  /// if true we define probability of phase change based on energy
+  bool energy_chance_flag;
+  double phase_change_rate;
 
   // mass to distribute
   double* dmass;
