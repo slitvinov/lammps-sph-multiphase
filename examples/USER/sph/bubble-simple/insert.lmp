@@ -155,9 +155,12 @@ thermo_style        custom step v_time v_natoms v_vnd c_im c_imx c_imy c_imz v_v
 thermo              1
 
 variable           pcutoff equal ${h}
+# fix                fdep droplet phase_change &
+#                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_d} &
+#                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
 fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_d} &
-                   ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
+                   ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ENERGY 1e5 region box units box
 
 # outside of this sphere the temperature is 1.0
 variable          Rtemp equal ${xcenter}-2.6*${dx}

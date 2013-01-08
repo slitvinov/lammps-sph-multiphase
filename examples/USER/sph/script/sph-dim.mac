@@ -193,3 +193,6 @@ dimension(R);
 infeval: true;
 float(ev(R^2, env));
 ev(R^2);
+
+V: 4/3*%pi*R^3;
+float(ev(V^(2/3), env));
