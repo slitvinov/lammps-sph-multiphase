@@ -7,7 +7,7 @@ if ${ndim}==3 then &
 # size of the domain
 variable          Ly   equal  1.5
 if ${ndim}==3 then &
-"variable         Lz   equal ${Lx}"
+"variable         Lz   equal ${Ly}"
 
 variable          dx   equal  1.0/${nx}
 
@@ -36,7 +36,7 @@ variable          gamma_w equal ${gamma_g}
 variable          rbackground equal 0.0
 
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 100
+variable          Nfreq equal 10
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}

@@ -44,7 +44,12 @@ create_atoms       ${g_type} region box
 # create walls on the top and on the bottom
 variable     y1 equal 3*${dx}
 variable     y2  equal ${Ly}-3.0*${dx}
-region	     rflow block EDGE EDGE ${y1} ${y2} EDGE EDGE units box
+if ${ndim}==3 then &
+"variable    z1 equal 3*${dx}" &
+"variable    z2 equal ${Lz}-3.0*${dx}" &
+"region	     rflow block EDGE EDGE ${y1} ${y2} ${z1} ${z2} units box" &
+else &
+"region	     rflow block EDGE EDGE ${y1} ${y2} EDGE EDGE units box"
 
 group	     flow region rflow
 group	     boundary subtract all flow
@@ -56,6 +61,15 @@ group        gbottom region rbottom
 region       rupper block EDGE EDGE ${y2} EDGE EDGE EDGE units box
 group        gupper region rupper
 
+if "${ndim}==3" then &
+"region       z1region block EDGE EDGE EDGE EDGE 0 ${z1} units box" &
+"region       z2region block EDGE EDGE EDGE EDGE ${z2} EDGE units box" &
+"group        gz1 region z1region" &
+"group        gz2 region z1region" &
+"fix          fz1 gz1 setmeso meso_t ${Tm}" &
+"fix          fz2 gz2 setmeso meso_t ${Tm}"
+
+group        gbottom region rbottom
 # keep constant temperature on the top
 fix fup      gupper  setmeso meso_t ${Tm}
 fix bm       boundary setmeso meso_rho ${sph_rho_g}
