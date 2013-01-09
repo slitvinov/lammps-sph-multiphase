@@ -2,7 +2,7 @@
 # filter atoms and xyz file
 BEGIN {
     # keep only B type
-    pat="B"
+    pat="/[BC]/"
 }
 
 function output(    i) {
@@ -24,7 +24,7 @@ NF==1 && NR>1 {
     atm=$0
 }
 
-$1==pat{
+($1~"B")||($1~"C"){
     aux[n++]=$0
 }
 
