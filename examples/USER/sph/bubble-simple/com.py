@@ -8,9 +8,10 @@ import dump
 import numpy as np
 import math
 
-os.system("./aux.sh")
+#os.system("./aux.sh")
 dname = "last1"
-d = dump.dump(os.path.join(dname, "dump*"))
+dname = "/home/litvinov/data-nx80-ndim3-Lx1.0-D_heat_d0.6-alpha100-Hwv4.0-dprob1.0-time_k1.0-cv_d0.4-sph_rho_d0.01-dT0.0-cv_g0.04-D_heat_g0.1-sph_eta_d0.69395m"
+d = dump.dump(os.path.join(dname, "dump0000*000.dat"))
 
 d.tselect.all()
 # list of times
@@ -45,16 +46,18 @@ for tc in t:
     z = d.vecs(tc, "z")
     r = np.sqrt(np.square(x-xcm) + np.square(y-ycm) + np.square(z-zcm))
     temperature = d.vecs(tc, "c_it_atom")
+    atype = d.vecs(tc, "type")
     ri = np.linspace(min(r), max(r), 100)
-    #data = [r, temperature]
-    #Z2 = ndimage.gaussian_filter(data, 0.2, mode='constant');
     temperature_smoothed = interp(ri, r, temperature, 0.01)
+    atype_smoothed = interp(ri, r, atype, 0.01)
     np.savetxt(os.path.join(dname, "com.int.%i" % tc),
                np.column_stack( (ri, temperature_smoothed) ))
     np.savetxt(os.path.join(dname, "com.dat.%i" % tc),
                np.column_stack( (r, temperature) ))
-    
-
+    np.savetxt(os.path.join(dname, "com.type.%i" % tc),
+               np.column_stack( (r, atype) ))
+    np.savetxt(os.path.join(dname, "com.type.%i" % tc),
+               np.column_stack( (ri, atype_smoothed) ))
 
 
 
