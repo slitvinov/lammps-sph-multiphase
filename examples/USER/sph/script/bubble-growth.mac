@@ -19,3 +19,12 @@ V: 4/3*%pi*R^3;
 eq2: dV=diff(V, R)*dR;
 eq3: dm = rho_v*dV;
 
+S: 4*%pi*R^2;
+
+l: sqrt(D*t);
+eq4: dQ= k*dT/l*S*dt;
+eq5: 'diff(R, t) = dR/dt;
+
+sol: solve([eq1, eq2, eq3, eq4, eq5], [dQ, dV, dm, dR, 'diff(R, t)]);
+
+assoc('diff(R, t), sol[1]);
