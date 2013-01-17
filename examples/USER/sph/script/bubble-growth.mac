@@ -1,7 +1,21 @@
 kill(all);
+load("dimension");
+ndim: 3;
 
-eq1: cv = E/m/T;
-eq2: Ef = E/V;
-eq3: rho = m/V;
+J: mass*length^2/time^2;
+put(dQ, J, dimension);
 
-solve([eq1, eq2, eq3], [E, T, m]);
+/* laten heat */
+put(Hwv, J/mass, dimension);
+put(dm, mass, dimension);
+
+put(R, length, dimension);
+put(rho_v, mass/length^ndim, dimension);
+
+eq1: dm = dQ/Hwv;
+
+/* TODO: dimension */
+V: 4/3*%pi*R^3;
+eq2: dV=diff(V, R)*dR;
+eq3: dm = rho_v*dV;
+
