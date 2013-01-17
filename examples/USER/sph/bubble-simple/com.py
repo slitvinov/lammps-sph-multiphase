@@ -8,9 +8,8 @@ import dump
 import numpy as np
 import math
 
-#os.system("./aux.sh")
+os.system("./aux.sh")
 dname = "last1"
-dname = "/home/litvinov/data-nx80-ndim3-Lx1.0-D_heat_d0.6-alpha100-Hwv4.0-dprob1.0-time_k1.0-cv_d0.4-sph_rho_d0.01-dT0.0-cv_g0.04-D_heat_g0.1-sph_eta_d0.69395m"
 d = dump.dump(os.path.join(dname, "dump0000*000.dat"))
 
 d.tselect.all()

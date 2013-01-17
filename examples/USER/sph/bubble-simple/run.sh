@@ -5,16 +5,16 @@ set -u
 Lx=1.0
 nx=40
 ndim=3
-np=2
+np=8
 D_heat_d=0.6
 D_heat_g=0.2
 sph_eta_d=0.69395
 cv_d=0.4
 cv_g=0.04
-dT=0.0
+dT=5.0
 Hwv=4.0
 alpha=100
-dprob=1.0
+dprob=0.1
 sph_rho_d=0.01
 time_k=1.0
 # parameters for kana
