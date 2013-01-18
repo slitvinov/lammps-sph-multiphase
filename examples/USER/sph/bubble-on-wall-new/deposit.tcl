@@ -85,7 +85,23 @@ user add key n decrypos
 user add key p incrypos
 
 #mol modstyle 0 0 VDW 0.600000 12.000000
-pbc box
+color Name B purple
+mol modstyle 0 0 VDW 1.000000 12.000000
+
+mol modselect 0 0 (all) and user > 0 and y<1.5
+proc makemov {}  {
+set frame 0
+while {${frame} < 69} {
+    set filename snap.[format "%04d" $frame].tga
+    animate goto ${frame}
+    incr frame
+    render snapshot ${filename}
+    if {${frame} == 69} {
+	exit
+    }
+}
+}
+
 
 # show only gas
-#mol modselect 0 0 (all) and user > 0 and name B
+
