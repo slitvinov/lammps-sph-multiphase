@@ -13,17 +13,17 @@ if ${ndim}==3 then &
 variable          dx   equal  1.0/${nx}
 
 # density of gas phase
-variable          sph_rho_g equal 1.0
+variable          sph_rho_l equal 1.0
 # density of droplet
-#variable          sph_rho_d equal 1.0
+#variable          sph_rho_v equal 1.0
 
 # sound speed
-variable          sph_c_d equal 200/sqrt(${sph_rho_d})
-variable          sph_c_g equal 200/sqrt(${sph_rho_g})
+variable          sph_c_v equal 200/sqrt(${sph_rho_v})
+variable          sph_c_l equal 200/sqrt(${sph_rho_l})
 
 # viscosity
-#variable          sph_eta_d equal 1.0
-variable          sph_eta_g equal 1.0
+#variable          sph_eta_v equal 1.0
+variable          sph_eta_l equal 1.0
 
 # extract that rbackground in the equation of state
 # pressure ~ ( rho/rho0 - rbackground)^gamma
@@ -33,25 +33,25 @@ variable          h equal 3.0*${dx}
 variable          Nfreq equal 100
 
 # mass of droplet particle
-variable          mass_d equal ${dx}^${ndim}*${sph_rho_d}
+variable          mass_v equal ${dx}^${ndim}*${sph_rho_v}
 # mass of gas particle
-variable          mass_g equal ${dx}^${ndim}*${sph_rho_g}
+variable          mass_l equal ${dx}^${ndim}*${sph_rho_l}
 
 # surface tension
 #variable          alpha equal 0.2
-#variable           D_heat_d equal 1.0
-#variable           D_heat_g equal 1.0
+#variable           D_heat_v equal 1.0
+#variable           D_heat_l equal 1.0
 
-#variable          cv_d      equal 1.0
-#variable          cv_g      equal 1.0
+#variable          cv_v      equal 1.0
+#variable          cv_l      equal 1.0
 variable           Tinf equal 1.0
 variable           Tc equal 0.0
 variable           Tt equal ${Tc}+${dT}
 # energy
-variable          e_d       equal ${cv_d}*${Tc}
-variable          e_g       equal ${cv_g}*${Tinf}
+variable          e_v       equal ${cv_v}*${Tc}
+variable          e_l       equal ${cv_l}*${Tinf}
 
 # type of the gas particle
-variable          g_type equal 1
+variable          l_type equal 1
 # type of the droplet particle
-variable          d_type equal 2
+variable          v_type equal 2
