@@ -1,27 +1,48 @@
 kill(all);
 load("dimension");
 fundamental_dimensions: [mass, length, time, K];
-ndim: 3;
+ndim: 2;
 
+/* Joule */
 J: mass*length^2/time^2;
+
+/* heat */
 put(dQ, J, dimension);
 
 /* laten heat */
 put(Hwv, J/mass, dimension);
+
+/* mass */
 put(dm, mass, dimension);
 
+/* radious of the bubble */
 put(R, length, dimension);
 put(dR, length, dimension);
+
+/* volume of the bubble */
+put(V, length^ndim, dimension);
 put(dV, length^ndim, dimension);
+
+/* time */
 put(t, time, dimension);
 put(dt, time, dimension);
-put(rho_v, mass/length^ndim, dimension);
-put(rho_l, mass/length^ndim, dimension);
-put(cv_l, J/mass/K, dimension);
-put(D_l, length*mass/time^3/K, dimension);
+
+/* density of the bubble */
+put(rho_v, mass/length^3, dimension);
+put(rho_l, mass/length^3, dimension);
+
+/* specific heat capacity */
+put(cp_l, J/mass/K, dimension);
+put(cp_v, J/mass/K, dimension);
+
+/* heat conductivity */
+put(k_l, length*mass/time^3/K, dimension);
 put(dT, K, dimension);
 
-D: D_l/cv_l/rho_l;
+/* thermal diffusivity */
+/* http://en.wikipedia.org/wiki/Thermal_diffusivity */
+D: k_l/cp_l/rho_l;
+is(dimension(D) = length^2/time);
 
 eq1: dm = dQ/Hwv;
 
@@ -32,10 +53,14 @@ eq2: dV=diff(V, R)*dR;
 eq3: dm = rho_v*dV;
 if ndim=3 then S: 4*%pi*R^2 else S: 2*%pi*R;
 
+/* charachteristic length */
 l: sqrt(D*t);
-eq4: dQ= D_l*dT/l*S*dt;
+is(dimension(l)=length);
+eq4: dQ= k_l*dT/l*S*dt;
 eq5: 'diff(R, t) = dR/dt;
 
 sol: solve([eq1, eq2, eq3, eq4, eq5], [dQ, dV, dm, dR, 'diff(R, t)]);
-
 Rexp: integrate(assoc('diff(R, t), sol[1]), t);
+
+dimension(Rexp);
+
