@@ -168,7 +168,7 @@ region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units b
 fix smeso      all setmeso meso_t ${Tinf} noregion rtemp
 
 echo              log
-variable          nstep equal 10.0/${dt}
+variable          nstep equal 0.002/${dt}
 group gflow region rtemp
 
 run               ${nstep}

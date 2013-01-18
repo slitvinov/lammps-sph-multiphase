@@ -64,5 +64,5 @@ Rexp: integrate(assoc('diff(R, t), sol[1]), t);
 is(dimension(Rexp)=length);
 
 infeval: true;
-env: [cp_l=0.04, k_l=0.2, rho_l=1.0, dT=1.0, Hwv=4.0, rho_v=0.01];
+env: [cp_l=0.04, k_l=0.2, rho_l=1.0, dT=1.0, Hwv=8.0, rho_v=0.01];
 float(ev(V, [R=Rexp, env]));
