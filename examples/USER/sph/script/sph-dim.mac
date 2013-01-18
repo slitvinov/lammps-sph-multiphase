@@ -49,8 +49,8 @@ put(cv_g, dimension(cv), dimension);
 
 eq3: dimension(m^2/rho^2*k*dT/r*dw) = dimension(m * en/t);
 sol:solve(eq3, dimension(k))[1];
-put(D_l, rhs(sol), dimension);
-put(D_g, rhs(sol), dimension);
+put(k_l, rhs(sol), dimension);
+put(k_g, rhs(sol), dimension);
 
 eq1: dimension(en) = dimension(D*dT*dw/r/rho^2*m) * dimension(t);
 /* eq2: dimension(en) = dimension(m/rho^2*D*dT*dw/r) * dimension(t);*/
@@ -95,7 +95,7 @@ ev(M, env_simple);
 /* mechanical paramters */
 m_env: [rho_g, rho_l, eta_g, eta_l, L, alpha, c_g, c_l];
 /* thermal paramters */
-t_env: [dT, cv_l, cv_g, Hwv, D_g, D_l];
+t_env: [dT, cv_l, cv_g, Hwv, k_g, k_l];
 
 dimensionless(m_env);
 assume_pos: true;
@@ -107,8 +107,8 @@ length(m_env) + length(t_env);
 natural_unit(alpha, [L, rho_l, eta_l, dT]);
 natural_unit(cv_g, [L, rho_l, eta_l, dT]);
 natural_unit(Hwv, [L, rho_l, eta_l, dT]);
-natural_unit(D_g, [L, rho_l, eta_l, dT]);
-natural_unit(D_l, [L, rho_l, eta_l, dT]);
+natural_unit(k_g, [L, rho_l, eta_l, dT]);
+natural_unit(k_l, [L, rho_l, eta_l, dT]);
 natural_unit(rho_g, [L, rho_l, eta_l, dT]);
 natural_unit(g, [L, rho_l, eta_l, dT]);
 ev(0.1/natural_unit(g, [L, rho_l, eta_l, dT])[1], env_simple);
@@ -151,7 +151,7 @@ dimension(eta_l = mu_l/rho_l);
 
 env_water: [alpha=0.059, Hwv=2257000, rho_l=958, rho_g=0.6, cv_l=4219, cv_g=2010,
             eta_l=2.83e-4/rho_l, eta_g=1.23e-5/rho_g,
-            D_l=0.68, D_g=0.025, dT=5, L=0.005];
+            k_l=0.68, k_g=0.025, dT=5, L=0.005];
 
 load ("lrats");
 
@@ -162,11 +162,11 @@ to_sim(var, env, base):= block([var_units],
 env_sim: [alpha=0.059, Hwv=2257000, rho_l=958*0.1,
           rho_g=0.6, cv_l=4219, cv_g=2010,
           eta_l=2.83e-4/rho_l*1e6, eta_g=1.23e-5/rho_g*1e6,
-          D_l=0.68, D_g=0.025, dT=5, L=0.005, R=L/5, g=9.8*(rho_l-rho_g)];
+          k_l=0.68, k_g=0.025, dT=5, L=0.005, R=L/5, g=9.8*(rho_l-rho_g)];
 
 t_gravity: natural_unit(t, [rho_g, g, R]);
-t_heat: natural_unit(t, [rho_l, cv_l, dT, D_l]);
-t_phase: natural_unit(t, [rho_l, dT, D_l, Hwv]);
+t_heat: natural_unit(t, [rho_l, cv_l, dT, k_l]);
+t_phase: natural_unit(t, [rho_l, dT, k_l, Hwv]);
 t_surface: natural_unit(t, [rho_l, alpha, R]);
 t_ns: natural_unit(t, [rho_l, eta_l, R]);
 
@@ -178,14 +178,14 @@ float(fullratsubst(env_sim, t_gravity/t_heat));
 to_sim(cv_l,  env_sim, [L, rho_l, eta_l, dT]);
 to_sim(cv_g,  env_sim, [L, rho_l, eta_l, dT]);
 to_sim(Hwv,  env_sim, [L, rho_l, eta_l, dT]);
-to_sim(D_l,  env_sim, [L, rho_l, eta_l, dT]);
-to_sim(D_g,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(k_l,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(k_g,  env_sim, [L, rho_l, eta_l, dT]);
 to_sim(alpha,  env_sim, [L, rho_l, eta_l, dT]);
 to_sim(eta_g,  env_sim, [L, rho_l, eta_l, dT]);
 
-env: [D_l=0.1, D_g=0.6, cv_g=0.04, cv_l=0.04, rho_l=1.0, rho_g=0.01, dT=1.0, Hwv=4.0];
+env: [k_l=0.1, k_g=0.6, cv_g=0.04, cv_l=0.04, rho_l=1.0, rho_g=0.01, dT=1.0, Hwv=4.0];
 
-B: sqrt(12/%pi*D_l/(rho_l*cv_l))*Ja;
+B: sqrt(12/%pi*k_l/(rho_l*cv_l))*Ja;
 R: B*sqrt(t);
 
 dimension(R);
@@ -198,5 +198,5 @@ float(ev(V^(2/3), env));
 float(V^(2/3));
 
 /* via Ja number */
-B_j: sqrt( 12/%pi * Ja^2 * D_l/(rho_l*cv_l) );
+B_j: sqrt( 12/%pi * Ja^2 * k_l/(rho_l*cv_l) );
 
