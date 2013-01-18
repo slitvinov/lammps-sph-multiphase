@@ -38,7 +38,7 @@ if ${ndim}==2 then &
 else &
 "lattice            sc ${dx} origin ${lshift} ${lshift} ${lshift}"
 
-create_atoms       ${g_type} region box
+create_atoms       ${l_type} region box
 
 # create walls on the top and on the bottom
 variable     x1  equal 3*${dx}
@@ -58,7 +58,7 @@ group	     flow region rflow
 fix                integrate_fix_full all meso
 
 #include            ${ndim}-image.lmp
-variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
+variable           sph_mu  equal ${sph_eta_v}/${sph_rho_v}
 include            settimestep.lmp
 
 neighbor           0 bin
@@ -68,20 +68,20 @@ communicate        single vel yes
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
                    sph/taitwater/morris sph/surfacetension sph/heatconduction/phasechange
 pair_coeff         * * sph/rhosum_multiphase   ${h}
-pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
-pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha}
-pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
+pair_coeff         ${v_type} ${v_type} sph/colorgradient ${h} 0
+pair_coeff         ${l_type} ${v_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0
 
-variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
-pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} 7.0 ${h} ${rbackground}
-pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g}  ${sph_eta_g} 7.0 ${h} ${rbackground}
-pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d}  ${sph_eta_d} 7.0 ${h} ${rbackground}
+variable           sph_eta_ld equal 2*${sph_eta_l}*${sph_eta_v}/(${sph_eta_v}+${sph_eta_l})
+pair_coeff         ${l_type} ${v_type} sph/taitwater/morris ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} 7.0 ${h} ${rbackground}
+pair_coeff         ${l_type} ${l_type} sph/taitwater/morris ${sph_rho_l} ${sph_c_l}  ${sph_eta_l} 7.0 ${h} ${rbackground}
+pair_coeff         ${v_type} ${v_type} sph/taitwater/morris ${sph_rho_v} ${sph_c_v}  ${sph_eta_v} 7.0 ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
-pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
-variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
-pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
-pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h}
+pair_coeff         ${l_type} ${l_type} sph/heatconduction/phasechange  ${D_heat_l} ${h}
+variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_heat_l})
+pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
+pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_v} ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B
@@ -98,25 +98,25 @@ variable            natoms equal count(all)
 #create vapor atom in the center of the domain
 #variable          xcenter_per equal ${xcenter}+0.25*${dx}
 #variable          ycenter_per equal ${ycenter}
-#create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+#create_atoms      ${v_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
 
 region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
-set               region rsq type ${d_type}
+set               region rsq type ${v_type}
 
 # variable          a_sq   equal 0.2
 # include           square.lmp
-# set               region rsq type ${d_type}
+# set               region rsq type ${v_type}
 
-set               type ${d_type} meso_cv ${cv_d}
-set               type ${g_type} meso_cv ${cv_g}
-set               type ${d_type} meso_e ${e_d}
-set               type ${g_type} meso_e ${e_g}
-set               type ${d_type} mass ${mass_d}
-set               type ${g_type} mass ${mass_g}
-set               type ${d_type} meso_rho ${sph_rho_d}
-set               type ${g_type} meso_rho ${sph_rho_g}
+set               type ${v_type} meso_cv ${cv_v}
+set               type ${l_type} meso_cv ${cv_l}
+set               type ${v_type} meso_e ${e_v}
+set               type ${l_type} meso_e ${e_l}
+set               type ${v_type} mass ${mass_v}
+set               type ${l_type} mass ${mass_l}
+set               type ${v_type} meso_rho ${sph_rho_v}
+set               type ${l_type} meso_rho ${sph_rho_l}
 
-group              droplet type ${d_type}
+group              droplet type ${v_type}
 
 
 compute         rho_peratom all meso_rho/atom
@@ -126,7 +126,7 @@ compute         ie all reduce sum c_ie_atom
 
 variable        energ atom c_ie_atom*mass
 compute         cenerg   all reduce sum v_energ
-variable        vcons equal c_cenerg+${Hwv}*${mass_d}*count(droplet)
+variable        vcons equal c_cenerg+${Hwv}*${mass_v}*count(droplet)
 
 variable        vmx atom mass*vx
 variable        vmy atom mass*vy
@@ -156,11 +156,11 @@ thermo              100
 
 variable           pcutoff equal ${h}
  fix                fdep droplet phase_change &
-                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_d} &
-                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ${prob} region box units box
+                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_v} &
+                    ${pcutoff} ${l_type} ${v_type} ${insert_every} 123456 ${prob} region box units box
 # fix                fdep droplet phase_change &
-#                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_d} &
-#                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 123456 ENERGY 1e5 region box units box
+#                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_v} &
+#                    ${pcutoff} ${l_type} ${v_type} ${insert_every} 123456 ENERGY 1e5 region box units box
 
 # outside of this sphere the temperature is 1.0
 variable          Rtemp equal ${xcenter}-2.6*${dx}

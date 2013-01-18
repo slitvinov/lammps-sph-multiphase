@@ -61,6 +61,8 @@ eq5: 'diff(R, t) = dR/dt;
 
 sol: solve([eq1, eq2, eq3, eq4, eq5], [dQ, dV, dm, dR, 'diff(R, t)]);
 Rexp: integrate(assoc('diff(R, t), sol[1]), t);
+is(dimension(Rexp)=length);
 
-dimension(Rexp);
-
+infeval: true;
+env: [cp_l=0.04, k_l=0.2, rho_l=1.0, dT=1.0, Hwv=4.0, rho_v=0.01];
+float(ev(V, [R=Rexp, env]));
