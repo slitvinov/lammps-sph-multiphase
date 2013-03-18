@@ -165,7 +165,6 @@ void FixPhaseChange::init()
     error->all(FLERR,"Region ID for fix phase_change does not exist");
 
   // need a full neighbor list, built whenever re-neighboring occurs
-
   int irequest = neighbor->request((void *) this);
   neighbor->requests[irequest]->pair = 0;
   neighbor->requests[irequest]->fix = 1;
@@ -515,10 +514,9 @@ int FixPhaseChange::pack_reverse_comm(int n, int first, double *buf)
 
   m = 0;
   last = first + n;
-
-    for (i = first; i < last; i++) {
-      buf[m++] = dmass[i];
-    }
+  for (i = first; i < last; i++) {
+    buf[m++] = dmass[i];
+  }
   return comm_reverse;
 }
 
