@@ -1,15 +1,15 @@
 /* ----------------------------------------------------------------------
- LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
- http://lammps.sandia.gov, Sandia National Laboratories
- Steve Plimpton, sjplimp@sandia.gov
+   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
+   http://lammps.sandia.gov, Sandia National Laboratories
+   Steve Plimpton, sjplimp@sandia.gov
 
- Copyright (2003) Sandia Corporation.  Under the terms of Contract
- DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
- certain rights in this software.  This software is distributed under
- the GNU General Public License.
+   Copyright (2003) Sandia Corporation.  Under the terms of Contract
+   DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
+   certain rights in this software.  This software is distributed under
+   the GNU General Public License.
 
- See the README file in the top-level LAMMPS directory.
- ------------------------------------------------------------------------- */
+   See the README file in the top-level LAMMPS directory.
+   ------------------------------------------------------------------------- */
 
 #include "math.h"
 #include "stdlib.h"
@@ -25,6 +25,8 @@
 #include <iostream>
 
 using namespace LAMMPS_NS;
+
+#define EPSILON 1.0e-12
 
 /* ---------------------------------------------------------------------- */
 
@@ -99,7 +101,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 			   cg[i][1]*cg[i][1]);
     }
     // TODO: FixMe
-    double epsilon = 1e-20;
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
       j &= NEIGHMASK;
@@ -139,17 +140,17 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	if (ndim==2) {
 	  /// TODO: can be moved outside of the jj loop
 	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1]);
-	  if (abscgi > epsilon) {
+	  if (abscgi > EPSILON) {
 	    SurfaceForcei[0] = (eij[0]*((cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/2-cg[i][0]*cg[i][0])-cg[i][0]*eij[1]*cg[i][1])/abscgi;
 	    SurfaceForcei[1] = (eij[1]*((cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/2-cg[i][1]*cg[i][1])-eij[0]*cg[i][0]*cg[i][1])/abscgi;
 	  }
 
-	  if (abscgj > epsilon) {
+	  if (abscgj > EPSILON) {
 	    SurfaceForcej[0] = (eij[0]*((cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/2-cg[j][0]*cg[j][0])-cg[j][0]*eij[1]*cg[j][1])/abscgj;
 	    SurfaceForcej[1] = (eij[1]*((cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/2-cg[j][1]*cg[j][1])-eij[0]*cg[j][0]*cg[j][1])/abscgj;
 	  }
 	} else {
-	  if (abscgi > epsilon) {
+	  if (abscgi > EPSILON) {
 	    SurfaceForcei[0] = (eij[0]*((cg[i][2]*cg[i][2]+cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/3-cg[i][0]*cg[i][0])
 				-cg[i][0]*eij[2]*cg[i][2]-cg[i][0]*eij[1]*cg[i][1])/ abscgi;
 	    SurfaceForcei[1] = (eij[1]*((cg[i][2]*cg[i][2]+cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0])/3-cg[i][1]*cg[i][1])
@@ -158,7 +159,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 				 -eij[1]*cg[i][1]*cg[i][2]-eij[0]*cg[i][0]*cg[i][2] ) /abscgi;
 	  }
 	  double abscgj = sqrt(cg[j][0]*cg[j][0] + cg[j][1]*cg[j][1] + cg[j][2]*cg[j][2]);
-	  if (abscgj > epsilon) {
+	  if (abscgj > EPSILON) {
 	    SurfaceForcej[0] = (eij[0]*((cg[j][2]*cg[j][2]+cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/3-cg[j][0]*cg[j][0])
 				-cg[j][0]*eij[2]*cg[j][2]-cg[j][0]*eij[1]*cg[j][1])/ abscgj;
 	    SurfaceForcej[1] = (eij[1]*((cg[j][2]*cg[j][2]+cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0])/3-cg[j][1]*cg[j][1])
@@ -187,27 +188,13 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	  }
         }
       }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
   }
 }
 
 /* ----------------------------------------------------------------------
- allocate all arrays
- ------------------------------------------------------------------------- */
+   allocate all arrays
+   ------------------------------------------------------------------------- */
 
 void PairSPHSurfaceTension::allocate() {
   allocated = 1;
@@ -223,18 +210,18 @@ void PairSPHSurfaceTension::allocate() {
 }
 
 /* ----------------------------------------------------------------------
- global settings
- ------------------------------------------------------------------------- */
+   global settings
+   ------------------------------------------------------------------------- */
 
 void PairSPHSurfaceTension::settings(int narg, char **arg) {
   if (narg != 0)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sph/surfacetension");
+	       "Illegal number of setting arguments for pair_style sph/surfacetension");
 }
 
 /* ----------------------------------------------------------------------
- set coeffs for one or more type pairs
- ------------------------------------------------------------------------- */
+   set coeffs for one or more type pairs
+   ------------------------------------------------------------------------- */
 
 void PairSPHSurfaceTension::coeff(int narg, char **arg) {
   if (narg != 3)
@@ -263,8 +250,8 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
 }
 
 /* ----------------------------------------------------------------------
- init for one type pair i,j and corresponding j,i
- ------------------------------------------------------------------------- */
+   init for one type pair i,j and corresponding j,i
+   ------------------------------------------------------------------------- */
 
 double PairSPHSurfaceTension::init_one(int i, int j) {
 
@@ -279,16 +266,14 @@ double PairSPHSurfaceTension::init_one(int i, int j) {
 /* ---------------------------------------------------------------------- */
 
 double PairSPHSurfaceTension::single(int i, int j, int itype, int jtype,
-    double rsq, double factor_coul, double factor_lj, double &fforce) {
+				     double rsq, double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
-
   return 0.0;
 }
 
 /* calculate phase stress base on phase gradient */
 void get_phase_stress(double* v, double* del_phi) {
-  double epsilon = 1e-19;
-  double interm0 = 1.0/ ( sqrt(v[0]*v[0] + v[1]*v[1]) + epsilon );
+  double interm0 = 1.0/ ( sqrt(v[0]*v[0] + v[1]*v[1]) + EPSILON );
   double interm1 = 0.5 * (v[0]*v[0] - v[1]*v[1]);
   double interm2 = v[0]*v[1];
   del_phi[0] = interm1*interm0;
