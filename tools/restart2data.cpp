@@ -1387,6 +1387,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
   } else if (strcmp(style,"sph/rhosum_multiphase") == 0) {
   } else if (strcmp(style,"sph/colorgradient") == 0) {
   } else if (strcmp(style,"sph/taitwater/morris") == 0) {
+  } else if (strcmp(style,"sph/taitwater/multiphase") == 0) {
   } else if (strcmp(style,"sph/surfacetension") == 0) {
   } else if (strcmp(style,"airebo") == 0) {
 
