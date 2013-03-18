@@ -142,7 +142,6 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
 
         // compute pressure  of atom j with Tait EOS
 	double pj = sph_pressure(B[jtype], rho0[jtype], gamma[itype], rbackground[jtype], rho[j]);
-	//printf("rho[j], B[jtype], rho0[jtype], pj: %f %f %f %f\n", rho[j], B[jtype], rho0[jtype], pj);
 	fj = pj / (rho[j] * rho[j]);
 
         velx=vxtmp - v[j][0];
@@ -153,7 +152,6 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
         delVdotDelR = delx * velx + dely * vely + delz * velz;
 
         // Multiphase Viscosity (Multiphase, 1996)
-
         fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
 
         fvisc *= imass * jmass * wfd;
@@ -240,7 +238,6 @@ void PairSPHTaitwaterMultiphase::coeff(int narg, char **arg) {
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
-    printf("i rho0[i]: %i %e\n", i, rho0[i]);
     gamma[i] = gamma_one;
     soundspeed[i] = soundspeed_one;
     B[i] = B_one;

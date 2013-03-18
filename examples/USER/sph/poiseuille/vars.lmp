@@ -1,6 +1,6 @@
 # number of particles in each of the directions
-variable          nx   equal 30
-variable          ny   equal 2*${nx}
+variable          nx   equal 10
+variable          ny   equal 30
 if "${ndim}==3" then &
 "variable nz equal ${nx}"
 
