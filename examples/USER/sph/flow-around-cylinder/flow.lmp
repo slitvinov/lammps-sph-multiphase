@@ -29,16 +29,15 @@ else &
 create_atoms       ${g_type} region box
 
 # set mass of the particles
-mass               ${d_type} ${sph_mass_d}
-mass               ${g_type} ${sph_mass_g}
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
 
 compute            rho_peratom all meso_rho/atom
-compute            colorgradient_peratom all meso_colorgradient/atom
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom
 dump_modify        dump_id first yes sort id pad 8
 
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
@@ -47,11 +46,11 @@ include            settimestep.lmp
 communicate        single vel yes
 set                group all meso_rho ${sph_rho}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/morris
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/multiphase
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 
 # harmonic mean of viscosities
-pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
+pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} ${h} 1 0
 
 neighbor           3e-6 bin
 neigh_modify       delay 0 every 1

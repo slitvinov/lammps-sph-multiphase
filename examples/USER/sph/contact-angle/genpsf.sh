@@ -3,7 +3,7 @@
 set -e
 set -u
 
-input=data-wall/droplet.restart
+input=$1/droplet.restart
 datafile=${input/.restart/.dat}
 output=${input/.restart/.psf}
 

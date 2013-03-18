@@ -62,7 +62,7 @@ communicate        single vel yes
 set                group all meso_rho ${sph_rho_g}
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
-                   sph/taitwater/morris sph/surfacetension
+                   sph/taitwater/multiphase sph/surfacetension
 
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 
@@ -73,9 +73,9 @@ pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
 
 # harmonic mean of viscosities
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
-pair_coeff         ${g_type} ${d_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} 7.0 ${h} ${rbackground}
-pair_coeff         ${g_type} ${g_type} sph/taitwater/morris ${sph_rho_g} ${sph_c_g} ${sph_eta_g} 7.0 ${h} ${rbackground}
-pair_coeff         ${d_type} ${d_type} sph/taitwater/morris ${sph_rho_d} ${sph_c_d} ${sph_eta_d} 7.0 ${h} ${rbackground}
+pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} 7.0 ${h} ${rbackground}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} 7.0 ${h} ${rbackground}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} 7.0 ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
 
@@ -106,5 +106,8 @@ variable          time equal step*dt
 fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
 
 variable          nstep equal 5.0/${dt}
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
 
 run               ${nstep}

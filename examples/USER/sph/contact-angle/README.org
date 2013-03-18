@@ -1,9 +1,8 @@
 domain: [-0.5:0.5][-0.5:0.5]
-rho_d = 1
-rho_g = 1e-3
+density: rho_l = rho_g = 1
 viscosity: eta = 0.05
 no-slip on all boundaries
-radios of the droplet is R=0.2 placed at the domain center
+radios of the droplet is R=0.1875 placed at the domain center
 surface tension is alpha = 1.0
 sound speed is 10
 
