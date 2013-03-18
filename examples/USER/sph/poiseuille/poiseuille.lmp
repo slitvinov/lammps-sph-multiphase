@@ -1,3 +1,5 @@
+# create otuput directory
+shell              mkdir ${dname}
 log                ${dname}/log.lammps
 echo               both
 variable           ndim equal 3
@@ -9,56 +11,50 @@ include           vars.lmp
 
 # create simulation box
 if ${ndim}==2 then &
-"variable           pLz    equal  1.0e-6" &
-"variable           nLz    equal  -1.0e-6" &
+"variable           pLz    equal  ${dx}" &
+"variable           nLz    equal  -${dx}" &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
 else &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
 
 # crate one type of the particles
 create_box         1 box
-# create gas particles
 if ${ndim}==3 then &
 "lattice            sc ${dx}" &
 else &
 "lattice            sq ${dx}"
 create_atoms       1 region box
-compute            rho_peratom all meso_rho/atom
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz
 dump_modify        dump_id first yes sort id pad 8
 
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
 include            settimestep.lmp
 
-neighbor           3.0e-6 bin
+neighbor           0     bin
 neigh_modify       delay 0 every 1
-
 communicate        single vel yes
+
 set                group all meso_rho ${sph_rho}
 set                group all mass ${sph_mass}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/morris
-pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
+pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/multiphase
+pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} 1.0 ${h} 0.0
 pair_coeff         * * sph/rhosum_multiphase   ${h}
 
-dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
-dump_modify        dump_dcd sort id
-write_restart      ${dname}/droplet.restart
-
 timestep           ${dt}
-variable            time equal step*dt
-thermo_style        custom v_time step
-thermo              10
 
-variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+variable bodyfx atom mass*${gx}*((y<${Ly}/2.0)-(y>${Ly}/2.0))
 fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
 
+run              200
+
+# save velocity profile
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave one units reduced
-run               100000
+y center 0.05 v_vx_cm file vx.av ave one units reduced
+run               500  every 10 "velocity all zero linear"
