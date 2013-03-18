@@ -91,7 +91,6 @@ pair_coeff         * * sph/surfacetension ${h}
 pair_coeff         * * sph/heatconduction  0.02 ${h}
 
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
-dump_modify        dump_xyz element A B
 
 variable            time equal step*dt
 variable            natoms equal count(all)
