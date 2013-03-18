@@ -243,7 +243,6 @@ void PairSPHColorGradient::coeff(int narg, char **arg) {
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
-      //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
       alpha[i][j] = alpha_one;
       setflag[i][j] = 1;
