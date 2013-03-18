@@ -50,11 +50,12 @@ timestep           ${dt}
 variable bodyfx atom mass*${gx}*((y<${Ly}/2.0)-(y>${Ly}/2.0))
 fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
 
-run              200
+variable         rtransient equal round(0.5/${dt})
+run              ${rtransient}
 
 # save velocity profile
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.05 v_vx_cm file vx.av ave one units reduced
-run               500  every 10 "velocity all zero linear"
+fix av_vx all ave/spatial 1 ${rtransient} ${rtransient} &
+y center 0.05 v_vx_cm file ${dname}/vx.av ave one units reduced
+run               ${rtransient}

@@ -36,4 +36,4 @@ else &
 
 shell ./min.sh dt ${dt_eta_v} ${dt_eta_l} ${dt_alpha_v} ${dt_alpha_l} ${dt_c_v} ${dt_c_l} ${dt_temp_l} ${dt_temp_v}
 include in.dt
-variable dt equal ${dt}*${time_k}
+variable dt equal ${dt}
