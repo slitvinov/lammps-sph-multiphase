@@ -1,0 +1,53 @@
+/*
+
+VanSant, James H. Conduction heat transfer
+solutions. No. UCRL-52863. California Univ., Livermore (USA). Lawrence
+Livermore National Lab., 1980.
+
+Section 6.1. Infinite Solids—No Internal Heating.
+Case: 6.1.9
+Adjoined semi-infinite regions—no contact resistance.
+
+Runs this script with
+maxima -b slab.mac
+
+*/
+
+infeval: true;
+
+xm: 0.5;
+L: 1.0;
+/* env: [cv_r=1.0, cv_l=1.0, rho_r=1e3, rho_l=1e3, k_l=10.0, k_r=1.0, tau=0.5, t_r=2, t_l=1]; */
+/* env: [cv_r=1.0, cv_l=1.0, rho_r=1e3, rho_l=1e3, k_l=100.0, k_r=1.0, tau=0.2, t_r=2, t_l=1]; */
+/* env: [cv_r=3.0, cv_l=1.0, rho_r=1e3, rho_l=1e3, k_l=1, k_r=3, tau=5, t_r=2, t_l=1]; */
+/* env: [cv_r=1.0, cv_l=1.0, rho_r=1e3, rho_l=2e3, k_l=1, k_r=3, tau=5, t_r=2, t_l=1]; */
+env: [cv_r=4.179, cv_l=1.0, rho_r=1000, rho_l=1.226, k_l=0.0254, k_r=3, tau=0.5, t_r=2, t_l=1];
+
+A: k_l/k_r*sqrt(alpha_r/alpha_l);
+alpha_r: k_r/(rho_r*cv_r);
+alpha_l: k_l/(rho_l*cv_l);
+Fo(x, alpha):= alpha*tau/x^2;
+Fos(x, alpha):= 1/(2*sqrt(Fo(x, alpha)));
+eq_r: (t-t_l)/(t_r-t_l) = 1/(1+A)*(1+A*erf(Fos(x, alpha_r)));
+temp_r: rhs(solve(eq_r, t)[1]);
+eq_l: (t-t_l)/(t_r-t_l) = 1/(1+A)*erfc(abs(Fos(x, alpha_l)));
+temp_l: rhs(solve(eq_l, t)[1]);
+temp(x):= if x>0 then ev(temp_r, env) else ev(temp_l, env);
+
+
+/* plot2d(temp(x), [x, -0.5, 0.5]); */
+fid: openw("slab.dat");
+n: 100;
+
+for i: 0 thru n do (
+  x: L*i/n,
+  y: temp(x-xm),
+  printf(fid, "~9,3e ~9,3e~%", x, float(y))
+  );
+close(fid);
+
+fpar: openw("par.lmp");
+for eq in env do (
+  printf(fpar, "variable ~a equal ~a~%", lhs(eq), rhs(eq))
+  );
+close(fpar);

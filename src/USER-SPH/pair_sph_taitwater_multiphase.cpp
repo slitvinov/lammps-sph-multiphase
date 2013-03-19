@@ -70,9 +70,11 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *rho = atom->rho;
   double *rmass = atom->rmass;
+  double *mass = atom->mass;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
+  int rmass_flag = atom->rmass_flag;
   // check consistency of pair coefficients
 
   if (first) {
@@ -111,7 +113,12 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = rmass[i];
+    if (rmass_flag) {
+      imass = rmass[i];
+    } else {
+      imass = mass[itype];
+    }
+
 
     double pi = sph_pressure(B[itype], rho0[itype], gamma[itype], rbackground[itype], rho[i]);
     fi = pi / (rho[i] * rho[i]);
@@ -125,6 +132,11 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
+      if (rmass_flag) {
+	jmass = rmass[j];
+      } else {
+ 	jmass = mass[jtype];
+      }
       jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
@@ -280,5 +292,6 @@ double PairSPHTaitwaterMultiphase::single(int i, int j, int itype, int jtype,
 }
 
 double LAMMPS_NS::sph_pressure(double B, double rho0, double gamma, double rbackground, double rho) {
-  return B*(pow(rho/rho0, gamma) - rbackground);
+  double P = B*(pow(rho/rho0, gamma) - rbackground);
+  return P;
 }

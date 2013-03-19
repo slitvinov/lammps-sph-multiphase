@@ -5,9 +5,14 @@ dimension          ${ndim}
 units              si
 atom_style         meso
 include            vars.lmp
+# periodic boundaries to have a correct density on the wall
+# TODO: make density fixed for the choosen particles
+boundary          p p p
 # create simulation box
 if ${ndim}==2 then &
-"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${dx} units box" &
+"variable           pLz    equal  ${dx}" &
+"variable           nLz    equal  0" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
 else &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
 variable           xcenter equal 0.5*${Lx}
@@ -17,38 +22,40 @@ variable           ycenter equal 0.5*${Ly}
 create_box         2 box
 
 # create gas particles
-if ${ndim}==2 then &
-"lattice            sq ${dx} origin 0.5 0.5 0" &
+if ${ndim}==3 then &
+"lattice            sc ${dx}" &
 else &
-"lattice            sc ${dx} origin 0.5 0.5 0.5"
-
+"lattice            sq ${dx}"
 create_atoms       ${g_type} region box
 
 # set mass of the particles
-set               type ${d_type} mass ${sph_mass_d}
-set               type ${g_type} mass ${sph_mass_g}
+set                group all meso_rho ${sph_rho}
+set                group all mass ${sph_mass}
 
 compute            rho_peratom all meso_rho/atom
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy c_rho_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes sort id pad 8
 
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
 include            settimestep.lmp
 
+communicate        single vel yes
 set                group all meso_rho ${sph_rho}
 
-neighbor           0 bin
-neigh_modify       delay 0 every 1 exclude type ${g_type} ${g_type}
-communicate        single vel yes
-
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/multiphase
-
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/morris
 pair_coeff         * * sph/rhosum_multiphase   ${h}
-pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} ${h} 1 0
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/multiphase
+pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} ${sph_gamma} ${h} ${sph_rho_background}
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+
+
+neighbor           0 bin
+neigh_modify       delay 0 every 1
 
 dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
 dump_modify        dump_dcd sort id
@@ -71,23 +78,23 @@ fix reverce_periodic flow addforce v_bodyfx 0.0 0.0
 
 variable            time equal step*dt
 thermo_style        custom step v_time
-thermo              10
+thermo              100
 
 timestep           ${dt}
 if "${ndim}==2" then "fix e2d all enforce2d"
-run               1000
+run               3000
 
 # end line
-variable           xend equal 0.9*${Lx}
+variable           xend equal 0.95*${Lx}
 region             rend block ${xend} ${Lx} 0 ${Ly} EDGE EDGE units box
 fix av_vend all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 vx region rend file vend.av ave running units reduced
+y center 0.01 vx region rend file ${dname}/vend.av ave running units reduced
 
 # center line
 variable           x1 equal 0.45*${Lx}
 variable           x2 equal 0.55*${Lx}
 region             rcenter block ${x1} ${x2} 0 ${Ly} EDGE EDGE units box
 fix av_vcen all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 vx region rcenter file vcen.av ave running units reduced
+y center 0.01 vx region rcenter file ${dname}/vcen.av ave running units reduced
 
-run              10000
+run              12000
