@@ -44,7 +44,7 @@ compute            colorgradient_peratom all meso_colorgradient/atom
 
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom c_colorgradient_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_colorgradient_peratom
 dump_modify        dump_id first yes sort id pad 8
 
 include            ${ndim}-image.lmp

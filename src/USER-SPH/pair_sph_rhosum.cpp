@@ -83,7 +83,6 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
   double *rmass = atom->rmass;
 
   // check consistency of pair coefficients
-
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {

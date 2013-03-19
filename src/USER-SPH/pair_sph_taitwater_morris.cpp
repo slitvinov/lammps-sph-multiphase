@@ -67,11 +67,13 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *rho = atom->rho;
   double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *de = atom->de;
   double *drho = atom->drho;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
+  int rmass_flag = atom->rmass_flag;
 
   // check consistency of pair coefficients
 
@@ -111,7 +113,11 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    if (rmass_flag) {
+      imass = rmass[i];
+    } else {
+      imass = mass[itype];
+    }
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
@@ -127,7 +133,11 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      if (rmass_flag) {
+	jmass = rmass[j];
+      } else {
+	jmass = mass[jtype];
+      }
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];

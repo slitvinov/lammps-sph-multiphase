@@ -2,7 +2,7 @@
 shell              mkdir ${dname}
 log                ${dname}/log.lammps
 echo               both
-variable           ndim equal 3
+variable           ndim equal 2
 dimension          ${ndim}
 units              si
 atom_style         meso
@@ -12,7 +12,7 @@ include           vars.lmp
 # create simulation box
 if ${ndim}==2 then &
 "variable           pLz    equal  ${dx}" &
-"variable           nLz    equal  -${dx}" &
+"variable           nLz    equal  0" &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
 else &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
@@ -20,15 +20,15 @@ else &
 # crate one type of the particles
 create_box         1 box
 if ${ndim}==3 then &
-"lattice            sc ${dx}" &
+"lattice            sc ${dx} origin 0.5 0.5 0.5" &
 else &
-"lattice            sq ${dx}"
+"lattice            sq ${dx} origin 0.5 0.5 0.0"
 create_atoms       1 region box
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz
 dump_modify        dump_id first yes sort id pad 8
 
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
@@ -51,6 +51,7 @@ variable bodyfx atom mass*${gx}*((y<${Ly}/2.0)-(y>${Ly}/2.0))
 fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
 
 variable         rtransient equal round(0.5/${dt})
+if "${ndim}==2" then "fix e2d all enforce2d"
 run              ${rtransient}
 
 # save velocity profile
