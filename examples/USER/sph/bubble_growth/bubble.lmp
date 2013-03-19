@@ -1,6 +1,7 @@
 echo               both
 
 # log file is in output directory
+shell              mkdir  ${dname}
 log                ${dname}/log.lammps
 # use SI units
 units              si
