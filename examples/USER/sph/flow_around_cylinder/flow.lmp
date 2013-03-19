@@ -1,18 +1,13 @@
 log                ${dname}/log.lammps
 echo               both
-variable           ndim equal 3
+variable           ndim equal 2
 dimension          ${ndim}
 units              si
 atom_style         meso
 include            vars.lmp
-# periodic boundaries to have a correct density on the wall
-# TODO: make density fixed for the choosen particles
-boundary          p p p
 # create simulation box
 if ${ndim}==2 then &
-"variable           pLz    equal  1.0e-3" &
-"variable           nLz    equal  -1.0e-3" &
-"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${dx} units box" &
 else &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
 variable           xcenter equal 0.5*${Lx}
@@ -22,10 +17,11 @@ variable           ycenter equal 0.5*${Ly}
 create_box         2 box
 
 # create gas particles
-if ${ndim}==3 then &
-"lattice            sc ${dx}" &
+if ${ndim}==2 then &
+"lattice            sq ${dx} origin 0.5 0.5 0" &
 else &
-"lattice            sq ${dx}"
+"lattice            sc ${dx} origin 0.5 0.5 0.5"
+
 create_atoms       ${g_type} region box
 
 # set mass of the particles
@@ -37,23 +33,22 @@ compute            rho_peratom all meso_rho/atom
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy fx fy fz c_rho_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vy c_rho_peratom
 dump_modify        dump_id first yes sort id pad 8
 
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
 include            settimestep.lmp
 
-communicate        single vel yes
 set                group all meso_rho ${sph_rho}
 
+neighbor           0 bin
+neigh_modify       delay 0 every 1 exclude type ${g_type} ${g_type}
+communicate        single vel yes
+
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/multiphase
+
 pair_coeff         * * sph/rhosum_multiphase   ${h}
-
-# harmonic mean of viscosities
 pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} ${h} 1 0
-
-neighbor           3e-6 bin
-neigh_modify       delay 0 every 1
 
 dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
 dump_modify        dump_dcd sort id
@@ -79,6 +74,7 @@ thermo_style        custom step v_time
 thermo              10
 
 timestep           ${dt}
+if "${ndim}==2" then "fix e2d all enforce2d"
 run               1000
 
 # end line
