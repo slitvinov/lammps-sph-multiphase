@@ -1,5 +1,6 @@
 # number of particles in each of the directions
-#variable          nx   equal 20
+variable          Lx   equal 2.0
+variable          nx   equal 40
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"
@@ -14,7 +15,7 @@ variable          dx   equal  1.0/${nx}
 # density of gas phase
 variable          sph_rho_g equal 1.0
 # density of droplet
-#variable          sph_rho_d equal 1.0
+variable          sph_rho_d equal 0.01
 variable          sph_rho_w equal ${sph_rho_g}
 
 # sound speed
@@ -24,6 +25,7 @@ variable          sph_c_w equal ${sph_c_g}
 
 # viscosity
 #variable          sph_eta_d equal 5e-3
+variable          sph_eta_d equal 0.069395
 variable          sph_eta_g equal 1.0
 variable          sph_eta_w equal ${sph_eta_g}
 
@@ -45,14 +47,23 @@ variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 variable          sph_mass_w equal ${sph_mass_g}
 
 # surface tension
+variable           alpha    equal 300
 variable           alpha_gd equal ${alpha}
 variable           alpha_gw equal ${alpha}
 variable           alpha_dw equal 1.5*${alpha}
+
+variable           D_heat_d equal 0.6
+variable           D_heat_g equal 0.1
 variable           D_heat_w equal ${D_heat_g}
 
+variable           dprob     equal 0.01
+variable           Hwv       equal 32.0
 
+variable          cv_d       equal 1.0
+variable          cv_g       equal 0.04
 variable          cv_w      equal ${cv_g}
 
+variable           dT       equal 0.1
 variable           Tc equal 0.0
 variable           Tt equal ${Tc}+${dT}
 # energy
@@ -61,7 +72,7 @@ variable          e_g       equal ${cv_g}*1.0
 variable          e_w       equal ${e_g}
 
 # add an uplift force to the gas particles
-#variable          gy    equal 5.0
+variable          gy    equal 3.60e+05
 
 # type of the gas particle
 variable          g_type equal 1

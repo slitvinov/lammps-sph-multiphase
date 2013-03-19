@@ -14,4 +14,4 @@ variable dt_c_w equal 1/4.0*${dx}/${sph_c_w}
 
 shell ./min.sh dt ${dt_eta_d} ${dt_eta_g} ${dt_eta_w} ${dt_alpha} ${dt_c_d} ${dt_c_g} ${dt_c_w}
 include in.dt
-variable dt equal ${dt}*${time_k}
+variable dt equal ${dt}
