@@ -1505,10 +1505,10 @@ void Neighbor::setup_bins()
   bininvy = 1.0 / binsizey;
   bininvz = 1.0 / binsizez;
 
-  if (binsize_optimal*bininvx > CUT2BIN_RATIO ||
-      binsize_optimal*bininvy > CUT2BIN_RATIO ||
-      binsize_optimal*bininvz > CUT2BIN_RATIO)
-    error->all(FLERR,"Cannot use neighbor bins - box size << cutoff");
+  // if (binsize_optimal*bininvx > CUT2BIN_RATIO ||
+  //     binsize_optimal*bininvy > CUT2BIN_RATIO ||
+  //     binsize_optimal*bininvz > CUT2BIN_RATIO)
+  //   error->all(FLERR,"Cannot use neighbor bins - box size << cutoff");
 
   // mbinlo/hi = lowest and highest global bins my ghost atoms could be in
   // coord = lowest and highest values of coords for my ghost atoms
