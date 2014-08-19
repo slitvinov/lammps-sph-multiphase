@@ -1,0 +1,10 @@
+kill(all);
+depends(u, r);
+depends(Rb, t);
+assume(Rb>0);
+/* u is liquid velocity */
+deq: 1/r^2*diff(r^2*u, r)=0;
+sol: ode2(deq, u, r);
+usol: rhs(ic1(sol, r=Rb, u=dRb));
+
+KE: 1/2*integrate(4*%pi*r^2*usol^2, r, Rb, +inf);

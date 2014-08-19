@@ -1,0 +1,8 @@
+/* heat capacity of water */
+cp_w: 4.1855 /* kJ/kg.K */
+
+/* heat capacity of vapor */
+cp_v: 1.864; /* KJ/kg.K */
+
+/* heat of vaparisation */
+dH: 2260; /* kJ/kg */

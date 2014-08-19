@@ -1,0 +1,16 @@
+kill(all);
+load("dimension.mac");
+fundamental_dimensions: [mass, length, time, K];
+put(R, length, dimension);
+put(rho_l, mass/length^3, dimension);
+put(rho_g, mass/length^3, dimension);
+put(v, length/time, dimension);
+put(m, mass, dimension);
+J: dimension(m*v^2);
+put(cp, J/(mass*K), dimension);
+put(H, J/mass, dimension);
+put(dT, K, dimension);
+
+dimensionless([dT, H, rho_l, rho_g, cp]);
+dimension(dT*cp*rho_l/(rho_g*H));
+

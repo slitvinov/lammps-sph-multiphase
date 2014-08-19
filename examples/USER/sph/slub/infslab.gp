@@ -1,0 +1,1 @@
+plot "infslab.dat" w l, "dump.last" u 3:6 w p

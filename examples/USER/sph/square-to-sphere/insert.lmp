@@ -1,0 +1,113 @@
+log                ${dname}/log.lammps
+echo               both
+units              si
+atom_style         meso
+# periodic boundaries to have a correct density on the wall
+# TODO: make density fixed for the choosen particles
+boundary          p p p
+
+#variable          ndim equal 3
+dimension         ${ndim}
+include           vars.lmp
+
+# create simulation box
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+if ${ndim}==3 then &
+"variable           zcenter equal 0.5*${Lz}" &
+else &
+"variable           zcenter equal 0.0" &
+
+if ${ndim}==2 then &
+"variable           pLz    equal  1.0e-3" &
+"variable           nLz    equal  -1.0e-3" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box"
+
+# create box with two types of particles (water, gas)
+create_box         2 box
+
+# create gas particles
+if ${ndim}==2 then &
+"lattice            sq ${dx}" &
+else &
+"lattice            sc ${dx}"
+
+create_atoms       ${g_type} region box
+
+
+set                 type ${d_type} meso_rho ${sph_rho_d}
+set                 type ${g_type} meso_rho ${sph_rho_g}
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+compute         ie_atom all meso_e/atom
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y vx vy &
+c_rho_peratom c_colorgradient_peratom c_ie_atom
+dump_modify        dump_id first yes sort id pad 8
+
+#include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
+include            settimestep.lmp
+
+neighbor           3.0e-2 bin
+neigh_modify       delay 0 every 1
+
+communicate        single vel yes
+set                group all meso_rho ${sph_rho_g}
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
+                   sph/taitwater/multiphase sph/surfacetension
+
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+
+variable           cg_cutoff equal 3.0*${dx}
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${cg_cutoff} 0
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${cg_cutoff} ${alpha}
+pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
+
+# harmonic mean of viscosities
+variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
+pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} 7.0 ${h} ${rbackground}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} 7.0 ${h} ${rbackground}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} 7.0 ${h} ${rbackground}
+
+pair_coeff         * * sph/surfacetension ${h}
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B
+
+variable            time equal step*dt
+variable            natoms equal count(all)
+thermo_style        custom step v_time v_natoms
+thermo              10
+
+timestep           ${dt}
+
+
+#include            square.lmp
+include            cube.lmp
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+
+
+
+group             droplet type ${d_type}
+compute           crg droplet gyration
+variable          vrg equal c_crg
+
+write_restart     ${dname}/droplet.restart
+variable          time equal step*dt
+fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
+
+variable          nstep equal 5.0/${dt}
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
+
+run               ${nstep}

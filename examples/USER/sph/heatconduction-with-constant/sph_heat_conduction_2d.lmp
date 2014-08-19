@@ -9,42 +9,43 @@ units		si
 atom_style	meso
 boundary        f p p
 
-variable        dx equal 0.02
-variable         h equal 3*${dx}
-variable        rho equal 0.1
-variable         k equal 1e-4
-variable        rmass equal ${rho}*${dx}^2
-lattice		sq ${dx}
-region		box block 0 1.0 0 0.3 0 ${dx} units box
+lattice		sq 0.01
+region		box block 0 100 0 10 0 0.1 
 create_box	1 box
 create_atoms	1 box
-set             group all mass ${rmass}
 
-region          left  block EDGE 0.5 EDGE EDGE EDGE EDGE units box
-region          right block 0.5 EDGE EDGE EDGE EDGE EDGE units box
-set             region left  meso_cv 1.0
-set             region right meso_cv 1.0
+region          left  block EDGE 49.9  EDGE EDGE EDGE EDGE
+region          right block 50 EDGE EDGE EDGE EDGE EDGE
 set             region left  meso_e 1.0 # internal energies
 set             region right meso_e 2.0
-set             group all meso_rho ${rho} # mesoscopic density is also needed for this pair style
+
+set             region left    mass       1.0e-5
+set             region right   mass       2.0e-5
+
+#group           gright region right
+#fix             fidtemp gright setmesode 0.1
+
+
+set             region left meso_rho 0.1
+set             region right meso_rho 0.4 # mesoscopic density is also needed for this pair style
 #               For correct temperature profiles, mescoscopic density and mass * number density must coincide!
 
 pair_style      sph/heatconduction
 #               i j diffusion coeff. cutoff
-pair_coeff      1 1 ${k}           ${h}
+pair_coeff      1 1 1.0e-4           2.0e-2
 
 compute         ie_atom all meso_e/atom
 compute         ie all reduce sum c_ie_atom
 
 thermo		10
 thermo_style    custom step temp c_ie
-timestep        0.25e-2
+timestep        0.25e-1
 neighbor	0.2e-2 bin
 fix             integrate_fix all meso/stationary
 
 dump		dump_fix all custom 10 dump.heat id type x y z c_ie_atom
 dump_modify     dump_fix first yes
-run             320
+run             160
 undump          dump_fix
 
 dump		dump_fix all custom 10 dump.last id type x y z c_ie_atom

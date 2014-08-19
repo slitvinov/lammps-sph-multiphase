@@ -1,0 +1,131 @@
+echo               both
+
+# log file is in output directory
+shell              mkdir  ${dname}
+log                ${dname}/log.lammps
+# use SI units
+units              si
+atom_style         meso
+
+# dimension (2 or 3)
+dimension         ${ndim}
+include           vars.lmp
+
+# create simulation box
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+if ${ndim}==3 then &
+"variable           zcenter equal 0.5*${Lz}" &
+else &
+"variable           zcenter equal 0.0" &
+
+if ${ndim}==2 then &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${dx} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box"
+
+# we have two times of atoms: vapor and liquid
+create_box         2 box
+
+if ${ndim}==2 then &
+"lattice            sq ${dx} origin 0.5 0.5 0" &
+else &
+"lattice            sc ${dx} origin 0.5 0.5 0.5"
+
+# create liquid atoms
+create_atoms       ${l_type} region box
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+# get time step
+include            settimestep.lmp
+timestep           ${dt}
+
+neighbor           0 bin
+neigh_modify       delay 0 every 1
+communicate        single vel yes
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
+                   sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_coeff         ${v_type} ${v_type} sph/colorgradient ${h} 0
+pair_coeff         ${l_type} ${v_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0
+
+variable           sph_eta_ld equal 2*${sph_eta_l}*${sph_eta_v}/(${sph_eta_v}+${sph_eta_l})
+pair_coeff         ${l_type} ${v_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} 7.0 ${h} ${rbackground}
+pair_coeff         ${l_type} ${l_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l}  ${sph_eta_l} 7.0 ${h} ${rbackground}
+pair_coeff         ${v_type} ${v_type} sph/taitwater/multiphase ${sph_rho_v} ${sph_c_v}  ${sph_eta_v} 7.0 ${h} ${rbackground}
+
+pair_coeff         * * sph/surfacetension ${h}
+pair_coeff         ${l_type} ${l_type} sph/heatconduction/phasechange  ${D_heat_l} ${h}
+variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_heat_l})
+pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
+pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_v} ${h}
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B
+
+
+variable           insert_every equal 1
+variable           Hwv equal 8.0
+variable           dr equal 0.5*${dx}
+variable           prob equal 0.01
+
+
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
+set               region rsq type ${v_type}
+
+set               type ${v_type} meso_cv ${cv_v}
+set               type ${l_type} meso_cv ${cv_l}
+set               type ${v_type} meso_e ${e_v}
+set               type ${l_type} meso_e ${e_l}
+set               type ${v_type} mass ${mass_v}
+set               type ${l_type} mass ${mass_l}
+set               type ${v_type} meso_rho ${sph_rho_v}
+set               type ${l_type} meso_rho ${sph_rho_l}
+
+variable           Ninsert equal 1000
+variable           insert_every equal 1
+variable           Tc equal 0.95
+variable           Tt equal 0.97
+variable           Cp equal 2.00
+variable           dr equal 0.1*${dx}
+group              droplet type ${d_type}
+
+
+compute         rho_peratom all meso_rho/atom
+compute         it_atom all meso_t/atom
+compute         ie_atom all meso_e/atom
+compute         ie all reduce sum c_ie_atom
+compute         ied bubble reduce sum c_ie_atom
+variable        bubble_energy equal c_ied
+variable        bubble_number equal count(bubble)
+variable        bubble_volume equal count(bubble)*${dx}^${ndim}
+variable        time equal step*${dt}
+variable        natoms equal count(all)
+fix extra all print 1 "${time} ${bubble_volume} ${bubble_number} ${bubble_energy}" file ${dname}/rg.dat screen no
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
+                                                                  c_rho_peratom c_ie_atom c_it_atom
+								  
+dump_modify        dump_id first yes sort id pad 8
+
+thermo_style        custom step v_time v_natoms v_bubble_number
+thermo              100
+
+variable           pcutoff equal ${h}
+fix                fdep bubble phase_change &
+                   ${Tc} ${Tt} ${Hwv} ${dr} ${mass_v} &
+                   ${pcutoff} ${l_type} ${v_type} ${insert_every} 123456 ${prob} region box units box
+
+# outside of this sphere the temperature is 1.0
+variable          Rtemp equal ${xcenter}-2.6*${dx}
+region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
+fix               smeso      all setmeso meso_t ${Tinf} noregion rtemp
+
+variable          nstep equal 0.002/${dt}
+
+if "${ndim}==2" then "fix e2d all enforce2d"
+run               ${nstep}
