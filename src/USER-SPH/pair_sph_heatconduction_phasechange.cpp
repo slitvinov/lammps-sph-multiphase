@@ -184,8 +184,8 @@ void PairSPHHeatConductionPhaseChange::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double alpha_one = force->numeric(arg[2]);
-  double cut_one   = force->numeric(arg[3]);
+  double alpha_one = force->numeric(FLERR, arg[2]);
+  double cut_one   = force->numeric(FLERR, arg[3]);
 
   // default value
   int fixflag_one = 0;
@@ -194,10 +194,10 @@ void PairSPHHeatConductionPhaseChange::coeff(int narg, char **arg) {
     // process "fix temperature" options
     if (strcmp(arg[4],"NULL") == 0) {
       fixflag_one = 2; // second type has fixed temperature
-      tc_one = force->numeric(arg[5]);
+      tc_one = force->numeric(FLERR, arg[5]);
     } else if (strcmp(arg[5],"NULL") == 0) {
       fixflag_one = 1; // first type has fixed temperature
-      tc_one = force->numeric(arg[4]);
+      tc_one = force->numeric(FLERR, arg[4]);
     } else {
       error->all(FLERR,"Incorrect args for pair coefficients");
     }

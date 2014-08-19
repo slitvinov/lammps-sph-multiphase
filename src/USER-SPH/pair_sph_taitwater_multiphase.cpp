@@ -239,13 +239,13 @@ void PairSPHTaitwaterMultiphase::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double rho0_one = force->numeric(arg[2]);
-  double soundspeed_one = force->numeric(arg[3]);
-  double viscosity_one = force->numeric(arg[4]);
-  double gamma_one = force->numeric(arg[5]);
-  double cut_one = force->numeric(arg[6]);
+  double rho0_one = force->numeric(FLERR, arg[2]);
+  double soundspeed_one = force->numeric(FLERR, arg[3]);
+  double viscosity_one = force->numeric(FLERR, arg[4]);
+  double gamma_one = force->numeric(FLERR, arg[5]);
+  double cut_one = force->numeric(FLERR, arg[6]);
   double B_one = soundspeed_one * soundspeed_one  * rho0_one / gamma_one;
-  double rbackground_one = force->numeric(arg[7]);
+  double rbackground_one = force->numeric(FLERR, arg[7]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {

@@ -26,10 +26,11 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-AtomVecMeso::AtomVecMeso(LAMMPS *lmp, int narg, char **arg) :
-	AtomVec(lmp, narg, arg) {
+AtomVecMeso::AtomVecMeso(LAMMPS *lmp) :
+	AtomVec(lmp) {
 	molecular = 0;
 	mass_type = 0;
+	forceclearflag = 1;
 
 	comm_x_only = 0; // we communicate not only x forward but also vest ...
 	comm_f_only = 0; // we also communicate de and drho in reverse direction
@@ -56,10 +57,8 @@ AtomVecMeso::AtomVecMeso(LAMMPS *lmp, int narg, char **arg) :
    ------------------------------------------------------------------------- */
 
 void AtomVecMeso::grow(int n) {
-	if (n == 0)
-		nmax += DELTA;
-	else
-		nmax = n;
+        if (n == 0) grow_nmax();
+        else nmax = n;
 	atom->nmax = nmax;
 	if (nmax < 0 || nmax > MAXSMALLINT)
 		error->one(FLERR,"Per-processor system is too big");
@@ -138,7 +137,15 @@ void AtomVecMeso::copy(int i, int j, int delflag) {
 
 	if (atom->nextra_grow)
 		for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
-			modify->fix[atom->extra_grow[iextra]]->copy_arrays(i, j);
+		  modify->fix[atom->extra_grow[iextra]]->copy_arrays(i, j, delflag);
+}
+
+/* ---------------------------------------------------------------------- */
+
+void AtomVecMeso::force_clear(int n, size_t nbytes)
+{
+  memset(&de[n],0,nbytes);
+  memset(&drho[n],0,nbytes);
 }
 
 /* ---------------------------------------------------------------------- */

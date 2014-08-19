@@ -70,7 +70,7 @@ class Atom : protected Pointers {
   double *eradius,*ervel,*erforce,*ervelforce;
   double *cs,*csforce,*vforce;
   int *etag;
-  double *rho, **colorgradient, *drho;
+  double *rho, **colorgradient, *drho, *cv;
   double *e, *de;
   double **vest;
 
