@@ -44,7 +44,7 @@ timestep           ${dt}
 
 neighbor           0 bin
 neigh_modify       delay 0 every 1
-communicate        single vel yes
+comm_modify        vel yes
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
                    sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
