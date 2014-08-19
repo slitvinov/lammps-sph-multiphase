@@ -13,7 +13,7 @@
 
 #include "math.h"
 #include "stdlib.h"
-#include "pair_sph_taitwater_morris.h"
+#include "pair_sph_taitwater_multiphase.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -21,12 +21,13 @@
 #include "memory.h"
 #include "error.h"
 #include "domain.h"
+#include "sph_kernel_quintic.h"
 
 using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHTaitwaterMorris::PairSPHTaitwaterMorris(LAMMPS *lmp) : Pair(lmp)
+PairSPHTaitwaterMultiphase::PairSPHTaitwaterMultiphase(LAMMPS *lmp) : Pair(lmp)
 {
   restartinfo = 0;
   first = 1;
@@ -34,7 +35,7 @@ PairSPHTaitwaterMorris::PairSPHTaitwaterMorris(LAMMPS *lmp) : Pair(lmp)
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHTaitwaterMorris::~PairSPHTaitwaterMorris() {
+PairSPHTaitwaterMultiphase::~PairSPHTaitwaterMultiphase() {
   if (allocated) {
     memory->destroy(setflag);
     memory->destroy(cutsq);
@@ -44,12 +45,14 @@ PairSPHTaitwaterMorris::~PairSPHTaitwaterMorris() {
     memory->destroy(soundspeed);
     memory->destroy(B);
     memory->destroy(viscosity);
+    memory->destroy(gamma);
+    memory->destroy(rbackground);
   }
 }
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
+void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
   int i, j, ii, jj, inum, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz, fpair;
 
@@ -66,15 +69,12 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   double **x = atom->x;
   double **f = atom->f;
   double *rho = atom->rho;
-  double *mass = atom->mass;
   double *rmass = atom->rmass;
-  double *de = atom->de;
-  double *drho = atom->drho;
+  double *mass = atom->mass;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
   int rmass_flag = atom->rmass_flag;
-
   // check consistency of pair coefficients
 
   if (first) {
@@ -119,10 +119,9 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
       imass = mass[itype];
     }
 
-    // compute pressure of atom i with Tait EOS
-    tmp = rho[i] / rho0[itype];
-    fi = tmp * tmp * tmp;
-    fi = B[itype] * (fi * fi * tmp - 1.0) / (rho[i] * rho[i]);
+
+    double pi = sph_pressure(B[itype], rho0[itype], gamma[itype], rbackground[itype], rho[i]);
+    fi = pi / (rho[i] * rho[i]);
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -136,32 +135,26 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
       if (rmass_flag) {
 	jmass = rmass[j];
       } else {
-	jmass = mass[jtype];
+ 	jmass = mass[jtype];
       }
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
-        ihsq = ih * ih;
-
-        wfd = h - sqrt(rsq);
+	double wfd;
         if (domain->dimension == 3) {
-          // Lucy Kernel, 3d
-          // Note that wfd, the derivative of the weight function with respect to r,
-          // is lacking a factor of r.
-          // The missing factor of r is recovered by
-          // (1) using delV . delX instead of delV . (delX/r) and
-          // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
-          wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
+          // Quintic spline
+	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
         } else {
-          // Lucy Kernel, 2d
-          wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 
         // compute pressure  of atom j with Tait EOS
-        tmp = rho[j] / rho0[jtype];
-        fj = tmp * tmp * tmp;
-        fj = B[jtype] * (fj * fj * tmp - 1.0) / (rho[j] * rho[j]);
+	double pj = sph_pressure(B[jtype], rho0[jtype], gamma[itype], rbackground[jtype], rho[j]);
+	fj = pj / (rho[j] * rho[j]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -170,34 +163,22 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
         // dot product of velocity delta and distance vector
         delVdotDelR = delx * velx + dely * vely + delz * velz;
 
-        // Morris Viscosity (Morris, 1996)
-
+        // Multiphase Viscosity (Multiphase, 1996)
         fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
 
         fvisc *= imass * jmass * wfd;
 
         // total pair force & thermal energy increment
-        fpair = -imass * jmass * (fi + fj) * wfd;
-        deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
-
-       // printf("testvar= %f, %f \n", delx, dely);
+        fpair = - (imass*imass*fi + jmass*jmass*fj) * wfd;
 
         f[i][0] += delx * fpair + velx * fvisc;
         f[i][1] += dely * fpair + vely * fvisc;
         f[i][2] += delz * fpair + velz * fvisc;
 
-        // and change in density
-        drho[i] += jmass * delVdotDelR * wfd;
-
-        // change in thermal energy
-        de[i] += deltaE;
-
         if (newton_pair || j < nlocal) {
           f[j][0] -= delx * fpair + velx * fvisc;
           f[j][1] -= dely * fpair + vely * fvisc;
           f[j][2] -= delz * fpair + velz * fvisc;
-          de[j] += deltaE;
-          drho[j] += imass * delVdotDelR * wfd;
         }
 
         if (evflag)
@@ -213,7 +194,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
  allocate all arrays
  ------------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::allocate() {
+void PairSPHTaitwaterMultiphase::allocate() {
   allocated = 1;
   int n = atom->ntypes;
 
@@ -226,6 +207,8 @@ void PairSPHTaitwaterMorris::allocate() {
 
   memory->create(rho0, n + 1, "pair:rho0");
   memory->create(soundspeed, n + 1, "pair:soundspeed");
+  memory->create(gamma, n + 1, "pair:gamma");
+  memory->create(rbackground, n + 1, "pair:rbackground");
   memory->create(B, n + 1, "pair:B");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(viscosity, n + 1, n + 1, "pair:viscosity");
@@ -235,7 +218,7 @@ void PairSPHTaitwaterMorris::allocate() {
  global settings
  ------------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::settings(int narg, char **arg) {
+void PairSPHTaitwaterMultiphase::settings(int narg, char **arg) {
   if (narg != 0)
     error->all(FLERR,
         "Illegal number of setting arguments for pair_style sph/taitwater/morris");
@@ -245,10 +228,10 @@ void PairSPHTaitwaterMorris::settings(int narg, char **arg) {
  set coeffs for one or more type pairs
  ------------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
-  if (narg != 6)
+void PairSPHTaitwaterMultiphase::coeff(int narg, char **arg) {
+  if (narg != 8)
     error->all(FLERR,
-        "Incorrect args for pair_style sph/taitwater/morris coefficients");
+        "Incorrect args for pair_style sph/taitwater/morris coefficients (expect 5 or 6)");
   if (!allocated)
     allocate();
 
@@ -256,20 +239,23 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double rho0_one = force->numeric(FLERR,arg[2]);
-  double soundspeed_one = force->numeric(FLERR,arg[3]);
-  double viscosity_one = force->numeric(FLERR,arg[4]);
-  double cut_one = force->numeric(FLERR,arg[5]);
-  double B_one = soundspeed_one * soundspeed_one * rho0_one / 7.0;
+  double rho0_one = force->numeric(arg[2]);
+  double soundspeed_one = force->numeric(arg[3]);
+  double viscosity_one = force->numeric(arg[4]);
+  double gamma_one = force->numeric(arg[5]);
+  double cut_one = force->numeric(arg[6]);
+  double B_one = soundspeed_one * soundspeed_one  * rho0_one / gamma_one;
+  double rbackground_one = force->numeric(arg[7]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
+    gamma[i] = gamma_one;
     soundspeed[i] = soundspeed_one;
     B[i] = B_one;
+    rbackground[i] = rbackground_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
-      //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
 
       setflag[i][j] = 1;
@@ -285,7 +271,7 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
  init for one type pair i,j and corresponding j,i
  ------------------------------------------------------------------------- */
 
-double PairSPHTaitwaterMorris::init_one(int i, int j) {
+double PairSPHTaitwaterMultiphase::init_one(int i, int j) {
 
   if (setflag[i][j] == 0) {
     error->all(FLERR,"Not all pair sph/taitwater/morris coeffs are not set");
@@ -293,15 +279,19 @@ double PairSPHTaitwaterMorris::init_one(int i, int j) {
 
   cut[j][i] = cut[i][j];
   viscosity[j][i] = viscosity[i][j];
-
   return cut[i][j];
 }
 
 /* ---------------------------------------------------------------------- */
 
-double PairSPHTaitwaterMorris::single(int i, int j, int itype, int jtype,
+double PairSPHTaitwaterMultiphase::single(int i, int j, int itype, int jtype,
     double rsq, double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
 
   return 0.0;
+}
+
+double LAMMPS_NS::sph_pressure(double B, double rho0, double gamma, double rbackground, double rho) {
+  double P = B*(pow(rho/rho0, gamma) - rbackground);
+  return P;
 }

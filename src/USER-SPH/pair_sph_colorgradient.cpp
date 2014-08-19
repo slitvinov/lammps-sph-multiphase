@@ -13,7 +13,8 @@
 
 #include "math.h"
 #include "stdlib.h"
-#include "pair_sph_rhosum.h"
+#include "pair_sph_colorgradient.h"
+#include "sph_kernel_quintic.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -24,29 +25,32 @@
 #include "neighbor.h"
 #include "update.h"
 #include "domain.h"
+#include <iostream>
+#include <assert.h>
 
 using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHRhoSum::PairSPHRhoSum(LAMMPS *lmp) : Pair(lmp)
+PairSPHColorGradient::PairSPHColorGradient(LAMMPS *lmp) : Pair(lmp)
 {
   restartinfo = 0;
 
   // set comm size needed by this Pair
 
-  comm_forward = 1;
+  comm_forward = 3;
   first = 1;
 }
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHRhoSum::~PairSPHRhoSum() {
+PairSPHColorGradient::~PairSPHColorGradient() {
   if (allocated) {
     memory->destroy(setflag);
     memory->destroy(cutsq);
 
     memory->destroy(cut);
+    memory->destroy(alpha);
   }
 }
 
@@ -54,7 +58,7 @@ PairSPHRhoSum::~PairSPHRhoSum() {
  init specific to this pair style
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::init_style() {
+void PairSPHColorGradient::init_style() {
   // need a full neighbor list
   int irequest = neighbor->request(this);
   neighbor->requests[irequest]->half = 0;
@@ -63,12 +67,14 @@ void PairSPHRhoSum::init_style() {
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHRhoSum::compute(int eflag, int vflag) {
+void PairSPHColorGradient::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
   double rsq, imass, h, ih, ihsq;
   int *jlist;
-  double wf;
+  
+  const int ndim = domain->dimension;
+  double eij[ndim];
   // neighbor list variables
   int inum, *ilist, *numneigh, **firstneigh;
 
@@ -79,10 +85,12 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
 
   double **x = atom->x;
   double *rho = atom->rho;
+  double **colorgradient = atom->colorgradient;
   int *type = atom->type;
   double *rmass = atom->rmass;
 
   // check consistency of pair coefficients
+
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
@@ -111,33 +119,13 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
   if (nstep != 0) {
     if ((update->ntimestep % nstep) == 0) {
 
-      // initialize density with self-contribution,
+      // initialize color gradient with zeros
       for (ii = 0; ii < inum; ii++) {
         i = ilist[ii];
-        itype = type[i];
-        imass = rmass[i];
-
-        h = cut[itype][itype];
-        if (domain->dimension == 3) {
-          /*
-          // Lucy kernel, 3d
-          wf = 2.0889086280811262819e0 / (h * h * h);
-          */
-
-          // quadric kernel, 3d
-          wf = 2.1541870227086614782 / (h * h * h);
-        } else {
-          /*
-          // Lucy kernel, 2d
-          wf = 1.5915494309189533576e0 / (h * h);
-          */
-
-          // quadric kernel, 2d
-          wf = 1.5915494309189533576e0 / (h * h);
-        }
-
-        rho[i] = imass * wf;
-      }
+        colorgradient[i][0] = 0.0;
+        colorgradient[i][1] = 0.0;
+	colorgradient[i][2] = 0.0;
+      } // ii loop
 
       // add density at each atom via kernel function overlap
       for (ii = 0; ii < inum; ii++) {
@@ -148,7 +136,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
         itype = type[i];
         jlist = firstneigh[i];
         jnum = numneigh[i];
-
+	double Vi = rmass[i]/rho[i]; 
         for (jj = 0; jj < jnum; jj++) {
           j = jlist[jj];
           j &= NEIGHMASK;
@@ -159,42 +147,42 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
           delz = ztmp - x[j][2];
           rsq = delx * delx + dely * dely + delz * delz;
 
-          if (rsq < cutsq[itype][jtype]) {
-            h = cut[itype][jtype];
-            ih = 1.0 / h;
-            ihsq = ih * ih;
+	  if (rsq < cutsq[itype][jtype]) {
+	    double r = sqrt(rsq);
+	    if (ndim==2) {
+	      eij[0]= delx/r; 
+	      eij[1]= dely/r;
+	    } else {
+	      eij[0]= delx/r;
+	      eij[1]= dely/r;
+	      eij[2]= delz/r;
+	    }
 
-            if (domain->dimension == 3) {
-              /*
-              // Lucy kernel, 3d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf =  2.0889086280811262819e0 * (h + 3. * r) * wf * wf * wf * ih;
-              */
+	    h = cut[itype][jtype];
+	    ih = 1.0 / h;
 
-              // quadric kernel, 3d
-              wf = 1.0 - rsq * ihsq;
-              wf = wf * wf;
-              wf = wf * wf;
-              wf = 2.1541870227086614782e0 * wf * ihsq * ih;
-            } else {
-              // Lucy kernel, 2d
-              //r = sqrt(rsq);
-              //wf = (h - r) * ihsq;
-              //wf = 1.5915494309189533576e0 * (h + 3. * r) * wf * wf * wf;
-
-              // quadric kernel, 2d
-              wf = 1.0 - rsq * ihsq;
-              wf = wf * wf;
-              wf = wf * wf;
-              wf = 1.5915494309189533576e0 * wf * ihsq;
-            }
-
-            rho[i] += rmass[j] * wf;
-          }
-
-        }
-      }
+	    double wfd;
+	    if (domain->dimension == 3) {
+	      // Quintic spline
+	      wfd = sph_dw_quintic3d(r*ih);
+	      wfd = wfd * ih * ih * ih * ih;
+	    } else {
+	      wfd = sph_dw_quintic2d(r*ih);
+	      wfd = wfd * ih * ih * ih;
+	    }
+	    double Vj = rmass[j]/rho[j];
+	    double Vj2 = Vj*Vj;
+	    double dphi = -wfd*alpha[itype][jtype]*dphi*Vj2/Vi;
+	    
+	    colorgradient[i][0] += dphi*eij[0];
+	    colorgradient[i][1] += dphi*eij[1];
+	    if (ndim==3) {
+	      colorgradient[i][2] += dphi*eij[2];
+	    }
+          } // rsq < cutsq
+	  
+        } // jj loop
+      } // ii loop
     }
   }
 
@@ -206,7 +194,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
  allocate all arrays
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::allocate() {
+void PairSPHColorGradient::allocate() {
   allocated = 1;
   int n = atom->ntypes;
 
@@ -218,26 +206,27 @@ void PairSPHRhoSum::allocate() {
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
 
   memory->create(cut, n + 1, n + 1, "pair:cut");
+  memory->create(alpha, n + 1, n + 1, "pair:alpha");
 }
 
 /* ----------------------------------------------------------------------
  global settings
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::settings(int narg, char **arg) {
+void PairSPHColorGradient::settings(int narg, char **arg) {
   if (narg != 1)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sph/rhosum");
-  nstep = force->inumeric(FLERR,arg[0]);
+        "Illegal number of setting arguments for pair_style sph/colorgradient");
+  nstep = force->inumeric(arg[0]);
 }
 
 /* ----------------------------------------------------------------------
  set coeffs for one or more type pairs
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::coeff(int narg, char **arg) {
-  if (narg != 3)
-    error->all(FLERR,"Incorrect number of args for sph/rhosum coefficients");
+void PairSPHColorGradient::coeff(int narg, char **arg) {
+  if (narg != 4)
+    error->all(FLERR,"Incorrect number of args for sph/colorgradient coefficients");
   if (!allocated)
     allocate();
 
@@ -245,13 +234,14 @@ void PairSPHRhoSum::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double cut_one = force->numeric(FLERR,arg[2]);
+  double cut_one = force->numeric(arg[2]);
+  double alpha_one = force->numeric(arg[3]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
-      //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
+      alpha[i][j] = alpha_one;
       setflag[i][j] = 1;
       count++;
     }
@@ -265,19 +255,20 @@ void PairSPHRhoSum::coeff(int narg, char **arg) {
  init for one type pair i,j and corresponding j,i
  ------------------------------------------------------------------------- */
 
-double PairSPHRhoSum::init_one(int i, int j) {
+double PairSPHColorGradient::init_one(int i, int j) {
   if (setflag[i][j] == 0) {
-    error->all(FLERR,"All pair sph/rhosum coeffs are not set");
+    error->all(FLERR,"All pair sph/colorgradient coeffs are not set");
   }
 
   cut[j][i] = cut[i][j];
+  alpha[j][i] = alpha[i][j];
 
   return cut[i][j];
 }
 
 /* ---------------------------------------------------------------------- */
 
-double PairSPHRhoSum::single(int i, int j, int itype, int jtype, double rsq,
+double PairSPHColorGradient::single(int i, int j, int itype, int jtype, double rsq,
     double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
 
@@ -286,27 +277,32 @@ double PairSPHRhoSum::single(int i, int j, int itype, int jtype, double rsq,
 
 /* ---------------------------------------------------------------------- */
 
-int PairSPHRhoSum::pack_forward_comm(int n, int *list, double *buf, 
-                                     int pbc_flag, int *pbc) {
+int PairSPHColorGradient::pack_comm(int n, int *list, double *buf, int pbc_flag,
+    int *pbc) {
   int i, j, m;
-  double *rho = atom->rho;
+  double **colorgradient = atom->colorgradient;
 
   m = 0;
   for (i = 0; i < n; i++) {
     j = list[i];
-    buf[m++] = rho[j];
+    buf[m++] = colorgradient[j][0];
+    buf[m++] = colorgradient[j][1];
+    buf[m++] = colorgradient[j][2];
   }
-  return m;
+  return 3;
 }
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHRhoSum::unpack_forward_comm(int n, int first, double *buf) {
+void PairSPHColorGradient::unpack_comm(int n, int first, double *buf) {
   int i, m, last;
-  double *rho = atom->rho;
+  double **colorgradient = atom->colorgradient;
 
   m = 0;
   last = first + n;
   for (i = first; i < last; i++)
-    rho[i] = buf[m++];
+    colorgradient[i][0] = buf[m++];
+    colorgradient[i][1] = buf[m++];
+    colorgradient[i][2] = buf[m++];
 }
+

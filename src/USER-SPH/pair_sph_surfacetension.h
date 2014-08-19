@@ -13,21 +13,21 @@
 
 #ifdef PAIR_CLASS
 
-PairStyle(sph/taitwater/morris,PairSPHTaitwaterMorris)
+PairStyle(sph/surfacetension,PairSPHSurfaceTension)
 
 #else
 
-#ifndef LMP_PAIR_TAITWATER_MORRIS_H
-#define LMP_PAIR_TAITWATER_MORRIS_H
+#ifndef LMP_PAIR_SPH_SURFACETENSION_H
+#define LMP_PAIR_SPH_SURFACETENSION_H
 
 #include "pair.h"
 
 namespace LAMMPS_NS {
 
-class PairSPHTaitwaterMorris : public Pair {
+class PairSPHSurfaceTension : public Pair {
  public:
-  PairSPHTaitwaterMorris(class LAMMPS *);
-  virtual ~PairSPHTaitwaterMorris();
+  PairSPHSurfaceTension(class LAMMPS *);
+  virtual ~PairSPHSurfaceTension();
   virtual void compute(int, int);
   void settings(int, char **);
   void coeff(int, char **);
@@ -35,10 +35,7 @@ class PairSPHTaitwaterMorris : public Pair {
   virtual double single(int, int, int, int, double, double, double, double &);
 
  protected:
-  double *rho0, *soundspeed, *B;
-  double **cut,**viscosity;
-  int first;
-
+  double **cut;
   void allocate();
 };
 
