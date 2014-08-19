@@ -13,31 +13,34 @@
 
 #ifdef PAIR_CLASS
 
-PairStyle(sph/taitwater/morris,PairSPHTaitwaterMorris)
+PairStyle(sph/colorgradient,PairSPHColorGradient)
 
 #else
 
-#ifndef LMP_PAIR_TAITWATER_MORRIS_H
-#define LMP_PAIR_TAITWATER_MORRIS_H
+#ifndef LMP_PAIR_SPH_COLORGRADIENT_H
+#define LMP_PAIR_SPH_COLORGRADIENT_H
 
 #include "pair.h"
 
 namespace LAMMPS_NS {
 
-class PairSPHTaitwaterMorris : public Pair {
+class PairSPHColorGradient : public Pair {
  public:
-  PairSPHTaitwaterMorris(class LAMMPS *);
-  virtual ~PairSPHTaitwaterMorris();
+  PairSPHColorGradient(class LAMMPS *);
+  virtual ~PairSPHColorGradient();
+  void init_style();
   virtual void compute(int, int);
   void settings(int, char **);
   void coeff(int, char **);
   virtual double init_one(int, int);
   virtual double single(int, int, int, int, double, double, double, double &);
+  int pack_comm(int, int *, double *, int, int *);
+  void unpack_comm(int, int, double *);
 
  protected:
-  double *rho0, *soundspeed, *B;
-  double **cut,**viscosity;
-  int first;
+  double **cut;
+  double **alpha;
+  int nstep, first;
 
   void allocate();
 };

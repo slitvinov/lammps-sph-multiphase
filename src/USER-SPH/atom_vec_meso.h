@@ -38,9 +38,11 @@ class AtomVecMeso : public AtomVec {
   void unpack_comm_vel(int, int, double *);
   int pack_reverse(int, int, double *);
   void unpack_reverse(int, int *, double *);
-  int pack_comm_hybrid(int, int *, double *);
+
+  int pack_comm_hybrid(int, int *, double *, int, int *);
   int unpack_comm_hybrid(int, int, double *);
-  int pack_border_hybrid(int, int *, double *);
+
+  int pack_border_hybrid(int, int *, double *, int, int *);
   int unpack_border_hybrid(int, int, double *);
   int pack_reverse_hybrid(int, int, double *);
   int unpack_reverse_hybrid(int, int *, double *);
@@ -69,7 +71,8 @@ class AtomVecMeso : public AtomVec {
   int *type,*mask;
   imageint *image;
   double **x,**v,**f;
-  double *rho, *drho, *e, *de, *cv;
+  double *rmass, *rho, *drho, *e, *de, *cv;
+  double **colorgradient;
   double **vest; // estimated velocity during force computation
 };
 

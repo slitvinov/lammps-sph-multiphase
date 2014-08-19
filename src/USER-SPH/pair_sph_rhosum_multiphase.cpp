@@ -13,7 +13,8 @@
 
 #include "math.h"
 #include "stdlib.h"
-#include "pair_sph_rhosum.h"
+#include "pair_sph_rhosum_multiphase.h"
+#include "sph_kernel_quintic.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -24,12 +25,13 @@
 #include "neighbor.h"
 #include "update.h"
 #include "domain.h"
+#include <iostream>
 
 using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHRhoSum::PairSPHRhoSum(LAMMPS *lmp) : Pair(lmp)
+PairSPHRhoSumMultiphase::PairSPHRhoSumMultiphase(LAMMPS *lmp) : Pair(lmp)
 {
   restartinfo = 0;
 
@@ -41,7 +43,7 @@ PairSPHRhoSum::PairSPHRhoSum(LAMMPS *lmp) : Pair(lmp)
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHRhoSum::~PairSPHRhoSum() {
+PairSPHRhoSumMultiphase::~PairSPHRhoSumMultiphase() {
   if (allocated) {
     memory->destroy(setflag);
     memory->destroy(cutsq);
@@ -54,7 +56,7 @@ PairSPHRhoSum::~PairSPHRhoSum() {
  init specific to this pair style
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::init_style() {
+void PairSPHRhoSumMultiphase::init_style() {
   // need a full neighbor list
   int irequest = neighbor->request(this);
   neighbor->requests[irequest]->half = 0;
@@ -63,10 +65,10 @@ void PairSPHRhoSum::init_style() {
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHRhoSum::compute(int eflag, int vflag) {
+void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
-  double rsq, imass, h, ih, ihsq;
+  double r, rsq, h, ih, ihsq;
   int *jlist;
   double wf;
   // neighbor list variables
@@ -83,6 +85,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
   double *rmass = atom->rmass;
 
   // check consistency of pair coefficients
+
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
@@ -115,29 +118,15 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
       for (ii = 0; ii < inum; ii++) {
         i = ilist[ii];
         itype = type[i];
-        imass = rmass[i];
 
         h = cut[itype][itype];
         if (domain->dimension == 3) {
-          /*
-          // Lucy kernel, 3d
-          wf = 2.0889086280811262819e0 / (h * h * h);
-          */
-
-          // quadric kernel, 3d
-          wf = 2.1541870227086614782 / (h * h * h);
+          wf = sph_kernel_quintic3d(0.0) / (h * h * h);
         } else {
-          /*
-          // Lucy kernel, 2d
-          wf = 1.5915494309189533576e0 / (h * h);
-          */
-
-          // quadric kernel, 2d
-          wf = 1.5915494309189533576e0 / (h * h);
+          wf = sph_kernel_quintic2d(0.0) / (h * h);
         }
-
-        rho[i] = imass * wf;
-      }
+        rho[i] = wf;
+      } // ii loop
 
       // add density at each atom via kernel function overlap
       for (ii = 0; ii < inum; ii++) {
@@ -146,6 +135,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
         ytmp = x[i][1];
         ztmp = x[i][2];
         itype = type[i];
+        double imass = rmass[i];
         jlist = firstneigh[i];
         jnum = numneigh[i];
 
@@ -162,39 +152,20 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
           if (rsq < cutsq[itype][jtype]) {
             h = cut[itype][jtype];
             ih = 1.0 / h;
-            ihsq = ih * ih;
-
             if (domain->dimension == 3) {
-              /*
-              // Lucy kernel, 3d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf =  2.0889086280811262819e0 * (h + 3. * r) * wf * wf * wf * ih;
-              */
-
-              // quadric kernel, 3d
-              wf = 1.0 - rsq * ihsq;
-              wf = wf * wf;
-              wf = wf * wf;
-              wf = 2.1541870227086614782e0 * wf * ihsq * ih;
+              r = sqrt(rsq) * ih;
+              wf = sph_kernel_quintic3d(r) * ih * ih * ih;
             } else {
-              // Lucy kernel, 2d
-              //r = sqrt(rsq);
-              //wf = (h - r) * ihsq;
-              //wf = 1.5915494309189533576e0 * (h + 3. * r) * wf * wf * wf;
-
-              // quadric kernel, 2d
-              wf = 1.0 - rsq * ihsq;
-              wf = wf * wf;
-              wf = wf * wf;
-              wf = 1.5915494309189533576e0 * wf * ihsq;
+              r = sqrt(rsq) * ih;
+              wf = sph_kernel_quintic2d(r) * ih * ih ;
             }
 
-            rho[i] += rmass[j] * wf;
+            rho[i] += wf;
           }
 
-        }
-      }
+        } // jj loop
+	rho[i] *= imass;
+      } // ii loop
     }
   }
 
@@ -206,7 +177,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
  allocate all arrays
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::allocate() {
+void PairSPHRhoSumMultiphase::allocate() {
   allocated = 1;
   int n = atom->ntypes;
 
@@ -224,18 +195,18 @@ void PairSPHRhoSum::allocate() {
  global settings
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::settings(int narg, char **arg) {
+void PairSPHRhoSumMultiphase::settings(int narg, char **arg) {
   if (narg != 1)
     error->all(FLERR,
         "Illegal number of setting arguments for pair_style sph/rhosum");
-  nstep = force->inumeric(FLERR,arg[0]);
+  nstep = force->inumeric(arg[0]);
 }
 
 /* ----------------------------------------------------------------------
  set coeffs for one or more type pairs
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::coeff(int narg, char **arg) {
+void PairSPHRhoSumMultiphase::coeff(int narg, char **arg) {
   if (narg != 3)
     error->all(FLERR,"Incorrect number of args for sph/rhosum coefficients");
   if (!allocated)
@@ -245,7 +216,7 @@ void PairSPHRhoSum::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double cut_one = force->numeric(FLERR,arg[2]);
+  double cut_one = force->numeric(arg[2]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
@@ -265,7 +236,7 @@ void PairSPHRhoSum::coeff(int narg, char **arg) {
  init for one type pair i,j and corresponding j,i
  ------------------------------------------------------------------------- */
 
-double PairSPHRhoSum::init_one(int i, int j) {
+double PairSPHRhoSumMultiphase::init_one(int i, int j) {
   if (setflag[i][j] == 0) {
     error->all(FLERR,"All pair sph/rhosum coeffs are not set");
   }
@@ -277,7 +248,7 @@ double PairSPHRhoSum::init_one(int i, int j) {
 
 /* ---------------------------------------------------------------------- */
 
-double PairSPHRhoSum::single(int i, int j, int itype, int jtype, double rsq,
+double PairSPHRhoSumMultiphase::single(int i, int j, int itype, int jtype, double rsq,
     double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
 
@@ -286,8 +257,8 @@ double PairSPHRhoSum::single(int i, int j, int itype, int jtype, double rsq,
 
 /* ---------------------------------------------------------------------- */
 
-int PairSPHRhoSum::pack_forward_comm(int n, int *list, double *buf, 
-                                     int pbc_flag, int *pbc) {
+int PairSPHRhoSumMultiphase::pack_comm(int n, int *list, double *buf, int pbc_flag,
+    int *pbc) {
   int i, j, m;
   double *rho = atom->rho;
 
@@ -296,12 +267,12 @@ int PairSPHRhoSum::pack_forward_comm(int n, int *list, double *buf,
     j = list[i];
     buf[m++] = rho[j];
   }
-  return m;
+  return 1;
 }
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHRhoSum::unpack_forward_comm(int n, int first, double *buf) {
+void PairSPHRhoSumMultiphase::unpack_comm(int n, int first, double *buf) {
   int i, m, last;
   double *rho = atom->rho;
 

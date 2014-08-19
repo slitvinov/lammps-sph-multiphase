@@ -5,15 +5,14 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under
+   certain rights in this software.  This software is distributed under 
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
 #include "string.h"
-#include "compute_meso_t_atom.h"
-#include "sph_energy_equation.h"
+#include "compute_meso_colorgradient_atom.h"
 #include "atom.h"
 #include "update.h"
 #include "modify.h"
@@ -21,73 +20,80 @@
 #include "force.h"
 #include "memory.h"
 #include "error.h"
+#include "domain.h"
+#include <math.h>
 
 using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-ComputeMesoTAtom::ComputeMesoTAtom(LAMMPS *lmp, int narg, char **arg) :
+ComputeMesoColorGradientAtom::ComputeMesoColorGradientAtom(LAMMPS *lmp, int narg, char **arg) :
   Compute(lmp, narg, arg)
 {
-  if (narg != 3) error->all(FLERR,"Number of arguments for compute meso_t/atom command != 3");
-  if ((atom->e_flag != 1) || (atom->cv_flag != 1))
-          error->all(FLERR,"compute meso_e/atom command requires atom_style with both energy and heat capacity (e.g. meso)");
+  if (narg != 3) error->all(FLERR,"Illegal compute meso_colorgradient/atom command");
+  if (atom->colorgradient_flag != 1) 
+    error->all(FLERR,"compute meso_colorgradient/atom command requires atom_style with colorgradient (e.g. meso)");
 
   peratom_flag = 1;
   size_peratom_cols = 0;
 
   nmax = 0;
-  tvector = NULL;
+  colorgradientVector = NULL;
 }
 
 /* ---------------------------------------------------------------------- */
 
-ComputeMesoTAtom::~ComputeMesoTAtom()
+ComputeMesoColorGradientAtom::~ComputeMesoColorGradientAtom()
 {
-  memory->sfree(tvector);
+  memory->sfree(colorgradientVector);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void ComputeMesoTAtom::init()
+void ComputeMesoColorGradientAtom::init()
 {
 
   int count = 0;
   for (int i = 0; i < modify->ncompute; i++)
-    if (strcmp(modify->compute[i]->style,"meso_t/atom") == 0) count++;
+    if (strcmp(modify->compute[i]->style,"colorgradientVector/atom") == 0) count++;
   if (count > 1 && comm->me == 0)
-    error->warning(FLERR,"More than one compute meso_t/atom");
+    error->warning(FLERR,"More than one compute colorgradientVector/atom");
 }
 
 /* ---------------------------------------------------------------------- */
 
-void ComputeMesoTAtom::compute_peratom()
+void ComputeMesoColorGradientAtom::compute_peratom()
 {
   invoked_peratom = update->ntimestep;
 
-  // grow tvector array if necessary
+  // grow colorgradientVector array if necessary
 
   if (atom->nlocal > nmax) {
-    memory->sfree(tvector);
+    memory->sfree(colorgradientVector);
     nmax = atom->nmax;
-    tvector = (double *) memory->smalloc(nmax*sizeof(double),"tvector/atom:tvector");
-    vector_atom = tvector;
+    colorgradientVector = (double *) memory->smalloc(nmax*sizeof(double),"atom:colorgradientVector");
+    vector_atom = colorgradientVector;
   }
 
-  double *e = atom->e;
-  double *rho = atom->rho;
-  double *cv = atom->cv;
+  // compute kinetic energy for each atom in group
+
+  double **colorgradient = atom->colorgradient;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
-	if (cv[i] > 0.0) {
-	  tvector[i] = sph_energy2t(e[i],cv[i]);
+	if (domain->dimension == 3) {
+	  colorgradientVector[i] = sqrt(colorgradient[i][0]*colorgradient[i][0] +
+					colorgradient[i][1]*colorgradient[i][1] +
+					colorgradient[i][2]*colorgradient[i][2]);
+	} else {
+	  colorgradientVector[i] = sqrt(colorgradient[i][0]*colorgradient[i][0] +
+	  				colorgradient[i][1]*colorgradient[i][1]);
 	}
       }
       else {
-	tvector[i] = 0.0;
+      	colorgradientVector[i] = 0.0;
       }
     }
 }
@@ -96,7 +102,7 @@ void ComputeMesoTAtom::compute_peratom()
    memory usage of local atom-based array
 ------------------------------------------------------------------------- */
 
-double ComputeMesoTAtom::memory_usage()
+double ComputeMesoColorGradientAtom::memory_usage()
 {
   double bytes = nmax * sizeof(double);
   return bytes;
