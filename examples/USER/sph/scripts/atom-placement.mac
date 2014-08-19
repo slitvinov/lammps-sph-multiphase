@@ -1,0 +1,40 @@
+/* color gradient */
+cg: [cx, cy, cz];
+
+/* vectors perpendicular to cg */
+v1: [-cy, cx, 0];
+v2: [0, -cz, cy];
+
+v1.cg;
+v2.cg;
+
+load(eigen);
+[b1, b2]: gramschmidt([v1, v2]);
+
+b1.cg;
+fullratsimp(b2.cg);
+
+e1: fullratsimp(b1/sqrt(b1.b1));
+e2: fullratsimp(b2/sqrt(b2.b2));
+
+fullratsimp(e1.e1);
+fullratsimp(e2.e2);
+
+cg.e1;
+fullratsimp(cg.e2);
+
+display2d: false;
+kill(cg);
+env: [cx=cg[0], cy=cg[1], cz=cg[2]];
+
+matchdeclare (n, all);
+tellsimpafter(n^2, pow(n,2));
+
+for i:0 thru 2 do (
+  print("b1[", i, "] = ", ev(b1[i+1], env))
+  );
+
+for i:0 thru 2 do (
+  print("b2[", i, "] = ", ev(b2[i+1], env))
+  );
+

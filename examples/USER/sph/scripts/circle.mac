@@ -1,0 +1,72 @@
+/*                              -------------
+                           ----/             \---- \
+                         -/                       \-\
+                       -/                           \-\
+                     -/                   %pi-phi      \ phi
+------------------------------------------------------/-\-------------------+-----
+                   /                              /---   \                  |
+                  /                          /----        \                 |  1*sin(%pi-phi)
+                 /                       /--- phi-%pi/2    \ phi            |
+-----------------+-----------------------------------------+----------------+--------
+                 |                                         | \-
+                 |                                         |   \
+                 \                                         /    \
+                  \                                       /      \
+                   \                                     /
+                    \                                   /
+                     -\                               /-
+                       -\                           /-
+                         -\                       /-
+                           ----\             /----
+                                -------------
+*/
+
+/* integrate from %pi-phi to phi, r = h/sin(p); */
+
+kill(all);
+assume(phi>%pi/2);
+assume(phi<%pi);
+sp_3d(phi):= block([h],
+  h: 1-sin(phi-%pi/2),
+  %pi*h^2*(1-h/3));
+
+sp_2d(phi):= block([alpha],
+  alpha: 2*%pi - 2*phi,
+  1/2*(alpha-sin(alpha)));
+
+/* test with monte carlo */
+load(distrib);
+monte_carlo_2d(phi, n):= block([x, y, h, i, nin],
+  h: sin(phi-%pi/2), nin: 0,
+  in_circ(x, y):= (x^2 + y^2)<1,
+  in_upper(x, y):= y>h,
+  for i: 1 thru n do (
+    x: random_continuous_uniform(0, 1),
+    y: random_continuous_uniform(0, 1),
+    if in_circ(x,y) and in_upper(x,y) then nin: nin + 1
+    ),
+   print("."),
+   return(2*nin/n)
+  );
+
+monte_carlo_3d(phi, n):= block([x, y, z, h, i, nin],
+  h: sin(phi-%pi/2), nin: 0,
+  in_circ(x, y, z):= (x^2 + y^2 + z^2)<1,
+  in_upper(x, y, z):= y>h,
+  for i: 1 thru n do (
+    x: random_continuous_uniform(0, 1),
+    y: random_continuous_uniform(0, 1),
+    z: random_continuous_uniform(0, 1),
+    if in_circ(x,y,z) and in_upper(x,y,z) then nin: nin + 1
+    ),
+   print("."),
+   return(4*nin/n)
+  );
+
+np: 10;
+n: 1000;
+l: makelist( %pi/2 + %pi/2 * i/np, i, 1, np);
+lg: map( lambda([phi], [phi, monte_carlo_3d(phi, n)]), l);
+s: sp_3d(phi);
+plot2d([s, [discrete, lg]], [phi, %pi/2, %pi]);
+

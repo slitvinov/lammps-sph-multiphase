@@ -1,0 +1,13 @@
+variable dt_eta equal 1/8.0*${dx}*${dx}/(${sph_mu})
+
+if "${sph_c}>0.0" then &
+"variable dt_c equal 1/4.0*${dx}/${sph_c}" &
+else &
+"variable dt_c equal 1e19"
+
+if "${dt_c}>${dt_eta}" then &
+"variable dt equal ${dt_eta}" &
+else &
+"variable dt equal ${dt_c}"
+
+print "(settimestep) dt_c dt_eta ${dt} ${dt_c} ${dt_eta} ${dt}"

@@ -1,0 +1,59 @@
+/* bubble departure diameter */
+kill(all);
+
+/* Fritz correlation is */
+/* theta is in angles */
+/* D= 0.0208 * theta * sqrt( sigma/(g*drho) ); */
+/* integrate sphere */
+assume(phi>%pi/2);
+assume(phi<%pi);
+sp_3d(phi):= block([h],
+  h: 1-sin(phi-%pi/2),
+  %pi*h^2*(1-h/3));
+
+sp_2d(phi):= block([alpha],
+  alpha: 2*%pi - 2*phi,
+  1/2*(alpha-sin(alpha)));
+
+
+/* volume of the sphere */
+/* sp_int(1, 0, %pi); */
+
+/* volume of the sphere with contact angle phi */
+assume(g>0);
+assume(drho>0);
+assume(sigma>0);
+d: 3;
+
+/* contact line length */
+eq1[3]: cl=2*%pi*R*sin(phi);
+eq1[2]: cl=1;
+
+/* surface tension */
+eq2: F_s= cl * sigma * sin(phi);
+
+/* body force on the bubble */
+eq3[3]: V=sp_3d(phi)*R^3;
+eq3[2]: V=sp_2d(phi)*R^2;
+eq4: F_b=V*g*drho;
+
+/* at departure forces must be equal */
+eq5: F_b = F_s;
+sol: solve( [eq1[d], eq2, eq3[d], eq4, eq5], [F_b, F_s, cl, V, R]);
+
+/* get a formula for R*/
+idx[3]: 2;
+idx[2]: 1;
+vsol: assoc(V,sol[idx[d]]);
+if d=3 then (
+  saux: solve(vsol = 4/3*%pi*rsol^3, rsol),
+  s: rhs(saux[3]) )
+else (
+  saux: solve(vsol = %pi*rsol^2, rsol),
+  s: rhs(saux[2]) );
+
+/* plot only part depending of phi, compare with Fritz */
+ps: ev(s, [sigma=1, drho=1, g=1]);
+fritz: 0.0208/%pi*180;
+plot2d([ps, fritz*phi], [phi, 0, %pi/4], [legend, "ours", "Fritz1936"]);
+taylor(ps, phi, 0, 1);

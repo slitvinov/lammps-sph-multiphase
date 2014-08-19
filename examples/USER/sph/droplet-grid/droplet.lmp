@@ -1,0 +1,128 @@
+log                ${dname}/log.lammps
+echo               both
+dimension          2
+units              si
+atom_style         meso
+# periodic boundaries to have a correct density on the wall
+# TODO: make density fixed for the choosen particles
+boundary          p p p
+variable          ndim index 2d
+include           case${icase}.lmp
+
+# create simulation box
+variable           pLz    equal  1.0e-3
+variable           nLz    equal  -1.0e-3
+variable           Lywall equal ${Ly}+6*${dx}
+variable           Lxwall equal ${Lx}+6*${dx}
+variable           xcenter equal 0.5*${Lxwall}
+variable           ycenter equal 0.5*${Lywall}
+region             box block 0.0 ${Lxwall}  0.0 ${Lywall} ${nLz} ${pLz} units box
+
+# create box with two types of particles (gas and droplet)
+create_box         3 box
+
+# create gas particles
+lattice            sq ${dx} origin 0.5 0.5 0.0
+create_atoms       ${g_type} region box
+
+variable     ylow equal 3*${dx}
+variable     yhi  equal ${Ly}+3*${dx}
+
+variable     xlow equal 3*${dx}
+variable     xhi  equal ${Lx}+3*${dx}
+
+region	     rflow block ${xlow} ${xhi} ${ylow} ${yhi} INF INF units box
+group	     flow region rflow
+group	     boundary subtract all flow
+set          group boundary type ${w_type}
+
+# fix wall particles
+fix          wallim boundary setforce 0 0 0
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_colorgradient_peratom
+dump_modify        dump_id first yes sort id pad 8
+
+include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
+include            settimestep.lmp
+
+neighbor           0       bin
+neigh_modify       delay 0 every 1
+communicate        single vel yes
+
+set                group all meso_rho ${sph_rho_g}
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
+                   sph/taitwater/multiphase sph/surfacetension
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+
+variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
+variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
+variable           sph_eta_dw equal 2*${sph_eta_d}*${sph_eta_w}/(${sph_eta_d}+${sph_eta_w})
+pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} 1.0 ${h} 0.0
+pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} 1.0 ${h} 0.0
+pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} 1.0 ${h} 0.0
+pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gw} 1.0 ${h} 0.0
+pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_dw} 1.0 ${h} 0.0
+pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} 1.0 ${h} 0.0
+
+
+pair_coeff         * * sph/surfacetension ${h}
+
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
+
+# create droplet
+region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
+set	           region rdroplet type ${d_type}
+write_restart      ${dname}/droplet.restart
+
+# add velocity
+variable            v0 equal 10.0
+variable            r0 equal 0.05
+variable            xc atom x-${xcenter}
+variable            yc atom y-${ycenter}
+variable            r atom sqrt(v_yc^2+v_xc^2)+1e-19
+variable            vx atom ${v0}*v_xc/${r0}*(1-v_yc^2/(${r0}*v_r))*exp(-v_r/${r0})
+variable            vy atom -${v0}*v_yc/${r0}*(1-v_xc^2/(${r0}*v_r))*exp(-v_r/${r0})
+
+
+set                 type ${d_type} meso_rho ${sph_rho_d}
+set                 type ${g_type} meso_rho ${sph_rho_g}
+set                 type ${w_type} meso_rho ${sph_rho_w}
+
+variable            time equal step*dt
+thermo_style        custom step v_time
+thermo              10 
+
+
+timestep           ${dt}
+
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+set               type ${w_type} mass ${sph_mass_w}
+
+group              droplet type ${d_type}
+
+
+compute            rg droplet gyration
+variable           vrg equal c_rg
+variable           vspher equal c_rg[1]/c_rg[2]
+fix extra all print 1 "${time} ${vrg} ${vspher}" file ${dname}/com.dat screen no
+
+#run               1000
+velocity flow     set v_vx v_vy 0.0
+variable          ntime equal round(0.5/${dt})
+run               ${ntime}

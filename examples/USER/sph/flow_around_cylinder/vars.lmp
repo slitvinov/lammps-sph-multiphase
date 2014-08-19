@@ -1,0 +1,45 @@
+# number of particles in each of the directions
+variable          nx   equal 56
+variable          ny   equal 56
+if "${ndim}==3" then &
+"variable nz equal 6"
+
+# size of the domain
+variable          Lx   equal  0.1
+variable          Ly   equal  0.1
+if "${ndim}==3" then &
+"variable Lz equal ${Lx}/${nx}*${nz}"
+variable          dx   equal  ${Lx}/${nx}
+
+# density of droplet
+variable          sph_rho equal 1e3
+variable          sph_rho_background equal 1.0
+
+# parameter in EOS
+variable          sph_gamma equal 1
+
+# sound speed 
+variable          sph_c equal 5.77e-4
+
+# viscosity of droplet 
+variable          sph_eta equal 1e-3
+
+variable          h equal 3*${dx}
+variable          Nfreq equal 1000
+variable          Nfreqimage equal 1000
+
+# mass of droplet particle
+variable          sph_mass equal ${dx}^${ndim}*${sph_rho}
+# mass of gas particle
+
+
+# radios of the cylinder
+variable          cyl_r equal 2e-2
+
+# body force
+variable          gx    equal 1.5e-7
+
+# type of the gas particle
+variable          g_type equal 1
+# type of the droplet particle
+variable          d_type equal 2

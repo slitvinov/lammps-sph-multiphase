@@ -1,0 +1,202 @@
+/* units of SPH simulation */
+kill(all);
+load("dimension.mac");
+fundamental_dimensions: [mass, length, time, K];
+/* density */
+put(rho, mass/length^3, dimension);
+put(rho_l, dimension(rho), dimension);
+put(rho_g, dimension(rho), dimension);
+/* volume */
+put(V, dimension(mass/rho), dimension);
+/* reverse volume */
+put(sigma, dimension(1/V), dimension);
+  
+/* radious of the bubble */
+put(R, length, dimension);
+/* domain size */
+put(L, length, dimension);
+put(r, length, dimension);
+/* kernel */
+put(w, dimension(rho/mass), dimension);
+put(dw, dimension(w/r), dimension);
+put(m, mass, dimension);
+put(t, time, dimension);
+put(v, length/time, dimension);
+/* sound speed */
+put(c_l, length/time, dimension);
+put(c_g, length/time, dimension);
+/* temperature */
+put(T, K, dimension);
+put(dT, K, dimension);
+/* force */
+put(F, dimension(m*v/t), dimension);
+/* gravity, F_g=mg */
+put(g, dimension(F/m), dimension);
+/* Joule */
+J: dimension(m*v^2);
+/* density */
+/* kinematic viscosity */
+put(eta_l, length^2/time, dimension);
+put(eta_g, length^2/time, dimension);
+/* energy of the particle, J/kg */
+put(en, J/mass, dimension);
+/* heat capacity, meso_cv
+cv*T should give en */
+put(cv, dimension(en)/K, dimension);
+put(cv_l, dimension(cv), dimension);
+put(cv_g, dimension(cv), dimension);
+/* put(D, dimension(en*R^2/(T*t)), dimension); */
+
+eq3: dimension(m^2/rho^2*k*dT/r*dw) = dimension(m * en/t);
+sol:solve(eq3, dimension(k))[1];
+put(k_l, rhs(sol), dimension);
+put(k_g, rhs(sol), dimension);
+
+eq1: dimension(en) = dimension(D*dT*dw/r/rho^2*m) * dimension(t);
+/* eq2: dimension(en) = dimension(m/rho^2*D*dT*dw/r) * dimension(t);*/
+sol: solve(eq1, dimension(D))[1];
+/* dimension(D) = length*mass/(time^3*K) */
+
+/* units of alpha (surface tension) */
+/* eq. (27), (28) in Hu2006 */
+eq1: dimension(P)=dimension(alpha_aux/r);
+eq2: dimension(v/t) = dimension(1/m * dw *P/sigma^2);
+sol: solve([eq1, eq2], [dimension(alpha_aux), dimension(P)])[1];
+put(alpha, assoc(dimension(alpha_aux), sol), dimension);
+dimension(R=sqrt(alpha/(g*rho)));
+
+/* heat of evaporation */
+put(Hwv, dimension(en), dimension);
+/* check if it the same as J/kg */
+is(J/mass=dimension(Hwv));
+
+/* Jacobs number */
+Ja: dT*cv_l*rho_l/(rho_g*Hwv);
+is(dimension(Ja)=1);
+env: [dT=0.05, cv_l=4.0, rho_l=10, rho_g=1, Hwv=32, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-1];
+env_simple: [dT=0.85, cv_l=4.0, rho_l=100, rho_g=1, Hwv=1.0, l0=0.25, alpha=0.25, g=1.0, eta_l=5e-2, L=1];
+ev(Ja, env);
+ev(Ja, env_simple);
+
+/* Eotvos number */
+put(l0, length, dimension);
+Eo: g*(rho_l-rho_g)*l0^2/alpha;
+dimension(Eo);
+ev(Eo, env);
+ev(Eo, env_simple);
+
+mu_l: eta_l*rho_l;
+/* Morton number */
+M: g*(rho_l-rho_g)*mu_l^4/(rho_l^2*alpha^3);
+dimension(M);
+ev(M, env);
+ev(M, env_simple);
+
+/* mechanical paramters */
+m_env: [rho_g, rho_l, eta_g, eta_l, L, alpha, c_g, c_l];
+/* thermal paramters */
+t_env: [dT, cv_l, cv_g, Hwv, k_g, k_l];
+
+dimensionless(m_env);
+assume_pos: true;
+ratsimp(sqrt(dimensionless(t_env)));
+
+dimensionless(append(m_env, t_env));
+length(m_env) + length(t_env);
+
+natural_unit(alpha, [L, rho_l, eta_l, dT]);
+natural_unit(cv_g, [L, rho_l, eta_l, dT]);
+natural_unit(Hwv, [L, rho_l, eta_l, dT]);
+natural_unit(k_g, [L, rho_l, eta_l, dT]);
+natural_unit(k_l, [L, rho_l, eta_l, dT]);
+natural_unit(rho_g, [L, rho_l, eta_l, dT]);
+natural_unit(g, [L, rho_l, eta_l, dT]);
+ev(0.1/natural_unit(g, [L, rho_l, eta_l, dT])[1], env_simple);
+
+/* get physical parameter */
+
+/* heat capacity of liquid water */
+/* http://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Type=JANAFL&Plot=on#JANAFL */
+/* http://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=1#Thermo-Gas */
+
+
+/* temperature is in K, cp in kg/mol.K */
+M_H20: 18.01e-3;
+cp_water(T) := block([A: -203.6060, B: 1523.290, C: -3196.413, D: 2474.455, E: 3.855326, t: T/1000],
+  cJ: A + B*t + C*t^2 + D*t^3 + E/t^2,
+  cJ/M_H20);
+
+cp_vapor(T) := block([A: 30.09200, B: 6.832514, C: 6.793435, D: -2.534480, E: 0.082139, t: T/1000],
+  cJ: A + B*t + C*t^2 + D*t^3 + E/t^2,
+  cJ/M_H20);
+
+dK: 273.15;
+cp_water(100+dK);
+cp_vapor(100+dK);
+
+/* dH0_kJ_mol: 241.83; /\* kJ/mol *\/ */
+/* dH0: dH0_kJ_mol/M_H20; /\* J/kg *\/ */
+/* /\* at 100C *\/ */
+/* dH: dH0 - integrate(cp_water(T)-cp_vapor(T), T, 20+dK, 100+dK); */
+
+/* take parameters from
+Narumanchi, Sreekant, et al. "Numerical simulations of nucleate
+boiling in impinging jets: Applications in power electronics cooling."
+International Journal of Heat and Mass Transfer 51.1 (2008): 1-12.
+*/
+
+is(dimension(alpha)=dimension(F/length));
+is(dimension(mu_l)=dimension(F*time/length^2));
+dimension(eta_l = mu_l/rho_l);
+
+env_water: [alpha=0.059, Hwv=2257000, rho_l=958, rho_g=0.6, cv_l=4219, cv_g=2010,
+            eta_l=2.83e-4/rho_l, eta_g=1.23e-5/rho_g,
+            k_l=0.68, k_g=0.025, dT=5, L=0.005];
+
+load ("lrats");
+
+to_sim(var, env, base):= block([var_units],
+  var_units: natural_unit(var, base),
+  float(fullratsubst(env, var/var_units)));
+
+env_sim: [alpha=0.059, Hwv=2257000, rho_l=958*0.1,
+          rho_g=0.6, cv_l=4219, cv_g=2010,
+          eta_l=2.83e-4/rho_l*1e6, eta_g=1.23e-5/rho_g*1e6,
+          k_l=0.68, k_g=0.025, dT=5, L=0.005, R=L/5, g=9.8*(rho_l-rho_g)];
+
+t_gravity: natural_unit(t, [rho_g, g, R]);
+t_heat: natural_unit(t, [rho_l, cv_l, dT, k_l]);
+t_phase: natural_unit(t, [rho_l, dT, k_l, Hwv]);
+t_surface: natural_unit(t, [rho_l, alpha, R]);
+t_ns: natural_unit(t, [rho_l, eta_l, R]);
+
+/* mechanical motion is very fast in comparison with heat conductivity */
+float(fullratsubst(env_sim, t_ns/t_heat));
+float(fullratsubst(env_sim, t_surface/t_heat));
+float(fullratsubst(env_sim, t_gravity/t_heat));
+
+to_sim(cv_l,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(cv_g,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(Hwv,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(k_l,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(k_g,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(alpha,  env_sim, [L, rho_l, eta_l, dT]);
+to_sim(eta_g,  env_sim, [L, rho_l, eta_l, dT]);
+
+env: [k_l=0.1, k_g=0.6, cv_g=0.04, cv_l=0.04, rho_l=1.0, rho_g=0.01, dT=1.0, Hwv=4.0];
+
+B: sqrt(12/%pi*k_l/(rho_l*cv_l))*Ja;
+R: B*sqrt(t);
+
+dimension(R);
+
+infeval: true;
+float(ev(R, env));
+
+V: 4/3*%pi*R^3;
+float(ev(V^(2/3), env));
+float(V^(2/3));
+
+/* via Ja number */
+B_j: sqrt( 12/%pi * Ja^2 * k_l/(rho_l*cv_l) );
+

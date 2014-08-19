@@ -1,0 +1,17 @@
+variable BIG equal 1e20
+variable dt_eta_d equal 1/8.0*${dx}*${dx}/${sph_eta_d}*${sph_rho_d}
+variable dt_eta_g equal 1/8.0*${dx}*${dx}/${sph_eta_g}*${sph_rho_g}
+variable dt_eta_w equal 1/8.0*${dx}*${dx}/${sph_eta_g}*${sph_rho_w}
+
+if "${alpha}>0" then  &
+"variable dt_alpha equal 1/4.0*sqrt(${sph_rho_d}*${dx}^3/(6.0*${alpha_gw}))" &
+else &
+"variable dt_alpha equal ${BIG}"
+
+variable dt_c_d equal 1/4.0*${dx}/${sph_c_d}
+variable dt_c_g equal 1/4.0*${dx}/${sph_c_g}
+variable dt_c_w equal 1/4.0*${dx}/${sph_c_w}
+
+shell ./min.sh dt ${dt_eta_d} ${dt_eta_g} ${dt_eta_w} ${dt_alpha} ${dt_c_d} ${dt_c_g} ${dt_c_w}
+include in.dt
+variable dt equal ${dt}

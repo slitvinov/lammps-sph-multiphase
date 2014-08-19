@@ -1,0 +1,13 @@
+kill(all);
+
+assume_pos: true;
+
+/* with mass conservation */
+eq1: El1 + Ev1 - dHmc = Ev2 + Ev2;
+
+/* without mass conservation */
+eq2: El1 + Ev1 + dHnc = El1 + Ev2 + Ev2;
+
+ratsimp(s1: solve(eq1, Ev2)[1]);
+s2: solve(eq2, Ev2)[1];
+solve(rhs(s1)=rhs(s2), dHnc);

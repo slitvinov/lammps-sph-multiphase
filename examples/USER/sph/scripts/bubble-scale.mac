@@ -1,0 +1,34 @@
+/*
+k :: heat conductivity
+cp :: heat capacity
+rho :: density
+alpha: k/(rho*cp) :: thermal diffusivity
+H                 :: latent heat
+dT                :: Tv-Tsat
+Ja:               :: Jacob number, (dT*cp*rho_l)/(rho_g*H)
+*/
+
+/*
+Water
+cp: 4.1855e3 [J/(kg.K)]
+Vapor
+cp: 1.850e3 [J/(kg.K)]
+specific heat of vaporisation
+H:  2.260e6 [J/kg]
+
+water (k) (intensive property)
+0.563 [W.K/m]
+
+vapor
+0.016 [W.K/m]
+*/
+
+
+kill(all);
+d: 3;
+eq1: dN = dE/Hwv;
+eq2: dE = S*dt/R;
+eq3: S=R^(d-1);
+eq4: dN = R^(d-1)*dR;
+
+solve([eq1, eq2, eq3, eq4], [dE, S, dR, dN]);

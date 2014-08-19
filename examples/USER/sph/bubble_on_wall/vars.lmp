@@ -1,0 +1,81 @@
+# number of particles in each of the directions
+variable          Lx   equal 2.0
+variable          nx   equal 40
+variable          ny   equal ${nx}
+if ${ndim}==3 then &
+"variable nz equal ${nx}"
+
+# size of the domain
+variable          Ly   equal  ${Lx}
+if ${ndim}==3 then &
+"variable         Lz   equal ${Lx}"
+
+variable          dx   equal  1.0/${nx}
+
+# density of gas phase
+variable          sph_rho_g equal 1.0
+# density of droplet
+variable          sph_rho_d equal 0.01
+variable          sph_rho_w equal ${sph_rho_g}
+
+# sound speed
+variable          sph_c_d equal 200/sqrt(${sph_rho_d})
+variable          sph_c_g equal 200/sqrt(${sph_rho_g})
+variable          sph_c_w equal ${sph_c_g}
+
+# viscosity
+#variable          sph_eta_d equal 5e-3
+variable          sph_eta_d equal 0.069395
+variable          sph_eta_g equal 1.0
+variable          sph_eta_w equal ${sph_eta_g}
+
+variable          gamma_d equal 1.0
+variable          gamma_g equal 1.0
+variable          gamma_w equal ${gamma_g}
+
+# extract that rbackground in the equation of state
+# pressure ~ ( rho/rho0 - rbackground)^gamma
+variable          rbackground equal 0.0
+
+variable          h equal 3.0*${dx}
+variable          Nfreq equal 100
+
+# mass of droplet particle
+variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
+# mass of gas particle
+variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
+variable          sph_mass_w equal ${sph_mass_g}
+
+# surface tension
+variable           alpha    equal 300
+variable           alpha_gd equal ${alpha}
+variable           alpha_gw equal ${alpha}
+variable           alpha_dw equal 1.5*${alpha}
+
+variable           D_heat_d equal 0.6
+variable           D_heat_g equal 0.1
+variable           D_heat_w equal ${D_heat_g}
+
+variable           dprob     equal 0.01
+variable           Hwv       equal 32.0
+
+variable          cv_d       equal 1.0
+variable          cv_g       equal 0.04
+variable          cv_w      equal ${cv_g}
+
+variable           dT       equal 0.1
+variable           Tc equal 0.0
+variable           Tt equal ${Tc}+${dT}
+# energy
+variable          e_d       equal ${cv_d}*${Tc}
+variable          e_g       equal ${cv_g}*1.0
+variable          e_w       equal ${e_g}
+
+# add an uplift force to the gas particles
+variable          gy    equal 3.60e+05
+
+# type of the gas particle
+variable          g_type equal 1
+# type of the droplet particle
+variable          d_type equal 2
+variable          w_type equal 3

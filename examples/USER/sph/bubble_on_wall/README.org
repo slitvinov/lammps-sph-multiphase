@@ -1,0 +1,17 @@
+Testing 3D bubble in a simple situation.
+
+For gnuplot
+	User-Defined Functions:
+	R(V) = (3.0/(4.0*pi))**(0.33333)*V**(0.3333)*dx - dx
+	file(D, Hwv, nx)=sprintf("data-nx%s-ndim3-np8-D_heat_g%s-alpha0.5-sph_c_g10.0-Hwv%s-prob1.0-time_k2.00dist/rg.dat", nx, D, Hwv)
+	g(x) = a*(x-b)**c
+	f is undefined
+	last(n) = sprintf("%s/rg.dat", system(flast(n)))
+	flast(n) = sprintf("ls -1td data* | awk -v n=%i 'NR==n'", n)
+
+	order(n) = sprintf("%s/rg.dat", system(forder(n)))
+	forder(n) = sprintf("ls -1d data* | sort -g | awk -v n=%i 'NR==n'", n)
+	
+	fg(n) = sprintf("ls -1d data* | sort -g | awk -v n=%i 'NR==n' | awk -vRS='-' -vFS='gy' '/gy/{print $2}' ", n)
+	g(n) = system(fg(n))+0.0
+

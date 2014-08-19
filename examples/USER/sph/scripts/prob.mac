@@ -1,0 +1,23 @@
+kill(all);
+
+Pois: lambda^k/k!*exp(-lambda);
+
+/* dt -> 0, f(dt)->0 */
+/* dt -> +inf, f(dt)->1 */
+/* for small f(dt), f(dt) ~ dt */
+f(dt):=dt/(dt+q) ;
+limit(f(dt), dt, 0);
+limit(f(dt), dt, +inf);
+eq: f(dt) + f(dt)*(1-f(dt))= f(2*dt);
+eq_simp: f(dt) + f(dt) = f(2*dt);
+is(eq_simp);
+is(eq);
+
+ratsimp(eq);
+
+solve(eq, dt);
+solve(eq, q);
+
+
+diff(A(t), t) = k*(A_0-A);
+dA = k*(A_0-A)*dt;
