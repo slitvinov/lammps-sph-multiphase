@@ -43,7 +43,7 @@ dump_modify        dump_id first yes sort id pad 8
 variable           sph_mu  equal ${sph_eta}/${sph_rho}
 include            settimestep.lmp
 
-communicate        single vel yes
+comm_modify        vel yes
 set                group all meso_rho ${sph_rho}
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/morris

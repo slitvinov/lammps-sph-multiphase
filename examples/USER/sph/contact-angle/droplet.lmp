@@ -53,8 +53,7 @@ include            settimestep.lmp
 
 neighbor           0       bin
 neigh_modify       delay 0 every 1
-communicate        single vel yes
-
+comm_modify        vel yes
 set                group all meso_rho ${sph_rho_g}
 
 pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
