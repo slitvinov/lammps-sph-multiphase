@@ -1,5 +1,6 @@
 #! /bin/bash
 
 dname=data
-mpirun -np 4  ../../../../src/lmp_linux -in poiseuille.lmp -var dname ${dname}
+lmp=../../../../src/lmp_linux
+${lmp} -in poiseuille.lmp -var dname ${dname}
 

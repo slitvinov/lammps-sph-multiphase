@@ -12,3 +12,6 @@ L: 1e-3 m
 rho: 1e3 kg m^-3
 F: 1e-4 m s^-2
 
+To run
+./run.sh
+gnuplot -p poiseuille.gp

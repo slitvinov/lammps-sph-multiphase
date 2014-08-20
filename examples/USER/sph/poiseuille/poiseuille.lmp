@@ -5,7 +5,7 @@ echo               both
 variable           ndim equal 2
 dimension          ${ndim}
 units              si
-atom_style         meso
+atom_style         meso/multiphase
 boundary          p p p
 include           vars.lmp
 
