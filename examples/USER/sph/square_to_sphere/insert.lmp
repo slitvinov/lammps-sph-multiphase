@@ -41,16 +41,19 @@ set                 type ${g_type} meso_rho ${sph_rho_g}
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
-compute         ie_atom all meso_e/atom
+compute            ie_atom all meso_e/atom
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y vx vy &
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &
+id type  &
+x y z vx vy vz fx fy fz &
 c_rho_peratom c_colorgradient_peratom c_ie_atom
+
 dump_modify        dump_id first yes sort id pad 8
 
-include            ${ndim}d-image.lmp
+if "${ndim}==2"    then "include            ${ndim}d-image.lmp"
 variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
