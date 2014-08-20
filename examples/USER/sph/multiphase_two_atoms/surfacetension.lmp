@@ -7,11 +7,14 @@ comm_modify    vel yes
 
 #2D box
 # domain size
-variable          Lx equal 1.000e-3
+variable          Lx equal 10
 # the center of the domain
 variable          xcenter equal 0.5*${Lx}
 # smothing length
-variable          h equal 6.5e-5
+variable          h equal 1
+
+variable          alpha equal 1.0
+
 variable          nLx equal -${Lx}
 region             box block 0 ${Lx} 0 ${Lx} ${nLx} ${Lx} units box
 
@@ -24,11 +27,10 @@ group        fst id 1
 velocity     fst set 0.0 0.0 0.0 units box
 
 # create atom with id=2
-variable          x2pos equal ${xcenter}+0.90*${h}
+variable          x2pos equal ${xcenter}+0.5
 create_atoms 2 single ${x2pos} ${xcenter} 0.0 units box
 group        scd id 2
 velocity     scd set 0.0 0.0 0.0 units box
-
 
 set               type 1         mass 1
 set               type 2         mass 1
@@ -36,14 +38,14 @@ set               type 2         mass 1
 set               type 1         meso_rho 1
 set               type 2         meso_rho 1
 
-# use Tait's EOS in combination with Morris' laminar viscosity.
-# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
-# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
-#The temperature is set to 1e5C.
-pair_style         sph/colorgradient 1
-pair_coeff         1 1     ${h} 0
-pair_coeff         2 2     ${h} 0
-pair_coeff         1 2     ${h} 1
+pair_style         hybrid/overlay sph/colorgradient 1 sph/surfacetension
+pair_coeff         1 1     sph/colorgradient ${h} 0
+pair_coeff         2 2     sph/colorgradient ${h} 0
+pair_coeff         1 2     sph/colorgradient ${h} ${alpha}
+
+pair_coeff         1 1     sph/surfacetension ${h}
+pair_coeff         2 2     sph/surfacetension ${h}
+pair_coeff         1 2     sph/surfacetension ${h}
 
 # do full time integration
 fix                integrate_fix_full all  meso
@@ -51,13 +53,13 @@ fix                integrate_fix_full all  meso
 compute            colorgradient_peratom all meso_colorgradient/atom
 
 neighbor           3.0e-6 bin
-timestep           1e-5
+timestep           0
 
 variable           force_sdpd_fx equal fx[1]
 variable           force_sdpd_fy equal fy[1]
 compute            rho_peratom all meso_rho/atom
 dump               dump_id all custom 1 dump*.dat id x y vx vy c_rho_peratom
 
-fix extra all print 1 "$(x[1]) $(x[2]) $(vx[1]) $(vx[2]) $(c_colorgradient_peratom[1]) $(c_colorgradient_peratom[2])" file pos.dat screen no
+fix extra all print 1 "$(fx[1]) $(fx[2])" file pos.dat screen no
 run                1
 
