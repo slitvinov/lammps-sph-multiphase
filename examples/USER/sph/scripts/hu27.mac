@@ -1,34 +1,16 @@
 /* (27) an equation form Hu2006 */
-
-kill(all);
 load ("scifac");
+load("expr2c.mac");
+load ("eigen");
 
-d: 2;
-if d=3 then (
-  /* color gradient vector */
-  cg_v: [cg[j][0], cg[j][1], cg[j][2]],
-  eij_v: [eij[0], eij[1], eij[2]]
-) else (
-  /* color gradient vector */
-  cg_v: [cg[j][0], cg[j][1]],
-  eij_v: [eij[0], eij[1]]
-  );
+ndim: 2;
+cg_v:  columnvector(makelist(cg[i][d-1], d, ndim));
+eij_v: makelist(eij[d-1],  d, ndim);
 
 /* \Pi in equation (27) */
-Pi(i,j):= ( 1/d*kron_delta(i, j) * cg_v.cg_v - cg_v[i]*cg_v[j] );
+Pm: 1/ndim*ident(ndim) * cg_v.cg_v - cg_v.transpose(cg_v);
+ex: flatten(args(Pm . columnvector(eij_v)));
+ex: makelist(map(lambda([q], map(expand, q)), ex[d]), d, ndim);
 
-display2d: false;
-/* matchdeclare (n, all);
-tellsimpafter(n^2, pow(n,2)); */
-ex[1]: gcfac(sum(eij[k]*Pi(k, 1), k, 1, d));
-ex[2]: gcfac(sum(eij[k]*Pi(k, 2), k, 1, d));
-if d=3 then (ex[3]: sum(eij[k]*Pi(k, 3), k, 1, d));
-
-fid: openw("hu27.txt");
-printf(fid, "~a~%", ex[1]);
-printf(fid, "~a~%", ex[2]);
-if d=3 then printf(fid, "~a~%", ex[3]);
-close(fid);
-
-kill(eij);
-kill(cg);
+with_stdout("hu27.txt",
+  for d thru ndim do printf(true, "Surface~a[~d] = ~a;~%~%", i, d-1, expr2c(float(ex[d]))));

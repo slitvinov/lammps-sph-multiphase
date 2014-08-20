@@ -1,8 +1,0 @@
-/* I want to create a vapor particle with mass m and temperature Ts
-*/
-assume(dm>0);
-assume(Tv>0);
-assume(N>0);
-
-eq: sum(cp_l[i]*T[i]*m/N, i, 1, N) + Hwv + dE;
-expr: ratsimp(solve(eq, dE));

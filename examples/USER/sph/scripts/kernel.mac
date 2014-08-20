@@ -1,6 +1,0 @@
-/* how it was */
-
-ih: 1/h;
-ihsq: ih * ih;
-aux: h - r;
-wfd: 25.066903536973515383e0*aux*aux*ihsq * ihsq * ihsq * ih;
