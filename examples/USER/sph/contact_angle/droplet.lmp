@@ -54,9 +54,9 @@ neigh_modify       delay 0 every 1
 comm_modify        vel yes
 set                group all meso_rho ${sph_rho_g}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
                    sph/taitwater/multiphase sph/surfacetension
-pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_coeff         * * sph/rhosum/multiphase   ${h}
 pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
 pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha_gd}
 pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0

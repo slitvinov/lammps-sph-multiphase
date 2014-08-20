@@ -13,7 +13,7 @@
 
 #ifdef PAIR_CLASS
 
-PairStyle(sph/rhosum_multiphase,PairSPHRhoSumMultiphase)
+PairStyle(sph/rhosum/multiphase,PairSPHRhoSumMultiphase)
 
 #else
 
