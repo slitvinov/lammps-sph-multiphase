@@ -5,8 +5,6 @@ dimension          ${ndim}
 units              si
 atom_style         meso/multiphase
 include            vars.lmp
-# periodic boundaries to have a correct density on the wall
-# TODO: make density fixed for the choosen particles
 boundary          p p p
 # create simulation box
 if ${ndim}==2 then &
