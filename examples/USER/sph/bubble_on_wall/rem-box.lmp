@@ -1,5 +1,0 @@
-# create a wher I want to delete atoms
-variable           y2aux equal ${y2}-3*${dx}
-region             remregion block EDGE EDGE ${y2aux} ${y2} EDGE EDGE units box
-fix fkeep all keepnumber remregion 49892
-variable y2aux delete
