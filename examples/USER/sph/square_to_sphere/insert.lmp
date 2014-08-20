@@ -57,7 +57,7 @@ if "${ndim}==2"    then "include            ${ndim}d-image.lmp"
 variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
-neighbor           3.0e-2 bin
+neighbor           0 bin
 neigh_modify       delay 0 every 1
 
 comm_modify        vel yes
@@ -87,7 +87,7 @@ dump_modify        dump_xyz element A B
 variable            time equal step*dt
 variable            natoms equal count(all)
 thermo_style        custom step v_time v_natoms
-thermo              10
+thermo              1
 
 timestep           ${dt}
 

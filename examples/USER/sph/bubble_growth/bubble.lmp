@@ -124,7 +124,9 @@ variable          Rtemp equal ${xcenter}-2.6*${dx}
 region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
 fix               smeso      all setmeso meso_t ${Tinf} noregion rtemp
 
-variable          nstep equal 0.002/${dt}
+variable          nstep equal 0.02/${dt}
+
+write_data        ${dname}/data.dat
 
 if "${ndim}==2" then "fix e2d all enforce2d"
 run               ${nstep}
