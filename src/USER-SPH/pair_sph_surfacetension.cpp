@@ -93,12 +93,12 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
     double abscgi;
     if (ndim == 3) {
-      double abscgi = sqrt(cg[i][0]*cg[i][0] +
-			   cg[i][1]*cg[i][1] +
-			   cg[i][2]*cg[i][2]);
+      abscgi = sqrt(cg[i][0]*cg[i][0] +
+		    cg[i][1]*cg[i][1] +
+		    cg[i][2]*cg[i][2]);
     } else {
-      double abscgi = sqrt(cg[i][0]*cg[i][0] +
-			   cg[i][1]*cg[i][1]);
+      abscgi = sqrt(cg[i][0]*cg[i][0] +
+		    cg[i][1]*cg[i][1]);
     }
     // TODO: FixMe
     for (jj = 0; jj < jnum; jj++) {
@@ -184,7 +184,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*wfd;
 	  if (ndim==3) {
 	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*wfd;
-
 	  }
         }
       }
