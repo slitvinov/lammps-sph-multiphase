@@ -5,7 +5,7 @@ shell              mkdir  ${dname}
 log                ${dname}/log.lammps
 # use SI units
 units              si
-atom_style         meso
+atom_style         meso/multiphase
 
 # dimension (2 or 3)
 dimension         ${ndim}
@@ -92,8 +92,7 @@ variable           Tc equal 0.95
 variable           Tt equal 0.97
 variable           Cp equal 2.00
 variable           dr equal 0.1*${dx}
-group              droplet type ${d_type}
-
+group              bubble type ${v_type}
 
 compute         rho_peratom all meso_rho/atom
 compute         it_atom all meso_t/atom
