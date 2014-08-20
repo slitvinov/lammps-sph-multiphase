@@ -85,7 +85,7 @@ dump_modify        dump_dcd sort id
 # create droplet
 region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
 set	           region rdroplet type ${d_type}
-write_restart      ${dname}/droplet.restart
+write_data         ${dname}/droplet.dat
 
 # add velocity
 variable            v0 equal 10.0

@@ -86,7 +86,7 @@ region             rdroplet cylinder z ${xcenter} ${ylow} ${cyl_r} EDGE EDGE uni
 region             udroplet intersect 2 rdroplet rflow
 set	           region  udroplet type ${d_type}
 
-write_restart      ${dname}/droplet.restart
+write_data         ${dname}/droplet.data
 
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
