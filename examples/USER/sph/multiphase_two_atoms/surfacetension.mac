@@ -1,0 +1,51 @@
+load("eigen");
+ndim   : 3;
+cutoff: 1;
+
+load("../scripts/sph-kernel.mac");
+h: cutoff;
+define_kernel(ndim, cutoff, 'quintic, 'w_scalar, 'dw_scalar)$
+
+vabs(dr):= sqrt(dr.dr);
+w(dr):= block([r: vabs(dr)], ''(w_scalar(r)));
+dw(dr):= block([r: vabs(dr)], dr/r * ''(dw_scalar(r)));
+
+x: [[5, 5, 5], [5.5, 5, 5]];
+m: [1, 1];
+rho: [1, 1];
+type: [1, 2];
+
+sph_color_loop(expr)::= buildq([expr, n: length(x)], create_list(
+    block([k: type[i]],
+      sum(block([l: type[j]],
+          if i#j and l#k then expr else 0), j, 1, n)),
+    i, 1, n));
+
+sph_one_loop(expr)::= buildq([expr, n: length(x)],
+  create_list(expr, i, 1, n));
+
+sph_force_loop(expr)::= buildq([expr, n: length(x)], create_list(
+    block([k: type[i]],
+      sum(block([l: type[j]],
+          if i#j then expr else 0), j, 1, n)),
+    i, 1, n));
+
+C[s,i]:= kron_delta(s, type[i]);
+alpha[k,l]:= 1 - kron_delta(k,l);
+
+dC: sph_color_loop(block([sigmai: rho[i]/m[i], sigmaj: rho[j]/m[j]],
+    print(sigmai, sigmaj),
+    sigmai*(C[l,i]/sigmai^2 + C[l,j]/sigmaj^2)*dw(x[i] - x[j])));
+
+Pm: sph_one_loop(
+        (1/ndim*ident(ndim) * dC[i].columnvector(dC[i]) -
+          columnvector(dC[i]).dC[i])/vabs(dC[i]));
+
+Fs: sph_force_loop(
+  block([sigmai: rho[i]/m[i], sigmaj: rho[j]/m[j]],
+    alpha[k,l]*dw(x[i] - x[j]) . (Pm[i]/sigmai^2 + Pm[j]/sigmaj^2)));
+
+Fs[1][1], numer;
+Fs[2][1], numer;
+
+Fs[1][1], numer;
