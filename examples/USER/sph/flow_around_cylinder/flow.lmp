@@ -3,7 +3,7 @@ echo               both
 variable           ndim equal 2
 dimension          ${ndim}
 units              si
-atom_style         meso
+atom_style         meso/multiphase
 include            vars.lmp
 # periodic boundaries to have a correct density on the wall
 # TODO: make density fixed for the choosen particles

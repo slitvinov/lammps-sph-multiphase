@@ -1,7 +1,7 @@
 shell              mkdir ${dname}
 log                ${dname}/log.lammps
 units              si
-atom_style         meso
+atom_style         meso/multiphase
 echo               both
 
 variable          ndim equal 2
