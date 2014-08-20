@@ -1,8 +1,0 @@
-Run to compare with analytical solution
-
-See Cleary1999
-Cleary, Paul W., and Joseph J. Monaghan. "Conduction modelling using
-smoothed particle hydrodynamics." Journal of Computational Physics
-148.1 (1999): 227-264.
-
-maxima -b infslab.mac; ../../../../src/lmp_linux -in infslab.lmp
