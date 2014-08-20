@@ -62,7 +62,7 @@ void PairSPHIdealGas::compute(int eflag, int vflag) {
   double **x = atom->x;
   double **f = atom->f;
   double *rho = atom->rho;
-  double *rmass = atom->rmass;
+  double *mass = atom->mass;
   double *de = atom->de;
   double *e = atom->e;
   double *drho = atom->drho;
@@ -89,7 +89,7 @@ void PairSPHIdealGas::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = rmass[i];
+    imass = mass[itype];
 
     fi = 0.4 * e[i] / imass / rho[i]; // ideal gas EOS; this expression is fi = pressure / rho^2
     ci = sqrt(0.4*e[i]/imass); // speed of sound with heat capacity ratio gamma=1.4
@@ -103,7 +103,7 @@ void PairSPHIdealGas::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = rmass[j];
+      jmass = mass[jtype];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];

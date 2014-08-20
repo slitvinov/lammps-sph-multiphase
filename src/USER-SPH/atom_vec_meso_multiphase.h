@@ -13,21 +13,21 @@
 
 #ifdef ATOM_CLASS
 
-AtomStyle(meso,AtomVecMeso)
+AtomStyle(meso/multiphase,AtomVecMesoMultiPhase)
 
 #else
 
-#ifndef LMP_ATOM_VEC_MESO_H
-#define LMP_ATOM_VEC_MESO_H
+#ifndef LMP_ATOM_VEC_MESO_MULTIPHASE_H
+#define LMP_ATOM_VEC_MESO_MULTIPHASE_H
 
 #include "atom_vec.h"
 
 namespace LAMMPS_NS {
 
-class AtomVecMeso : public AtomVec {
+class AtomVecMesoMultiPhase : public AtomVec {
  public:
-  AtomVecMeso(class LAMMPS *);
-  ~AtomVecMeso() {}
+  AtomVecMesoMultiPhase(class LAMMPS *);
+  ~AtomVecMesoMultiPhase() {}
   void grow(int);
   void grow_reset();
   void copy(int, int, int);
