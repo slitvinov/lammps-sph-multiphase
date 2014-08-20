@@ -136,7 +136,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
         itype = type[i];
         jlist = firstneigh[i];
         jnum = numneigh[i];
-	double Vi = rmass[i]/rho[i]; 
+	double sigmai = rho[i]/rmass[i];
         for (jj = 0; jj < jnum; jj++) {
           j = jlist[jj];
           j &= NEIGHMASK;
@@ -170,9 +170,9 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	      wfd = sph_dw_quintic2d(r*ih);
 	      wfd = wfd * ih * ih * ih;
 	    }
-	    double Vj = rmass[j]/rho[j];
-	    double Vj2 = Vj*Vj;
-	    double dphi = -wfd*alpha[itype][jtype]*Vj2/Vi;
+	    double sigmaj = rho[j]/rmass[j];
+	    double sigmaj2 = sigmaj*sigmaj;
+	    double dphi = -wfd*alpha[itype][jtype]/sigmaj2*sigmai;
 	    
 	    colorgradient[i][0] += dphi*eij[0];
 	    colorgradient[i][1] += dphi*eij[1];
