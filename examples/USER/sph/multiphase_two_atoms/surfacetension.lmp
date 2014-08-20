@@ -20,17 +20,10 @@ region             box block 0 ${Lx} 0 ${Lx} ${nLx} ${Lx} units box
 
 create_box         2 box
 
-
-# create atom with id=1
-create_atoms 1 single ${xcenter} ${xcenter} 0.0 units box
-group        fst id 1
-velocity     fst set 0.0 0.0 0.0 units box
-
-# create atom with id=2
-variable          x2pos equal ${xcenter}+0.5
-create_atoms 2 single ${x2pos} ${xcenter} 0.0 units box
-group        scd id 2
-velocity     scd set 0.0 0.0 0.0 units box
+# run 
+# maxima -b surfacetension.mac
+# to get this file
+include           in.atoms
 
 set               type 1         mass 1
 set               type 2         mass 1
@@ -60,6 +53,6 @@ variable           force_sdpd_fy equal fy[1]
 compute            rho_peratom all meso_rho/atom
 dump               dump_id all custom 1 dump*.dat id x y vx vy c_rho_peratom
 
-fix extra all print 1 "$(fx[1]) $(fx[2])" file pos.dat screen no
+fix extra all print 1 "$(fx[1]) $(fy[1]) $(fz[1])" file pos.dat screen no
 run                1
 
