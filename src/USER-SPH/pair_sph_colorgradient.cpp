@@ -172,7 +172,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    }
 	    double Vj = rmass[j]/rho[j];
 	    double Vj2 = Vj*Vj;
-	    double dphi = -wfd*alpha[itype][jtype]*dphi*Vj2/Vi;
+	    double dphi = -wfd*alpha[itype][jtype]*Vj2/Vi;
 	    
 	    colorgradient[i][0] += dphi*eij[0];
 	    colorgradient[i][1] += dphi*eij[1];
@@ -186,7 +186,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
     }
   }
 
-  // communicate densities
+  // communicate colorgradient
   comm->forward_comm_pair(this);
 }
 
