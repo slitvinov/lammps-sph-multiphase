@@ -3,8 +3,6 @@ echo               both
 dimension          2
 units              si
 atom_style         meso/multiphase
-# periodic boundaries to have a correct density on the wall
-# TODO: make density fixed for the choosen particles
 boundary          p p p
 variable          ndim index 2d
 include           case${icase}.lmp

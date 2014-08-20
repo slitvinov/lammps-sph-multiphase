@@ -2,8 +2,6 @@ log                ${dname}/log.lammps
 echo               both
 units              si
 atom_style         meso/multiphase
-# periodic boundaries to have a correct density on the wall
-# TODO: make density fixed for the choosen particles
 boundary          p p p
 
 #variable          ndim equal 3
