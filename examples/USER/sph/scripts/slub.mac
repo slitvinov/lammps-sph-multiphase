@@ -1,6 +1,0 @@
-assume(l>0);
-assume(r>0);
-relt: 1 + sqrt(l)/sqrt(r);
-Tc: (Tr-Tl) * sqrt(r)/(sqrt(r) + sqrt(l));
-Tlim: ratsimp(relt * Tc + Tl);
-

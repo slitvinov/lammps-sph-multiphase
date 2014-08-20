@@ -1,5 +1,0 @@
-f(y):= a*y + b;
-
-sol: solve( [f(y1)=1.0, f(y1+dL)=Tc], [a, b])[1];
-ev(f(y), sol);
-
