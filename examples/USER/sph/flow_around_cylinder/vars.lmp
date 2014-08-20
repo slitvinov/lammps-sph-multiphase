@@ -26,7 +26,6 @@ variable          sph_eta equal 1e-3
 
 variable          h equal 3*${dx}
 variable          Nfreq equal 1000
-variable          Nfreqimage equal 1000
 
 # mass of droplet particle
 variable          sph_mass equal ${dx}^${ndim}*${sph_rho}
