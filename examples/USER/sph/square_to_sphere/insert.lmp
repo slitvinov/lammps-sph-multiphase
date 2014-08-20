@@ -1,3 +1,4 @@
+shell              mkdir              ${dname}
 log                ${dname}/log.lammps
 echo               both
 units              si
@@ -49,7 +50,7 @@ dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y vx
 c_rho_peratom c_colorgradient_peratom c_ie_atom
 dump_modify        dump_id first yes sort id pad 8
 
-#include            ${ndim}-image.lmp
+include            ${ndim}d-image.lmp
 variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
@@ -77,7 +78,7 @@ pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${s
 
 pair_coeff         * * sph/surfacetension ${h}
 
-dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump               dump_xyz all xyz ${Nfreq} ${dname}/droplet.xyz
 dump_modify        dump_xyz element A B
 
 variable            time equal step*dt
@@ -94,18 +95,14 @@ set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
 
 
-
 group             droplet type ${d_type}
 compute           crg droplet gyration
 variable          vrg equal c_crg
 
-write_restart     ${dname}/droplet.restart
+write_data        ${dname}/droplet.dat
 variable          time equal step*dt
 fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
 
 variable          nstep equal 5.0/${dt}
-
-dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
-dump_modify        dump_dcd sort id
 
 run               ${nstep}

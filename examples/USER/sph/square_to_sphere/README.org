@@ -1,1 +1,4 @@
 Insert air bubble at the bottom of the domain
+
+bash genpsf.sh data-nx20-ndim3/
+vmd -e post.tcl -psf data-nx20-ndim3/droplet.psf -xyz data-nx20-ndim3/droplet.xyz

@@ -3,11 +3,8 @@
 set -e
 set -u
 
-input=$1/droplet.restart
-datafile=${input/.restart/.dat}
-output=${input/.restart/.psf}
-
-../../../../tools/restart2data ${input} ${datafile}
+datafile="$1"/droplet.dat
+output=${datafile/.dat/.psf}
 
 tmpfile=$(mktemp /tmp/XXXXX)
 # generate psf file with vmd
