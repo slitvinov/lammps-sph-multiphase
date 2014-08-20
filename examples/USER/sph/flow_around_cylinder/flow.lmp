@@ -44,12 +44,12 @@ include            settimestep.lmp
 comm_modify        vel yes
 set                group all meso_rho ${sph_rho}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/taitwater/morris
-pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/taitwater/morris
+pair_coeff         * * sph/rhosum/multiphase   ${h}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/multiphase
+pair_style         hybrid/overlay sph/rhosum/multiphase 1  sph/taitwater/multiphase
 pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} ${sph_gamma} ${h} ${sph_rho_background}
-pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_coeff         * * sph/rhosum/multiphase   ${h}
 
 
 neighbor           0 bin

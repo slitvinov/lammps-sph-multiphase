@@ -46,9 +46,9 @@ neighbor           0 bin
 neigh_modify       delay 0 every 1
 comm_modify        vel yes
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1 sph/colorgradient 1 &
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
                    sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
-pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_coeff         * * sph/rhosum/multiphase   ${h}
 pair_coeff         ${v_type} ${v_type} sph/colorgradient ${h} 0
 pair_coeff         ${l_type} ${v_type} sph/colorgradient ${h} ${alpha}
 pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0

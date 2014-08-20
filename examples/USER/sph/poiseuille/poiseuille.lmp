@@ -41,9 +41,9 @@ comm_modify        vel yes
 set                group all meso_rho ${sph_rho}
 set                group all mass ${sph_mass}
 
-pair_style         hybrid/overlay sph/rhosum_multiphase 1  sph/taitwater/multiphase
+pair_style         hybrid/overlay sph/rhosum/multiphase 1  sph/taitwater/multiphase
 pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} 1.0 ${h} 0.0
-pair_coeff         * * sph/rhosum_multiphase   ${h}
+pair_coeff         * * sph/rhosum/multiphase   ${h}
 
 timestep           ${dt}
 

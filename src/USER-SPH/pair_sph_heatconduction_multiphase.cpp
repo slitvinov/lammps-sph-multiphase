@@ -13,7 +13,7 @@
 
 #include "math.h"
 #include "stdlib.h"
-1#include "pair_sph_heatconduction_multiphase.h"
+#include "pair_sph_heatconduction_multiphase.h"
 #include "sph_kernel_quintic.h"
 #include "sph_energy_equation.h"
 #include "atom.h"
