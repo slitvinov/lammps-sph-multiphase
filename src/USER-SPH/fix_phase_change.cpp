@@ -10,7 +10,6 @@
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
-#include "assert.h"
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
@@ -69,7 +68,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   if (seed <= 0) error->all(FLERR,"Illegal value for seed");
   // chance is based on energy
   if (strcmp(arg[m++],"ENERGY") == 0) {
-    printf("ENERGY flag is used\n");
     energy_chance_flag = true;
     phase_change_rate = atof(arg[m++]);
     nnarg = 15;
@@ -78,7 +76,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
     change_chance = atof(arg[m-1]);
     if (change_chance < 0) error->all(FLERR,"Illegal value for change_chance");
   }
-  assert(m==nnarg);
 
   iregion = -1;
   idregion = NULL;
@@ -116,22 +113,9 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
       error->all(FLERR,"Phase change region extends outside simulation box");
   }
 
-  // setup scaling
-
-  if (scaleflag && domain->lattice == NULL)
-    error->all(FLERR,"Use of fix phase_change with undefined lattice");
-
-  double xscale,yscale,zscale;
-  if (scaleflag) {
-    xscale = domain->lattice->xlattice;
-    yscale = domain->lattice->ylattice;
-    zscale = domain->lattice->zlattice;
-  }
-  else xscale = yscale = zscale = 1.0;
-
   random = new RanPark(lmp,seed);
-  // set up reneighboring
 
+  // set up reneighboring
   force_reneighbor = 1;
   next_reneighbor = update->ntimestep + 1;
   nfirst = next_reneighbor;
@@ -180,7 +164,6 @@ void FixPhaseChange::init_list(int, NeighList *ptr)
 /* ----------------------------------------------------------------------
    perform phase change
 ------------------------------------------------------------------------- */
-
 void FixPhaseChange::pre_exchange()
 {
   // just return if should not be called on this timestep
@@ -196,7 +179,6 @@ void FixPhaseChange::pre_exchange()
     subhi = domain->subhi_lamda;
   }
 
-    // choose random position for new atom within region
   int nins = 0;
   int nlocal = atom->nlocal;
   int* numneigh = list->numneigh;
@@ -241,6 +223,19 @@ void FixPhaseChange::pre_exchange()
 	delta = 0.75*delta;
 	natempt++;
       } while (!ok && natempt<10);
+      
+      if (!ok) {
+	double delta = dr;
+	natempt = 0;
+	do { 
+	  create_newpos_simple(x[i], delta, coord);
+	  ok = insert_one_atom(coord, sublo, subhi);
+	  // reduce dr
+	  delta = 0.75*delta;
+	  natempt++;
+	} while (!ok && natempt<10);
+      }
+
       if (ok) {
 	nins++;
 	/// we should take mass from neighboring from_type atoms
@@ -381,7 +376,9 @@ void FixPhaseChange::options(int narg, char **arg)
     } else if (strcmp(arg[iarg],"units") == 0) {
       if (iarg+2 > narg) error->all(FLERR,"Illegal fix phase_change command");
       if (strcmp(arg[iarg+1],"box") == 0) scaleflag = 0;
-      else if (strcmp(arg[iarg+1],"lattice") == 0) scaleflag = 1;
+      else if (strcmp(arg[iarg+1],"lattice") == 0) 
+	error->all(FLERR,"Illegal fix phase_change command: 'units lattice' "
+		   "is not implemented");
       else error->all(FLERR,"Illegal fix phase_change command");
       iarg += 2;
     } else error->all(FLERR,"Illegal fix phase_change command");
@@ -466,6 +463,12 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
   }
 }
 
+void FixPhaseChange::create_newpos_simple(double* xone, double delta, double* coord) {
+  coord[0] = xone[0] + (random->uniform() - 0.5)*delta;
+  coord[1] = xone[1] + (random->uniform() - 0.5)*delta;
+  coord[2] = xone[2] + (random->uniform() - 0.5)*delta;
+}
+
 void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, double* coord) {
   double eij[3];
   if (domain->dimension==3) {
@@ -474,28 +477,28 @@ void FixPhaseChange::create_newpos(double* xone, double* cgone, double delta, do
     b1[1] =  cgone[0] ;
     b1[2] =  0 ;
     double b1abs = sqrt(b1[0]*b1[0] + b1[1]*b1[1] + b1[2]*b1[2]);
-    b1[0] = b1[0]/b1abs;     b1[1] = b1[1]/b1abs;     b1[2] = b1[2]/b1abs;
-    assert( b1[0]*cgone[0] + b1[1]*cgone[1] + b1[2]*cgone[2] < 1e-8);
+    if (b1abs>CG_SMALL) {
+      b1[0] = b1[0]/b1abs;     b1[1] = b1[1]/b1abs;     b1[2] = b1[2]/b1abs;
+    }
 
     double b2[3];
     b2[0] =  -cgone[0]*cgone[1]*cgone[2]/(pow(cgone[1],2)+pow(cgone[0],2)) ;
     b2[1] =  -cgone[2]*pow(cgone[1],2)/(pow(cgone[1],2)+pow(cgone[0],2)) ;
     b2[2] =  cgone[1];
     double b2abs = sqrt(b2[0]*b2[0] + b2[1]*b2[1] + b2[2]*b2[2]);
-    b2[0] = b2[0]/b2abs;     b2[1] = b2[1]/b2abs;     b2[2] = b2[2]/b2abs;
-    assert( b2[0]*cgone[0] + b2[1]*cgone[1] + b2[2]*cgone[2] < 1e-8);
+    if (b1abs>CG_SMALL) {
+      b2[0] = b2[0]/b2abs;     b2[1] = b2[1]/b2abs;     b2[2] = b2[2]/b2abs;
+    }
 
     double atmp = random->uniform() - 0.5;
     double btmp = random->uniform() - 0.5;
     eij[0] = atmp*b1[0] + btmp*b2[0];
     eij[1] = atmp*b1[1] + btmp*b2[1];
     eij[2] = atmp*b1[2] + btmp*b2[2];
-    assert( eij[0]*cgone[0] + eij[1]*cgone[1] + eij[2]*cgone[2] < 1e-8);
+
   } else {
     // TODO: find direction cheaper
     double atmp = random->uniform();
-    assert(atmp<=1.0);
-    assert(atmp>=0.0);
     if (atmp>0.5) atmp=1; else atmp=-1;
     eij[0] = -atmp*cgone[1];
     eij[1] = atmp*cgone[0];
