@@ -1,0 +1,64 @@
+# Compare heat conduction from LAMMPS and from maxima
+# (heatconduction_phase_change.lmp)
+# To run this test:
+#
+# maxima -b heatconduction_phase_change.mac
+# ../../../../src/lmp_linux -in sheatconduction_phase_change.lmp
+#
+# To see the output 
+# head pos.dat
+
+echo               both
+dimension          3
+units              si
+atom_modify        map array sort 0 0
+atom_style         meso/multiphase
+comm_modify    vel yes
+
+#2D box
+# domain size
+variable          Lx equal 10
+# smothing length
+variable          h equal 1
+variable          k_heat equal 1.0
+
+variable          nLx equal -${Lx}
+region             box block 0 ${Lx} 0 ${Lx} ${nLx} ${Lx} units box
+
+create_box         2 box
+
+# run 
+# maxima -b surfacetension.mac
+# to get this file
+include           in.atoms
+
+set               type 1         mass 1
+set               type 2         mass 1
+
+set               type 1         meso_rho 1
+set               type 2         meso_rho 1
+
+set               type 1  meso_e 1.0
+set               type 2  meso_e 2.0
+
+set               type 1  meso_cv 1.0
+set               type 2  meso_cv 1.0
+
+
+pair_style         sph/heatconduction/phasechange
+pair_coeff         1 1     ${k_heat} ${h}
+pair_coeff         1 2     ${k_heat} ${h}
+pair_coeff         2 2     ${k_heat} ${h}
+
+# do full time integration
+fix                integrate_fix_full all  meso
+
+compute         de_atom all meso_de/atom
+compute         t_atom all  meso_t/atom
+
+neighbor           3.0e-6 bin
+timestep           0
+
+fix extra all print 1 "$(c_de_atom[1]) $(c_de_atom[2]) $(c_t_atom[1]) $(c_t_atom[2])" file pos.dat screen no
+run                1
+
