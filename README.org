@@ -17,7 +17,7 @@ sudo apt-get install openmpi-dev
 sudo apt-get install openmpi-bin
 sudo apt-get install libjpeg-dev
 #+END_EXAMPLE
-2. Clone the repositary
+2. Clone the repository
 #+BEGIN_EXAMPLE
 git https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+END_EXAMPLE
@@ -132,4 +132,25 @@ where algorithm checks for potential phase transition.
 
 * Examples
 See [[file:examples/USER/sph/]]
+
+** examples/USER/sph/poiseuille
+
+Low reynolds number Poiseuille flow simulation with parameters
+from [1] and driven by uniform body forces in opposite directions
+along two-halves of a computational domain [2].
+
+#+CAPTION: Reverse poiseuille flow
+#+NAME:   fig:poiseuille
+[[./examples/USER/sph/img/poiseuille.svg]]
+
+
+* Footnotes
+
+[1] Morris, J. P., Fox, P. J. & Zhu, Y. Modeling Low Reynolds Number
+Incompressible Flows Using SPH. Journal of Computational Physics 136,
+214–226 (1997).
+
+[2] Fedosov, D. A., Karniadakis, G. E. & Caswell, B. Steady shear
+rheometry of dissipative particle dynamics models of polymer fluids in
+reverse Poiseuille flow. J Chem Phys 132, (2010).
 
