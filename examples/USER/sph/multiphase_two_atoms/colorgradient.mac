@@ -2,7 +2,6 @@ ndim   : 3;
 cutoff: 1;
 
 load("../scripts/sph-kernel.mac");
-h: cutoff;
 define_kernel(ndim, cutoff, 'quintic, 'w_scalar, 'dw_scalar)$
 
 vabs(dr):= sqrt(dr.dr);
