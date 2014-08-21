@@ -141,11 +141,29 @@ along two-halves of a computational domain [2].
 
 #+CAPTION: Reverse poiseuille flow
 #+NAME:   fig:poiseuille
-[[file:examples/USER/sph/img/poiseuille.svg]]
-
-#+CAPTION: Reverse poiseuille flow
-#+NAME:   fig:poiseuille
 [[file:examples/USER/sph/img/poiseuille.png]]
+
+** examples/USER/sph/flow_around_cylinder
+
+Flow around cylinder simulation with parameters from [1].
+
+#+CAPTION: Comparison of SPH and FEM velocity profiles along paths 1 and 2 for Re=0.03 ([1])
+#+NAME:   fig:poiseuille
+[[file:examples/USER/sph/img/flow.png]]
+
+** examples/USER/sph/slub
+
+Infinite slub simulation [3]
+
+#+CAPTION: Infinite slub
+#+NAME:   fig:poiseuille
+[[file:examples/USER/sph/img/infslub.png]]
+
+
+** examples/USER/sph/droplet_grid
+
+Circular liquid-droplet oscillation under the action of capillary
+forces [4]
 
 
 * Footnotes
@@ -157,4 +175,11 @@ Incompressible Flows Using SPH. Journal of Computational Physics 136,
 [2] Fedosov, D. A., Karniadakis, G. E. & Caswell, B. Steady shear
 rheometry of dissipative particle dynamics models of polymer fluids in
 reverse Poiseuille flow. J Chem Phys 132, (2010).
+
+[3] Cleary, Paul W., and Joseph J. Monaghan. "Conduction modelling
+using smoothed particle hydrodynamics." Journal of Computational
+Physics 148.1 (1999): 227-264.
+
+[4] Hu, X. Y. & Adams, N. A. A Multi-phase SPH Method for Macroscopic
+and Mesoscopic Flows. J. Comput. Phys. 213, 844–861 (2006).
 
