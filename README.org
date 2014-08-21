@@ -141,7 +141,11 @@ along two-halves of a computational domain [2].
 
 #+CAPTION: Reverse poiseuille flow
 #+NAME:   fig:poiseuille
-[[./examples/USER/sph/img/poiseuille.svg]]
+[[file:examples/USER/sph/img/poiseuille.svg]]
+
+#+CAPTION: Reverse poiseuille flow
+#+NAME:   fig:poiseuille
+[[file:examples/USER/sph/img/poiseuille.png]]
 
 
 * Footnotes
