@@ -68,7 +68,7 @@ void PairSPHRhoSumMultiphase::init_style() {
 void PairSPHRhoSumMultiphase::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
-  double r, rsq, h, ih, ihsq;
+  double r, rsq, h, ih;
   int *jlist;
   double wf;
   // neighbor list variables
