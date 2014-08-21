@@ -1,6 +1,8 @@
 #! /bin/bash
 
 dname=data-wall
+lmp=../../../../src/lmp_linux
 mkdir -p ${dname}
-mpirun -np 2  ../../../../src/lmp_linux -in flow.lmp -var dname ${dname}
+
+${lmp} -in flow.lmp -var dname ${dname}
 

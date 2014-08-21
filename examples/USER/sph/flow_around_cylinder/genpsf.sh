@@ -3,7 +3,7 @@
 set -e
 set -u
 
-datafile="$1"/droplet.dat
+datafile="$1"/flow.dat
 output=${datafile/.dat/.psf}
 
 tmpfile=$(mktemp /tmp/XXXXX)

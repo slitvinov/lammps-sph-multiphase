@@ -38,7 +38,7 @@ variable          mass_v equal ${dx}^${ndim}*${sph_rho_v}
 variable          mass_l equal ${dx}^${ndim}*${sph_rho_l}
 
 # surface tension
-variable           alpha    equal 500
+variable           alpha    equal 250
 variable           D_heat_v equal 0.6
 variable           D_heat_l equal 0.2
 
@@ -51,6 +51,10 @@ variable           Tt equal ${Tc}+${dT}
 # energy
 variable          e_v       equal ${cv_v}*${Tc}
 variable          e_l       equal ${cv_l}*${Tinf}
+
+variable           Hwv equal 8.0
+variable           Tc equal 0.95
+variable           Tt equal 0.97
 
 # type of the gas particle (liquid)
 variable          l_type equal 1

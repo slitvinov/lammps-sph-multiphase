@@ -74,19 +74,18 @@ pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${s
 pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_dw} 1.0 ${h} 0.0
 pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} 1.0 ${h} 0.0
 
-
 pair_coeff         * * sph/surfacetension ${h}
 
-
-dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump               dump_dcd all dcd ${Nfreq} ${dname}/droplet.dcd
 dump_modify        dump_dcd sort id
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/droplet.xyz
+dump_modify        dump_xyz element A B C
 
 # create droplet
 region             rdroplet cylinder z ${xcenter} ${ylow} ${cyl_r} EDGE EDGE units box
 region             udroplet intersect 2 rdroplet rflow
 set	           region  udroplet type ${d_type}
-
-write_data         ${dname}/droplet.data
 
 set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
@@ -111,6 +110,7 @@ variable           vrg equal c_rg
 variable           vspher equal c_rg[1]/c_rg[2]
 fix extra all print 1 "${time} ${vrg} ${vspher}" file ${dname}/com.dat screen no
 
-#run               1000
+write_data         ${dname}/droplet.dat
+
 variable          ntime equal round(0.5/${dt})
 run               ${ntime}

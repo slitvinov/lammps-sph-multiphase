@@ -34,7 +34,7 @@ variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
 variable          sph_mass_w equal ${sph_mass_g}
 
 # surface tension
-variable          alpha equal 2.0
+variable          alpha equal 1.0
 
 # radios of the droplet
 variable          cyl_r equal 0.1875
