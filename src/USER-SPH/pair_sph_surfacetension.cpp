@@ -52,7 +52,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
   double xtmp, ytmp, ztmp, delx, dely, delz;
 
   int *ilist, *jlist, *numneigh, **firstneigh;
-  double imass, jmass, h, ih, ihsq;
+  double imass, jmass, h, ih;
   double rsq, wfd;
 
   if (eflag || vflag)
@@ -270,11 +270,3 @@ double PairSPHSurfaceTension::single(int i, int j, int itype, int jtype,
   return 0.0;
 }
 
-/* calculate phase stress base on phase gradient */
-void get_phase_stress(double* v, double* del_phi) {
-  double interm0 = 1.0/ ( sqrt(v[0]*v[0] + v[1]*v[1]) + EPSILON );
-  double interm1 = 0.5 * (v[0]*v[0] - v[1]*v[1]);
-  double interm2 = v[0]*v[1];
-  del_phi[0] = interm1*interm0;
-  del_phi[1] = interm2*interm0;
-}

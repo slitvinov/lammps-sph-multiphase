@@ -70,7 +70,7 @@ void PairSPHColorGradient::init_style() {
 void PairSPHColorGradient::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
-  double rsq, imass, h, ih, ihsq;
+  double rsq, h, ih;
   int *jlist;
   
   const int ndim = domain->dimension;
