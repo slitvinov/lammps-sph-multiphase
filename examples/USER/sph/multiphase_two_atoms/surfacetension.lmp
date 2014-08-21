@@ -51,15 +51,8 @@ pair_coeff         1 2     sph/surfacetension ${h}
 # do full time integration
 fix                integrate_fix_full all  meso
 
-compute            colorgradient_peratom all meso_colorgradient/atom
-
 neighbor           3.0e-6 bin
 timestep           0
-
-variable           force_sdpd_fx equal fx[1]
-variable           force_sdpd_fy equal fy[1]
-compute            rho_peratom all meso_rho/atom
-dump               dump_id all custom 1 dump*.dat id x y vx vy c_rho_peratom
 
 fix extra all print 1 "$(fx[1]) $(fy[1]) $(fz[1])" file pos.dat screen no
 run                1
