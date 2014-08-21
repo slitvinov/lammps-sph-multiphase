@@ -1,3 +1,13 @@
+# Compare surface tenstion force from LAMMPS and from maxima
+# (surfacetension.mac) 
+# To run this test:
+#
+# maxima -b surfacetension.mac
+# ../../../../src/lmp_linux -in surfacetension.lmp
+#
+# To see the output 
+# head pos.dat
+
 echo               both
 dimension          3
 units              si
@@ -8,8 +18,6 @@ comm_modify    vel yes
 #2D box
 # domain size
 variable          Lx equal 10
-# the center of the domain
-variable          xcenter equal 0.5*${Lx}
 # smothing length
 variable          h equal 1
 
