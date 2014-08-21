@@ -35,7 +35,7 @@ enum{NONE,CONSTANT,EQUAL,ATOM};
 FixSetMesodE::FixSetMesodE(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  if (narg < 4) error->all(FLERR,"Illegal fix setmeso command");
+  if (narg < 4) error->all(FLERR,"Illegal fix setmesode command");
 
   vector_flag = 1;
   size_vector = 1;
