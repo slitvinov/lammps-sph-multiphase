@@ -45,6 +45,12 @@ fix                integrate_fix_full all meso
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_colorgradient_peratom
 dump_modify        dump_id first yes sort id pad 8
 
+dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd sort id
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B C
+
 include            ${ndim}-image.lmp
 variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
@@ -75,12 +81,8 @@ pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${s
 pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_dw} 1.0 ${h} 0.0
 pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} 1.0 ${h} 0.0
 
-
 pair_coeff         * * sph/surfacetension ${h}
 
-
-dump               dump_dcd all dcd ${Nfreq} ${dname}/data.dcd
-dump_modify        dump_dcd sort id
 
 # create droplet
 region             rdroplet cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
