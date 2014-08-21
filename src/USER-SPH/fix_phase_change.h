@@ -73,6 +73,7 @@ class FixPhaseChange : public Fix {
   // insert one atom, return true if sucsesfull
   bool insert_one_atom(double* coord, double* sublo, double* subhi);
   void create_newpos(double* xone, double* cgone, double delta, double* coord);
+  void create_newpos_simple(double* xone, double delta, double* coord);
   bool isfromphasearound(int i);
 };
 
