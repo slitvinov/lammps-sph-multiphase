@@ -1,4 +1,3 @@
-kill(all);
 ndim   : 3;
 cutoff: 1;
 
@@ -10,10 +9,17 @@ vabs(dr):= sqrt(dr.dr);
 w(dr):= block([r: vabs(dr)], ''(w_scalar(r)));
 dw(dr):= block([r: vabs(dr)], dr/r * ''(dw_scalar(r)));
 
-x: [[5, 5, 5], [5.5, 5, 5]];
-m: [2, 1];
-rho: [1, 1];
-type: [1, 2];
+x: [[5, 5, 5], [5.5, 5, 5], [5, 5, 4.8]];
+type: [1, 2, 2];
+
+m: [2, 1, 1];
+rho: [1, 1, 1];
+
+
+with_stdout("in.atoms",
+  for id thru length(x) do
+  printf(true, "create_atoms ~d single ~{~g ~} units box~%", type[id], x[id]));
+
 
 sph_color_loop(expr)::= buildq([expr, n: length(x)], create_list(
     block([k: type[i]],
