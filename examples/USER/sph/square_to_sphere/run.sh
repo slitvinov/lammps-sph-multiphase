@@ -1,6 +1,7 @@
 #! /bin/bash
 
 nx=20
-ndim=3
+ndim=2
 dname=data-nx${nx}-ndim${ndim}
-../../../../src/lmp_linux -in insert.lmp -var ndim ${ndim} -var nx ${nx} -var dname ${dname}
+lmp=../../../../src/lmp_linux
+${lmp} -in insert.lmp -var ndim ${ndim} -var nx ${nx} -var dname ${dname}

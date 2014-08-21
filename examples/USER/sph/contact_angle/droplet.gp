@@ -1,5 +1,5 @@
 set macro
-dt = 1.7146336010054037343e-06
+dt = system("cut -d ' ' -f 4 in.dt") 
 set term x11 1
 plot [:0.5][-0.5:0.5] "vom.dat" u (dt*$1):2 w lp, "" u (dt*$1):3 w lp
 

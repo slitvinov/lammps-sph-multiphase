@@ -87,10 +87,9 @@ dump_modify        dump_xyz element A B
 variable            time equal step*dt
 variable            natoms equal count(all)
 thermo_style        custom step v_time v_natoms
-thermo              1
+thermo              ${Nfreq}
 
 timestep           ${dt}
-
 
 #include            square.lmp
 include            cube.lmp

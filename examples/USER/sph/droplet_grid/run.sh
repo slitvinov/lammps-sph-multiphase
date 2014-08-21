@@ -1,6 +1,6 @@
 #! /bin/bash
 
-nx=51
+nx=40
 dname=data-wall-nx${nx}
 
 # case number (1 or 2)

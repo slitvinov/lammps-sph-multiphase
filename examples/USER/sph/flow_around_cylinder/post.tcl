@@ -1,8 +1,5 @@
 log vmd.tcl
+user add key q exit
 
-mol modstyle 0 0 Points 21.0
-set sel_solvent [atomselect top "resname 1"]
-$sel_solvent set name water
-
-set sel_solvent [atomselect top "resname 2"]
-$sel_solvent set name droplet
+mol modselect 0 0 all
+mol modstyle 0 0 CPK 0.0030000 0.000000 10.000000 10.000000

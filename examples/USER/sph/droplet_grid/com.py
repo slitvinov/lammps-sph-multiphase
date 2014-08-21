@@ -1,10 +1,9 @@
 # For emacs set
-# (setenv "PYTHONPATH" "/scratch/work/Pizza.py/src/")
-# (setenv "PYTHONPATH" "/home/vital303/work/Pizza.py/src/")
+# (setenv "PYTHONPATH" "<Pizza>/src/")
 
 import dump
 import numpy as np
-d = dump.dump("data-wall-nx121/dump*.dat")
+d = dump.dump("data-wall-nx40/dump*.dat")
 
 d.tselect.all()
 t = d.time()

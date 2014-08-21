@@ -42,7 +42,7 @@ set             region right meso_e ${e_r}
 set             region left meso_rho ${rho_l}
 set             region right meso_rho ${rho_r}
 
-pair_style      sph/heatconduction
+pair_style      sph/heatconduction/phasechange
 pair_coeff      1 1   ${k_l}           ${h}
 variable        klr equal 2*${k_l}*${k_r}/(${k_r}+${k_l})
 pair_coeff      1 2   ${klr}           ${h}
