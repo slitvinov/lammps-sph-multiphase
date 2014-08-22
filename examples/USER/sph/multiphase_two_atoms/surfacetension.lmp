@@ -6,7 +6,7 @@
 # ../../../../src/lmp_linux -in surfacetension.lmp
 #
 # To see the output 
-# head pos.dat
+# head output.dat
 
 echo               both
 dimension          3
@@ -54,6 +54,6 @@ fix                integrate_fix_full all  meso
 neighbor           3.0e-6 bin
 timestep           0
 
-fix extra all print 1 "$(fx[1]) $(fy[1]) $(fz[1])" file pos.dat screen no
+fix extra all print 1 "$(fx[1]) $(fy[1]) $(fz[1])" file output.dat screen no
 run                1
 
