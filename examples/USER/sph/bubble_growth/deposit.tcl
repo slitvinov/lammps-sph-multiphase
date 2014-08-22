@@ -4,7 +4,6 @@ user add key q exit
 
 # read variable number of atoms
 topo readvarxyz [lindex $argv 0]
-mol modstyle 0 0 Points 16
 pbc set {1.0 1.0 1.0} -all
 
 set sel [atomselect top all]
@@ -27,8 +26,10 @@ proc slice {dw {dim x}} {
     mol modselect 0 0 (all) and user > 0 and ${dim}>$z1 and ${dim}<$z2
 }
 
-#mol modstyle 0 0 VDW 0.600000 12.000000
+#mol modstyle 0 0 VDW 0.300000 12.000000
+mol modstyle 0 0 Points 16
+mol modselect 0 0 (all) and user > 0
 #pbc box
 
-# show only gas
-#mol modselect 0 0 (all) and user > 0 and name B
+# show only bubble
+#

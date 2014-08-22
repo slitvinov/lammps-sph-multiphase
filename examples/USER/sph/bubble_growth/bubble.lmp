@@ -64,12 +64,9 @@ variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_he
 pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
 pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_v} ${h}
 
-dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
-dump_modify        dump_xyz element A B
-
 variable           insert_every equal 1
 variable           dr equal 0.5*${dx}
-variable           prob equal 0.2
+variable           prob equal 0.01
 
 region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
 set               region rsq type ${v_type}
@@ -83,43 +80,43 @@ set               type ${l_type} mass ${mass_l}
 set               type ${v_type} meso_rho ${sph_rho_v}
 set               type ${l_type} meso_rho ${sph_rho_l}
 
-variable           Ninsert equal 1000
-variable           insert_every equal 1
-variable           dr equal 0.1*${dx}
-group              bubble type ${v_type}
-
+group           bubble type ${v_type}
 compute         rho_peratom all meso_rho/atom
 compute         it_atom all meso_t/atom
 compute         ie_atom all meso_e/atom
 compute         ie all reduce sum c_ie_atom
-compute         ied bubble reduce sum c_ie_atom
-variable        bubble_energy equal c_ied
-variable        bubble_number equal count(bubble)
-variable        bubble_volume equal count(bubble)*${dx}^${ndim}
+compute         ie_ave bubble reduce ave c_ie_atom
+compute         ie_max bubble reduce max c_ie_atom
+compute         ie_min bubble reduce min c_ie_atom
 variable        time equal step*${dt}
 variable        natoms equal count(all)
-fix extra all print 100 "${time} ${bubble_volume} ${bubble_number} ${bubble_energy}" file ${dname}/rg.dat screen no
+fix extra all print 10 &
+"${time} $(count(bubble)*v_dx^v_ndim) $(count(bubble)) &
+$(c_ie_min) $(c_ie_ave) $(c_ie_max)" &
+file ${dname}/rg.dat screen no
 
-dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
-                                                                   c_rho_peratom c_ie_atom c_it_atom
-dump_modify        dump_txt first yes sort id pad 8
 
-thermo_style        custom step v_time v_natoms v_bubble_number
+thermo_style        custom step v_time
 thermo              ${Nfreq}
 
+variable           insert_every equal 1
+variable           dr equal 0.1*${dx}
 variable           pcutoff equal ${h}
+
 fix                fdep bubble phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_v} &
-                   ${pcutoff} ${l_type} ${v_type} ${insert_every} 123456 ${prob} region box units box
+                   ${pcutoff} ${l_type} ${v_type} ${insert_every} &
+		   123456 ${prob} region box units box
 
 # outside of this sphere the temperature is 1.0
 variable          Rtemp equal ${xcenter}-2.6*${dx}
 region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
 fix               smeso      all setmeso meso_t ${Tinf} noregion rtemp
 
-variable          nstep equal 0.02/${dt}
+variable          nstep equal round(0.002/${dt})
 
 write_data        ${dname}/data.dat
 
 if "${ndim}==2" then "fix e2d all enforce2d"
+include           dump.lmp
 run               ${nstep}

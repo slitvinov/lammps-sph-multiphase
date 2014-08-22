@@ -1,4 +1,3 @@
-kill(all);
 load("dimension");
 fundamental_dimensions: [mass, length, time, K];
 ndim: 2;
@@ -25,6 +24,7 @@ put(dV, length^ndim, dimension);
 
 /* time */
 put(t, time, dimension);
+put(tc, time, dimension);
 put(dt, time, dimension);
 
 /* density of the bubble */
@@ -60,6 +60,8 @@ eq4: dQ= k_l*dT/l*S*dt;
 eq5: 'diff(R, t) = dR/dt;
 
 sol: solve([eq1, eq2, eq3, eq4, eq5], [dQ, dV, dm, dR, 'diff(R, t)]);
+assume(tc>0);
+assume(t>0);
 Rexp: integrate(assoc('diff(R, t), sol[1]), t);
 is(dimension(Rexp)=length);
 

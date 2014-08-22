@@ -6,11 +6,7 @@ echo               both
 
 variable          ndim equal 2
 dimension         ${ndim}
-if ${ndim}==3 then &
-"boundary          p f p" &
-else &
-"boundary          p f p"
-
+boundary          p f p
 include           vars.lmp
 
 # create simulation box
@@ -125,10 +121,6 @@ region            rsq sphere ${xcenter} ${y1} ${zcenter} 0.1 units box
 set               region rsq type ${d_type}
 set               group boundary type ${w_type}
 
-# variable          a_sq   equal 0.2
-# include           square.lmp
-# set               region rsq type ${d_type}
-
 set               type ${d_type} meso_cv ${cv_d}
 set               type ${g_type} meso_cv ${cv_g}
 set               type ${d_type} meso_e ${e_d}
@@ -150,7 +142,6 @@ run               0
 unfix             tpr
 
 group              droplet type ${d_type}
-
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
@@ -174,12 +165,12 @@ fix extra all print 1 &
 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${xvcm} ${yvcm} ${velcmx} ${velcmy} ${vmi}" &
 file ${dname}/rg.dat screen no
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
+dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
                                                                   c_rho_peratom c_ie_atom mass c_it_atom
-dump_modify        dump_id first yes sort id pad 8
+dump_modify        dump_txt first yes sort id pad 8
 
 thermo_style        custom step v_time v_natoms v_vnd
-thermo              10
+thermo              ${Nfreq}
 
 variable           pcutoff equal ${h}
 fix                fdep droplet phase_change &
@@ -189,8 +180,7 @@ fix                fdep droplet phase_change &
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
-#include rem-box.lmp
-
+# stop if a bubble is too big
 run               10000000 pre no  post no every 1000 &
 "if ${vmi}>2 then quit" &
 "if ${vnd}>1.0 then quit"
