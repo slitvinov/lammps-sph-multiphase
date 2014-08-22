@@ -3,7 +3,6 @@
 set -e
 set -u
 
-np=8
 ndim=2
 lmp=../../../../src/lmp_linux
 

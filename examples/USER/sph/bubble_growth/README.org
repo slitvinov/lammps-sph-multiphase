@@ -1,1 +1,5 @@
-Nucleate boiling simulation.
+Nucleate boiling simulation. To run
+
+bash run.sh
+bash genpsf.sh data-ndim2/
+vmd -e deposit.tcl  -args data-ndim2/data.xyz

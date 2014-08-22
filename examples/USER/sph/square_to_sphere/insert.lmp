@@ -105,6 +105,6 @@ write_data        ${dname}/droplet.dat
 variable          time equal step*dt
 fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
 
-variable          nstep equal 5.0/${dt}
+variable          nstep equal round(5.0/${dt})
 
 run               ${nstep}
