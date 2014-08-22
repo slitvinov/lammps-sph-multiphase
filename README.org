@@ -157,7 +157,7 @@ Infinite slub simulation [3]
 
 #+CAPTION: Infinite slub
 #+NAME:   fig:poiseuille
-[[file:examples/USER/sph/img/infslub.png]]
+[[file:examples/USER/sph/img/infslab.png]]
 
 
 ** examples/USER/sph/droplet_grid
