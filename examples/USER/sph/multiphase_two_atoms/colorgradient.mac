@@ -32,4 +32,5 @@ dC: sph_color_loop( block([sigmai: rho[i]/m[i], sigmaj: rho[j]/m[j]],
     print(sigmai, sigmaj),
     sigmai*(C[l,i]/sigmai^2 + C[l,j]/sigmaj^2)*dw(x[i] - x[j])));
 
+/* show color gradient */
 makelist(vabs(dC[d]), d, 2), numer;

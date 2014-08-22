@@ -6,7 +6,7 @@
 # ../../../../src/lmp_linux -in sheatconduction_phase_change.lmp
 #
 # To see the output 
-# head pos.dat
+# head output.dat
 
 echo               both
 dimension          3
@@ -58,5 +58,7 @@ compute         t_atom all  meso_t/atom
 neighbor           3.0e-6 bin
 timestep           0
 
-fix extra all print 1 "$(c_de_atom[1]) $(c_de_atom[2]) $(c_t_atom[1]) $(c_t_atom[2])" file pos.dat screen no
+fix extra all print 1 &
+"$(c_de_atom[1]) $(c_de_atom[2]) $(c_t_atom[1]) $(c_t_atom[2])" &
+file output.dat screen no
 run                1

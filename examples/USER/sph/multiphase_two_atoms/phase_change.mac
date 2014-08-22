@@ -23,22 +23,3 @@ with_stdout("in.atoms",
   for id thru length(x) do
   printf(true, "create_atoms ~d single ~{~g ~} units box~%", type[id], x[id]));
 
-sph_color_loop(expr)::= buildq([expr, n: length(x)], create_list(
-    block([k: type[i]],
-      sum(block([l: type[j]],
-          if i#j and l#k then expr else 0), j, 1, n)),
-    i, 1, n));
-
-sph_one_loop(expr)::= buildq([expr, n: length(x)],
-  create_list(expr, i, 1, n));
-
-sph_force_loop(expr)::= buildq([expr, n: length(x)], create_list(
-    block([k: type[i]],
-      sum(block([l: type[j]],
-          if i#j then expr else 0), j, 1, n)),
-    i, 1, n));
-
-T: sph_one_loop(E[i]/cv[i]);
-dE: sph_force_loop( 4*m[j]/(rho[i]*rho[j])*(kk[i]*kk[j]/(kk[i]+kk[j]))*(T[i] - T[j])*dws(x[i]-x[j]));
-
-dE, numer;

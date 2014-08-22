@@ -48,7 +48,5 @@ Fs: sph_force_loop(
   block([sigmai: rho[i]/m[i], sigmaj: rho[j]/m[j]],
     alpha[k,l]*dw(x[i] - x[j]) . (Pm[i]/sigmai^2 + Pm[j]/sigmaj^2)));
 
-Fs[1][1], numer;
-Fs[2][1], numer;
-
-Fs[1][1], numer;
+/* show surface tension */
+Fs[1], numer;

@@ -1,0 +1,27 @@
+Several examples with two SPH atoms
+
+- colorgradient.lmp :: color gradient
+#+BEGIN_EXAMPLE
+maxima -b surfacetension.mac
+../../../../src/lmp -in surfacetension.lmp
+#+END_EXAMPLE
+
+- surfacetension.lmp :: surface tension test
+#+BEGIN_EXAMPLE
+maxima -b surfacetension.mac
+../../../../src/lmp -in surfacetension.lmp
+#+END_EXAMPLE
+
+- heatconduction_phase_change.lmp :: heat conduction test
+#+BEGIN_EXAMPLE
+maxima -b heatconduction_phase_change.mac
+../../../../src/lmp -in heatconduction_phase_change.lmp
+#+END_EXAMPLE
+
+- phase_change.lmp :: phase change test
+#+BEGIN_EXAMPLE
+maxima -b phase_change.mac
+../../../../src/lmp -in phase_change.lmp
+#+END_EXAMPLE
+
+
