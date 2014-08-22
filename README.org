@@ -19,7 +19,7 @@ sudo apt-get install libjpeg-dev
 #+END_EXAMPLE
 2. Clone the repository
 #+BEGIN_EXAMPLE
-git https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
+git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+END_EXAMPLE
 3. Build the package
 #+BEGIN_EXAMPLE
@@ -39,7 +39,7 @@ sudo yum install libjpeg-devel
 #+END_EXAMPLE
 2. Clone the repository
 #+BEGIN_EXAMPLE
-git https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
+git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+END_EXAMPLE
 3. Build the package
 #+BEGIN_EXAMPLE
