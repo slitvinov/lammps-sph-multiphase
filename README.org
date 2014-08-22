@@ -37,7 +37,7 @@ sudo yum install mpich2-devel
 sudo yum install gcc-c++
 sudo yum install libjpeg-devel
 #+END_EXAMPLE
-2. Clone the repositary
+2. Clone the repository
 #+BEGIN_EXAMPLE
 git https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+END_EXAMPLE
@@ -75,7 +75,7 @@ pair_style         sph/colorgradient
 pair_coeff         I J     ${h} ${alpha}
 #+END_EXAMPLE
 Here, =I= and =J= are the types of SPH particles for which a color
-gradient is calculated, =alpha= is a surface tension coefficent, =h=
+gradient is calculated, =alpha= is a surface tension coefficient, =h=
 is a cutoff.
 
 ** pair_sph_surfacetension
@@ -87,7 +87,7 @@ pair_coeff         I J     sph/surfacetension ${h}
 
 Here, =I= and =J= are the types of SPH particles for which a surface
 tension is calculated, =h= is a cutoff. Note that surface tension
-coefficent is included into color gradient.
+coefficient is included into color gradient.
 
 ** pair_sph_heatconduction_phasechange
 A modified heat conduction equation to use for phase change model. Has
@@ -97,17 +97,17 @@ from USER-SPH package
 pair_coeff         I J  sph/heatconduction/phasechange  ${D_heat_ld}
 #+END_EXAMPLE
 Here, =I= and =J= are the types of SPH particles which interact and
-=D= is a heat diffusion coefficent.
+=D= is a heat diffusion coefficient.
 
 Full form of the pair style is
 #+BEGIN_EXAMPLE
 pair_coeff         I J  sph/heatconduction/phasechange  ${D_heat_ld} TI TJ
 #+END_EXAMPLE
-where =TI= and =TJ= are temperatures for coressponding particles in
+where =TI= and =TJ= are temperatures for corresponding particles in
 =I= and =J= interactions.
 
-=NULL= can be used as a placeholder to indicate that normal temperatur
-shuld be used for corresponding particle
+=NULL= can be used as a placeholder to indicate that normal temperate
+should be used for corresponding particle
 #+BEGIN_EXAMPLE
 pair_coeff         I J  sph/heatconduction/phasechange  ${D_heat_ld} TI NULL
 #+END_EXAMPLE
@@ -126,7 +126,7 @@ characteristic distance for a new particle position, =mass= a mass of
 a new particle, =h= cutoff of the interaction, =from_type= and
 =to_type= types of the particles involved in phase transition, =N=
 frequency of the check for phase transition algorithm, =seed= a seed
-for random number generator, =prob= probobility of the phase
+for random number generator, =prob= probability of the phase
 transition if all criteria are met (=0<prob<1=), =region= a region
 where algorithm checks for potential phase transition.
 
@@ -135,7 +135,7 @@ See [[file:examples/USER/sph/]]
 
 ** examples/USER/sph/poiseuille
 
-Low reynolds number Poiseuille flow simulation with parameters
+Low Reynolds number Poiseuille flow simulation with parameters
 from [1] and driven by uniform body forces in opposite directions
 along two-halves of a computational domain [2].
 
