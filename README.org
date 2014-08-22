@@ -165,6 +165,22 @@ Infinite slub simulation [3]
 Circular liquid-droplet oscillation under the action of capillary
 forces [4]
 
+** examples/USER/sph/bubble_growth
+Bubble growth in super-heated liquid
+
+#+BEGIN_EXAMPLE
+bash run.sh
+#+END_EXAMPLE
+
+To see the particles in VMD
+#+BEGIN_EXAMPLE
+vmd -e deposit.tcl  -args data-ndim2/data.xyz
+#+END_EXAMPLE
+
+To plot the volume of the bubble vs time
+#+BEGIN_EXAMPLE
+plot "data-ndim2/rg.dat" w lp
+#+END_EXAMPLE
 
 * Footnotes
 
