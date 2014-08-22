@@ -47,7 +47,7 @@ variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
 variable          sph_mass_w equal ${sph_mass_g}
 
 # surface tension
-variable           alpha    equal 300
+variable           alpha    equal 150
 variable           alpha_gd equal ${alpha}
 variable           alpha_gw equal ${alpha}
 variable           alpha_dw equal 1.5*${alpha}

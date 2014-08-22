@@ -1,6 +1,6 @@
 # For emacs set
-# (setenv "PYTHONPATH" "/scratch/work/Pizza.py/src/")
-# (setenv "PYTHONPATH" "/home/vital303/work/Pizza.py/src/")
+# (setenv "PYTHONPATH" "<Pizza.py>/src/")
+
 
 import dump
 import numpy as np

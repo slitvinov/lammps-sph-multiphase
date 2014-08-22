@@ -103,5 +103,3 @@ while {${frame} < 69} {
 }
 
 
-# show only gas
-
