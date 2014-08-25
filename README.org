@@ -156,7 +156,7 @@ Flow around cylinder simulation with parameters from [1].
 Infinite slub simulation [3]
 
 #+CAPTION: Infinite slub
-#+NAME:   fig:poiseuille
+#+NAME:   fig:infslab
 [[file:examples/USER/sph/img/infslab.png]]
 
 
@@ -164,6 +164,15 @@ Infinite slub simulation [3]
 
 Circular liquid-droplet oscillation under the action of capillary
 forces [4]
+
+#+CAPTION: Droplet oscillation rho_l/rho_g=1
+#+NAME:    fig:cap_waves
+[[file:examples/USER/sph/img/cap_waves.png]]
+
+#+CAPTION: Droplet oscillation rho_l/rho_g=100
+#+NAME:    fig:cap_waves100
+[[file:examples/USER/sph/img/cap_waves100.png]]
+
 
 ** examples/USER/sph/bubble_growth
 Bubble growth in super-heated liquid
