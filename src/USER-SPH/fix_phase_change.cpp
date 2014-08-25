@@ -80,7 +80,6 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
 
   iregion = -1;
   idregion = NULL;
-  maxattempt = 10;
   scaleflag = 1;
 
   // read options from end of input line
@@ -223,7 +222,7 @@ void FixPhaseChange::pre_exchange()
 	// reduce dr
 	delta = 0.75*delta;
 	natempt++;
-      } while (!ok && natempt<10);
+      } while (!ok && natempt<maxattempt);
       
       if (!ok) {
 	double delta = dr;
@@ -234,7 +233,7 @@ void FixPhaseChange::pre_exchange()
 	  // reduce dr
 	  delta = 0.75*delta;
 	  natempt++;
-	} while (!ok && natempt<10);
+	} while (!ok && natempt<maxattempt);
       }
 
       if (ok) {
@@ -361,6 +360,9 @@ void FixPhaseChange::options(int narg, char **arg)
   if (narg < 0) error->all(FLERR,"Illegal fix indent command");
 
   int iarg = 0;
+  // default number of attempts
+  maxattempt = 10;
+
   while (iarg < narg) {
     if (strcmp(arg[iarg],"region") == 0) {
       if (iarg+2 > narg) error->all(FLERR,"Illegal fix phase_change command");
@@ -458,11 +460,8 @@ bool FixPhaseChange::insert_one_atom(double* coord, double* sublo, double* subhi
     for (int j = 0; j < nfix; j++)
       if (fix[j]->create_attribute) fix[j]->set_arrays(m);
   }
-  if (flag) {
-    return true;
-  } else {
-    return false;
-  }
+  
+  if (flag) return true; else return false;
 }
 
 void FixPhaseChange::create_newpos_simple(double* xone, double delta, double* coord) {
