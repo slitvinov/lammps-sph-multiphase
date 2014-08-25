@@ -29,18 +29,16 @@ set               type 2         mass 1
 set               type 1         meso_rho 1
 set               type 2         meso_rho 1
 
-pair_style         sph/colorgradient 1
-pair_coeff         1 1     ${h} 0
-pair_coeff         2 2     ${h} 0
-pair_coeff         1 2     ${h} ${alpha}
+pair_style         sph/rhosum/multiphase 1
+pair_coeff         * *     ${h}
 
 # do full time integration
 fix                integrate_fix_full all  meso
-compute            colorgradient_peratom all meso_colorgradient/atom
+compute            rho_peratom all meso_rho/atom
 
 neighbor           0 bin
 timestep           0
 
-fix extra all print 1 "$(c_colorgradient_peratom[1]) $(c_colorgradient_peratom[2])" file outpt.dat screen no
+fix extra all print 1 "$(c_rho_peratom[1]) $(c_rho_peratom[2]) $(c_rho_peratom[3])" file outpt.dat screen no
 run                1
 
