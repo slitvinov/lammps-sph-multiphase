@@ -10,18 +10,18 @@ documentation of LAMMPS and to SPH-USER package:
 ** Installation examples
 *** Ubuntu Linux 12.04
 
-1. Install libraries
+- Install libraries
 #+BEGIN_EXAMPLE
 sudo apt-get install git
 sudo apt-get install openmpi-dev
 sudo apt-get install openmpi-bin
 sudo apt-get install libjpeg-dev
 #+END_EXAMPLE
-2. Clone the repository
+- Clone the repository
 #+BEGIN_EXAMPLE
 git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+END_EXAMPLE
-3. Build the package
+- Build the package
 #+BEGIN_EXAMPLE
 cd lammps-sph/src
 make yes-USER-SPH
@@ -30,18 +30,18 @@ make linux CC=mpicc LINK=mpicc CCFLAGS='-O2 -g' FFT_LIB=-lm
 
 *** CentOS Linux 6.5
 
-1. Install libraries
+- Install libraries
 #+BEGIN_EXAMPLE
 sudo yum install git
 sudo yum install mpich2-devel
 sudo yum install gcc-c++
 sudo yum install libjpeg-devel
 #+END_EXAMPLE
-2. Clone the repository
+- Clone the repository
 #+BEGIN_EXAMPLE
 git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+END_EXAMPLE
-3. Build the package
+- Build the package
 #+BEGIN_EXAMPLE
 cd lammps-sph/src
 make yes-USER-SPH
