@@ -2,8 +2,8 @@ Several examples with two SPH atoms
 
 - colorgradient.lmp :: color gradient
 #+BEGIN_EXAMPLE
-maxima -b surfacetension.mac
-../../../../src/lmp -in surfacetension.lmp
+maxima -b colorgradient.mac
+../../../../src/lmp -in colorgradient.lmp
 #+END_EXAMPLE
 
 - surfacetension.lmp :: surface tension test

@@ -38,7 +38,7 @@ pair_coeff         1 2     ${h} ${alpha}
 fix                integrate_fix_full all  meso
 compute            colorgradient_peratom all meso_colorgradient/atom
 
-neighbor           3.0e-6 bin
+neighbor           0 bin
 timestep           0
 
 fix extra all print 1 "$(c_colorgradient_peratom[1]) $(c_colorgradient_peratom[2])" file outpt.dat screen no

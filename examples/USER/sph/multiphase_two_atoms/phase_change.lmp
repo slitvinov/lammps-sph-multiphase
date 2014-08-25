@@ -72,7 +72,7 @@ compute         e_atom all meso_e/atom
 compute         de_atom all meso_de/atom
 compute         t_atom all  meso_t/atom
 
-neighbor           3.0e-6 bin
+neighbor           0 bin
 timestep           0
 
 dump              dump_txt all custom 1 dump.*.dat id type x y z vx vy vy mass c_e_atom c_de_atom

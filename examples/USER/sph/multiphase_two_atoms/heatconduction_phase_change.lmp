@@ -55,7 +55,7 @@ fix                integrate_fix_full all  meso
 compute         de_atom all meso_de/atom
 compute         t_atom all  meso_t/atom
 
-neighbor           3.0e-6 bin
+neighbor           0 bin
 timestep           0
 
 fix extra all print 1 &
