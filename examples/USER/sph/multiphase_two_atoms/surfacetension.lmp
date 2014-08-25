@@ -51,7 +51,7 @@ pair_coeff         1 2     sph/surfacetension ${h}
 # do full time integration
 fix                integrate_fix_full all  meso
 
-neighbor           3.0e-6 bin
+neighbor           0 bin
 timestep           0
 
 fix extra all print 1 "$(fx[1]) $(fy[1]) $(fz[1])" file output.dat screen no
