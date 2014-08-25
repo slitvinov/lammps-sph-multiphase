@@ -1,1 +1,8 @@
-Bubble growth in superheated liquid
+Capillary wave simulations: circular liquid-droplet oscillations under
+the action of capillary forces (see Section 3.1). To run adjust run.sh
+and execute:
+
+./run.sh
+
+Hu, X. Y. & Adams, N. A. A Multi-phase SPH Method for Macroscopic and
+Mesoscopic Flows. J. Comput. Phys. 213, 844–861 (2006).

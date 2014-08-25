@@ -12,7 +12,7 @@ variable          sph_rho_d equal 1.0
 variable          sph_rho_g equal 1e-3
 variable          sph_rho_w equal ${sph_rho_g}
 
-# sound speed 
+# sound speed
 variable          sph_c_d equal 10/sqrt(${sph_rho_d})
 variable          sph_c_g equal 10/sqrt(${sph_rho_g})
 variable          sph_c_w equal ${sph_c_g}

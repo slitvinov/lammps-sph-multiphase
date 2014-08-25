@@ -105,9 +105,7 @@ set                 type ${w_type} meso_rho ${sph_rho_w}
 
 variable            time equal step*dt
 thermo_style        custom step v_time
-thermo              10 
-
-
+thermo              100
 timestep           ${dt}
 
 set               type ${d_type} mass ${sph_mass_d}
@@ -116,11 +114,22 @@ set               type ${w_type} mass ${sph_mass_w}
 
 group              droplet type ${d_type}
 
+variable           x0     equal xcm(droplet,x)
+variable           y0     equal xcm(droplet,y)
+variable           ind     atom  (y>${y0})*(x>${x0})*mass
+
+variable           mx    atom  v_ind*(x-${x0})
+variable           my    atom  v_ind*(y-${y0})
+
+compute            sind      droplet reduce sum v_ind
+compute            smx       droplet reduce sum v_mx
+compute            smy     droplet reduce sum v_my
 
 compute            rg droplet gyration
-variable           vrg equal c_rg
-variable           vspher equal c_rg[1]/c_rg[2]
-fix extra all print 1 "${time} ${vrg} ${vspher}" file ${dname}/com.dat screen no
+# http://en.wikipedia.org/wiki/Relative_shape_anisotropy
+variable           kappasq  equal  2*(c_rg[1]^2+c_rg[2]^2)/(c_rg[1]+c_rg[2])^2-1
+fix prn_rg all print 10 "${time} $(c_rg[1]) $(c_rg[2]) $(c_rg[4]) ${kappasq}" file ${dname}/rg.dat screen no
+fix prn_cm all print 10 "${time} $(c_smx/c_sind) $(c_smy/c_sind)" file ${dname}/cm.dat screen no
 
 #run               1000
 velocity flow     set v_vx v_vy 0.0
