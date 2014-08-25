@@ -64,10 +64,6 @@ variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_he
 pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
 pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_v} ${h}
 
-variable           insert_every equal 1
-variable           dr equal 0.5*${dx}
-variable           prob equal 0.01
-
 region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
 set               region rsq type ${v_type}
 
@@ -89,26 +85,25 @@ compute         ie_ave bubble reduce ave c_ie_atom
 compute         ie_max bubble reduce max c_ie_atom
 compute         ie_min bubble reduce min c_ie_atom
 variable        time equal step*${dt}
-variable        natoms equal count(all)
+variable        batoms equal count(bubble)
 fix extra all print 10 &
 "${time} $(count(bubble)*v_dx^v_ndim) $(count(bubble)) &
 $(c_ie_min) $(c_ie_ave) $(c_ie_max)" &
 file ${dname}/rg.dat screen no
 
-
-thermo_style        custom step v_time
+thermo_style        custom step v_time v_batoms
 thermo              ${Nfreq}
 
 variable           insert_every equal 1
-variable           dr equal 0.1*${dx}
+variable           dr equal 0.5*${dx}
 variable           pcutoff equal ${h}
-
+variable           prob    equal 0.01
 fix                fdep bubble phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${mass_v} &
                    ${pcutoff} ${l_type} ${v_type} ${insert_every} &
 		   123456 ${prob} region box units box
 
-# outside of this sphere the temperature is 1.0
+# outside of this sphere the temperature is ${Tinf}
 variable          Rtemp equal ${xcenter}-2.6*${dx}
 region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
 fix               smeso      all setmeso meso_t ${Tinf} noregion rtemp
