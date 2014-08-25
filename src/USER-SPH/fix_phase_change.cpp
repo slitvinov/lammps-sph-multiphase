@@ -10,6 +10,7 @@
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
+#include "assert.h"
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
@@ -190,7 +191,7 @@ void FixPhaseChange::pre_exchange()
   double *rho = atom->rho;
   double *cv = atom->cv;
   double *e   = atom->e;
-  dmass   = atom->de;
+  dmass   = atom->drho;
   int *type = atom->type;
   
   int nall;
@@ -325,6 +326,7 @@ void FixPhaseChange::pre_exchange()
   for (int i = 0; i < nlocal; i++) {
     double mold = rmass[i];
     rmass[i] -= dmass[i];
+    assert(rmass[i]>0);
     // renormalize energy
     e[i] = e[i]*mold/rmass[i];
     dmass[i] = 0;
@@ -520,7 +522,7 @@ int FixPhaseChange::pack_reverse_comm(int n, int first, double *buf)
   for (i = first; i < last; i++) {
     buf[m++] = dmass[i];
   }
-  return comm_reverse;
+  return m;
 }
 
 /* ---------------------------------------------------------------------- */
