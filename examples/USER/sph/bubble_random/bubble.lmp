@@ -66,14 +66,7 @@ variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_he
 pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
 pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_v} ${h}
 
-set               type ${v_type} meso_cv ${cv_v}
-set               type ${l_type} meso_cv ${cv_l}
-set               type ${v_type} meso_e ${e_v}
-set               type ${l_type} meso_e ${e_l}
-set               type ${v_type} mass ${mass_v}
-set               type ${l_type} mass ${mass_l}
-set               type ${v_type} meso_rho ${sph_rho_v}
-set               type ${l_type} meso_rho ${sph_rho_l}
+include            in.phases
 
 group           bubble type ${v_type}
 compute         rho_peratom all meso_rho/atom
@@ -103,14 +96,18 @@ if "${ndim}==2" then "fix e2d all enforce2d"
 include           dump.lmp
 variable          total_time equal step*${dt}
 thermo_style      custom step v_total_time v_batoms v_rho_min v_rho_max
-variable          relax1 equal round(0.04/${dt})
+variable          relax1 equal round(0.004/${dt})
 run               ${relax1}
 
 region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
 set               region rsq type ${v_type}
-variable          relax2 equal round(0.04/${dt})
+variable          relax2 equal round(0.004/${dt})
+
+include            in.phases
 velocity          all set 0 0 0
+
 run               ${relax2}
+
 velocity          all set 0 0 0
 
 variable           insert_every equal 1
@@ -128,6 +125,6 @@ $(c_ie_min) $(c_ie_ave) $(c_ie_max)" &
 file ${dname}/rg.dat screen no
 
 variable          time equal (step-${relax1}-${relax2})*${dt}
-variable          nstep equal round(2.0/${dt})
+variable          nstep equal round(0.2/${dt})
 thermo_style      custom step v_time v_batoms v_rho_min v_rho_max
 run               ${nstep}
