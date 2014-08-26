@@ -26,10 +26,6 @@ proc slice {dw {dim x}} {
     mol modselect 0 0 (all) and user > 0 and ${dim}>$z1 and ${dim}<$z2
 }
 
-#mol modstyle 0 0 VDW 0.300000 12.000000
-mol modstyle 0 0 Points 16
+mol modstyle 0 0 VDW 0.250000 12.000000
+#mol modstyle 0 0 Points 16
 mol modselect 0 0 (all) and user > 0
-#pbc box
-
-# show only bubble
-#
