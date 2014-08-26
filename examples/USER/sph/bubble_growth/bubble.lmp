@@ -33,7 +33,8 @@ else &
 "lattice            sc ${dx} origin 0.5 0.5 0.5"
 
 # create liquid atoms
-create_atoms       ${l_type} region box
+variable            natoms equal   ${nx}^${ndim}
+create_atoms        ${l_type} region box
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
@@ -54,9 +55,9 @@ pair_coeff         ${l_type} ${v_type} sph/colorgradient ${h} ${alpha}
 pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0
 
 variable           sph_eta_ld equal 2*${sph_eta_l}*${sph_eta_v}/(${sph_eta_v}+${sph_eta_l})
-pair_coeff         ${l_type} ${v_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} 7.0 ${h} ${rbackground}
-pair_coeff         ${l_type} ${l_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l}  ${sph_eta_l} 7.0 ${h} ${rbackground}
-pair_coeff         ${v_type} ${v_type} sph/taitwater/multiphase ${sph_rho_v} ${sph_c_v}  ${sph_eta_v} 7.0 ${h} ${rbackground}
+pair_coeff         ${l_type} ${v_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} 1.0 ${h} ${rbackground}
+pair_coeff         ${l_type} ${l_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l}  ${sph_eta_l} 1.0 ${h} ${rbackground}
+pair_coeff         ${v_type} ${v_type} sph/taitwater/multiphase ${sph_rho_v} ${sph_c_v}  ${sph_eta_v} 1.0 ${h} ${rbackground}
 
 pair_coeff         * * sph/surfacetension ${h}
 pair_coeff         ${l_type} ${l_type} sph/heatconduction/phasechange  ${D_heat_l} ${h}
@@ -64,17 +65,6 @@ variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_he
 pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
 pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange  ${D_heat_v} ${h}
 
-region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
-set               region rsq type ${v_type}
-
-set               type ${v_type} meso_cv ${cv_v}
-set               type ${l_type} meso_cv ${cv_l}
-set               type ${v_type} meso_e ${e_v}
-set               type ${l_type} meso_e ${e_l}
-set               type ${v_type} mass ${mass_v}
-set               type ${l_type} mass ${mass_l}
-set               type ${v_type} meso_rho ${sph_rho_v}
-set               type ${l_type} meso_rho ${sph_rho_l}
 
 group           bubble type ${v_type}
 compute         rho_peratom all meso_rho/atom
@@ -84,15 +74,29 @@ compute         ie all reduce sum c_ie_atom
 compute         ie_ave bubble reduce ave c_ie_atom
 compute         ie_max bubble reduce max c_ie_atom
 compute         ie_min bubble reduce min c_ie_atom
-variable        time equal step*${dt}
 variable        batoms equal count(bubble)
-fix extra all print 10 &
-"${time} $(count(bubble)*v_dx^v_ndim) $(count(bubble)) &
-$(c_ie_min) $(c_ie_ave) $(c_ie_max)" &
-file ${dname}/rg.dat screen no
 
-thermo_style        custom step v_time v_batoms
+compute             rho_min all reduce min c_rho_peratom
+variable            rho_min equal c_rho_min
+
+compute             rho_max all reduce max c_rho_peratom
+variable            rho_max equal c_rho_max
 thermo              ${Nfreq}
+
+# outside of this sphere the temperature is ${Tinf}
+variable          Rtemp equal ${xcenter}-2.6*${dx}
+region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
+fix               smeso      all setmeso meso_t ${Tinf} noregion rtemp
+
+write_data        ${dname}/data.dat
+
+if "${ndim}==2" then "fix e2d all enforce2d"
+include           dump.lmp
+
+region            rsq sphere ${xcenter} ${ycenter} ${zcenter} 0.05 units box
+set               region rsq type ${v_type}
+
+include            in.phases
 
 variable           insert_every equal 1
 variable           dr equal 0.5*${dx}
@@ -103,15 +107,13 @@ fix                fdep bubble phase_change &
                    ${pcutoff} ${l_type} ${v_type} ${insert_every} &
 		   123456 ${prob} region box units box
 
-# outside of this sphere the temperature is ${Tinf}
-variable          Rtemp equal ${xcenter}-2.6*${dx}
-region            rtemp sphere ${xcenter} ${ycenter} ${zcenter} ${Rtemp} units box
-fix               smeso      all setmeso meso_t ${Tinf} noregion rtemp
+fix extra all print 10 &
+"${time} $(count(bubble)*v_dx^v_ndim) $(count(bubble)) &
+$(c_ie_min) $(c_ie_ave) $(c_ie_max)" &
+file ${dname}/rg.dat screen no
 
-variable          nstep equal round(0.002/${dt})
+variable          time equal step*dt
+variable          nstep equal round(0.003/${dt})
+thermo_style      custom step v_time v_batoms v_rho_min v_rho_max
 
-write_data        ${dname}/data.dat
-
-if "${ndim}==2" then "fix e2d all enforce2d"
-include           dump.lmp
 run               ${nstep}
