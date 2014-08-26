@@ -24,4 +24,10 @@ maxima -b phase_change.mac
 ../../../../src/lmp -in phase_change.lmp
 #+END_EXAMPLE
 
+- sph_rhosum_multiphase.lmp :: SPH density test
+#+BEGIN_EXAMPLE
+maxima -b sph_rhosum_multiphase.mac
+../../../../src/lmp -in sph_rhosum_multiphase.lmp
+#+END_EXAMPLE
+
 
