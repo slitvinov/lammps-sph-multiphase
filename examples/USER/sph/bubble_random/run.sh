@@ -4,7 +4,7 @@ set -e
 set -u
 
 ndim=3
-nx=20
+nx=40
 lmp=../../../../src/lmp_linux
 
 dname=data-ndim${ndim}-nx${nx}
