@@ -1,0 +1,7 @@
+dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
+                                                                   c_rho_peratom c_ie_atom c_it_atom
+dump_modify        dump_txt first yes sort id pad 8
+
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B
