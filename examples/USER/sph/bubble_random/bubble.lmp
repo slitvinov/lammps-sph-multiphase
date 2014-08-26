@@ -125,6 +125,6 @@ $(c_ie_min) $(c_ie_ave) $(c_ie_max)" &
 file ${dname}/rg.dat screen no
 
 variable          time equal (step-${relax1}-${relax2})*${dt}
-variable          nstep equal round(0.2/${dt})
+variable          nstep equal round(0.003/${dt})
 thermo_style      custom step v_time v_batoms v_rho_min v_rho_max
 run               ${nstep}
