@@ -53,7 +53,7 @@ eq3: dm = rho_v*dV;
 if ndim=3 then S: 4*%pi*R^2 else S: 2*%pi*R;
 
 /* charachteristic length */
-l: sqrt(D*t);
+l: sqrt(2*D*t);
 is(dimension(l)=length);
 eq4: dQ= k_l*dT/l*S*dt;
 eq5: 'diff(R, t) = dR/dt;
@@ -69,3 +69,5 @@ env: [cp_l=0.04, k_l=0.2, rho_l=1, dT=1, Hwv=32, rho_v=0.1];
 float(ev(V, [R=Rexp, env]));
 
 fullratsimp(subst(R=Rexp, V));
+
+Rexp;

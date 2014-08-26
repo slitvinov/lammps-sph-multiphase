@@ -158,8 +158,6 @@ Infinite slub simulation [3]
 #+CAPTION: Infinite slub
 #+NAME:   fig:infslab
 [[file:examples/USER/sph/img/infslab.png]]
-
-
 ** examples/USER/sph/droplet_grid
 
 Circular liquid-droplet oscillation under the action of capillary
@@ -172,7 +170,6 @@ forces [4]
 #+CAPTION: Droplet oscillation rho_l/rho_g=100
 #+NAME:    fig:cap_waves100
 [[file:examples/USER/sph/img/cap_waves100.png]]
-
 
 ** examples/USER/sph/bubble_growth
 Bubble growth in super-heated liquid

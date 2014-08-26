@@ -30,10 +30,8 @@ variable          sph_eta_g equal 5e-2
 # pressu ~ ( rho/rho0 - rbackground)^gamma
 variable          rbackground equal 0.0
 
-
 variable          h equal 3.0*${dx}
-variable          Nfreq equal 10
-variable          Nfreqimage equal 10
+variable          Nfreq equal 100
 
 # mass of droplet particle
 variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}

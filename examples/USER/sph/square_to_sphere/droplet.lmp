@@ -53,7 +53,6 @@ c_rho_peratom c_colorgradient_peratom c_ie_atom
 
 dump_modify        dump_id first yes sort id pad 8
 
-if "${ndim}==2"    then "include            ${ndim}d-image.lmp"
 variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
 include            settimestep.lmp
 
@@ -91,20 +90,19 @@ thermo              ${Nfreq}
 
 timestep           ${dt}
 
-#include            square.lmp
-include            cube.lmp
+include           cube.lmp
 set               type ${d_type} mass ${sph_mass_d}
 set               type ${g_type} mass ${sph_mass_g}
 
 
 group             droplet type ${d_type}
-compute           crg droplet gyration
-variable          vrg equal c_crg
+compute           rg droplet gyration
+# http://en.wikipedia.org/wiki/Relative_shape_anisotropy
 
 write_data        ${dname}/droplet.dat
 variable          time equal step*dt
-fix extra all print 1 "${time} ${vrg}" file ${dname}/rg.dat screen no
+fix extra all print ${Nfreq} "${time} $(c_rg)" file ${dname}/rg.dat screen no
 
-variable          nstep equal round(5.0/${dt})
+variable          nstep equal round(0.5/${dt})
 
 run               ${nstep}
