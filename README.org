@@ -158,6 +158,9 @@ Infinite slub simulation [3]
 #+CAPTION: Infinite slub
 #+NAME:   fig:infslab
 [[file:examples/USER/sph/img/infslab.png]]
+** examples/USER/sph/square_to_sphere
+Cube changes to a sphere
+
 ** examples/USER/sph/droplet_grid
 
 Circular liquid-droplet oscillation under the action of capillary
