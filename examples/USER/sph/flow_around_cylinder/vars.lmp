@@ -1,6 +1,6 @@
 # number of particles in each of the directions
-variable          nx   equal 101
-variable          ny   equal 101
+variable          nx   equal 51
+variable          ny   equal 51
 if "${ndim}==3" then &
 "variable nz equal 6"
 

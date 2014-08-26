@@ -1,2 +1,10 @@
-Flow around cylinder.
+Flow around cylinder with parameters from
+
+Morris, J. P., Fox, P. J. & Zhu, Y. Modeling Low Reynolds Number
+Incompressible Flows Using SPH. Journal of Computational Physics 136,
+214–226 (1997).
+
+To visualize with VMD
+bash genpsf.sh data-wall/
+vmd -e post.tcl -psf data-wall/flow.psf data-wall/flow.xyz 
 

@@ -82,8 +82,7 @@ thermo             ${Nfreq}
 
 timestep           ${dt}
 if "${ndim}==2" then "fix e2d all enforce2d"
-run               3000
-
+run                $(round(1500/dt))
 
 variable           bin_step equal 2/${nx}
 
@@ -100,4 +99,4 @@ region             rcenter block ${x1} ${x2} 0 ${Ly} EDGE EDGE units box
 fix av_vcen all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center ${bin_step} vx region rcenter file ${dname}/vcen.av ave running units reduced
 
-run              12000
+run                $(round(6000/dt))
