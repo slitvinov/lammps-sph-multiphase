@@ -1,5 +1,5 @@
 # number of particles in each of the directions
-variable          nx   equal 20
+variable          nx   equal 40
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"
@@ -38,7 +38,7 @@ variable          mass_v equal ${dx}^${ndim}*${sph_rho_v}
 variable          mass_l equal ${dx}^${ndim}*${sph_rho_l}
 
 # surface tension
-variable           alpha    equal 250
+variable           alpha    equal 500
 variable           D_heat_v equal 0.6
 variable           D_heat_l equal 0.2
 
