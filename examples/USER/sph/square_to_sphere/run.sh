@@ -1,7 +1,7 @@
 #! /bin/bash
 
-nx=20
-ndim=2
+nx=40
+ndim=3
 dname=data-nx${nx}-ndim${ndim}
 lmp=../../../../src/lmp_linux
-${lmp} -in insert.lmp -var ndim ${ndim} -var nx ${nx} -var dname ${dname}
+${lmp} -in droplet.lmp -var ndim ${ndim} -var nx ${nx} -var dname ${dname}

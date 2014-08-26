@@ -1,4 +1,4 @@
-Insert air bubble at the bottom of the domain
+Cube transforms to a sphere under effect of surface tension.
 
-bash genpsf.sh data-nx20-ndim3/
-vmd -e post.tcl -psf data-nx20-ndim3/droplet.psf -xyz data-nx20-ndim3/droplet.xyz
+bash run.sh
+vmd -e post.tcl -xyz data-nx20-ndim2/droplet.xyz

@@ -1,4 +1,4 @@
 log vmd.tcl
 user add key q exit
-mol modselect 0 0 name A
-mol modstyle 0 0 CPK 0.050000 0.300000 10.000000 10.000000
+
+mol modstyle 0 0 VDW 0.010000 12.000000
