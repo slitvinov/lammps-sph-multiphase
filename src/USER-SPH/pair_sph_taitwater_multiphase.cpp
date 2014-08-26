@@ -70,11 +70,9 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *rho = atom->rho;
   double *rmass = atom->rmass;
-  double *mass = atom->mass;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
-  int rmass_flag = atom->rmass_flag;
   // check consistency of pair coefficients
 
   if (first) {
@@ -100,7 +98,6 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
   firstneigh = list->firstneigh;
 
   // loop over neighbors of my atoms
-
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
     xtmp = x[i][0];
@@ -113,15 +110,13 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    if (rmass_flag) {
-      imass = rmass[i];
-    } else {
-      imass = mass[itype];
-    }
+    imass = rmass[i];
 
-
-    double pi = sph_pressure(B[itype], rho0[itype], gamma[itype], rbackground[itype], rho[i]);
-    fi = pi / (rho[i] * rho[i]);
+    // compute pressure of atom i
+    double pi = sph_pressure(B[itype], rho0[itype], gamma[itype], 
+			     rbackground[itype], rho[i]);
+    double Vi  = imass/rho[i];
+    double Vi2 = Vi * Vi;
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -132,11 +127,6 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      if (rmass_flag) {
-	jmass = rmass[j];
-      } else {
- 	jmass = mass[jtype];
-      }
       jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
@@ -151,10 +141,13 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
 	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
+	double Vj  = jmass/rho[j];
+	double Vj2 = Vj * Vj;
 
-        // compute pressure  of atom j with Tait EOS
-	double pj = sph_pressure(B[jtype], rho0[jtype], gamma[itype], rbackground[jtype], rho[j]);
-	fj = pj / (rho[j] * rho[j]);
+        // compute pressure
+	double pj = sph_pressure(B[jtype], rho0[jtype], gamma[itype], 
+				 rbackground[jtype], rho[j]);
+	double pij_wave = (rho[j]*pi + rho[i]*pj)/(rho[i] + rho[j]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -163,13 +156,14 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
         // dot product of velocity delta and distance vector
         delVdotDelR = delx * velx + dely * vely + delz * velz;
 
-        // Multiphase Viscosity (Multiphase, 1996)
-        fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
-
-        fvisc *= imass * jmass * wfd;
+        fvisc = (Vi2 + Vj2) * viscosity[itype][jtype] * wfd;
 
         // total pair force & thermal energy increment
-        fpair = - (imass*imass*fi + jmass*jmass*fj) * wfd;
+        double fpair =   - (Vi2 + Vj2) * pij_wave * wfd;
+
+        deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
+
+       // printf("testvar= %f, %f \n", delx, dely);
 
         f[i][0] += delx * fpair + velx * fvisc;
         f[i][1] += dely * fpair + vely * fvisc;
@@ -179,6 +173,7 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
           f[j][0] -= delx * fpair + velx * fvisc;
           f[j][1] -= dely * fpair + vely * fvisc;
           f[j][2] -= delz * fpair + velz * fvisc;
+
         }
 
         if (evflag)
