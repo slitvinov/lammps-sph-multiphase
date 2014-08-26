@@ -1,6 +1,6 @@
 load("dimension");
 fundamental_dimensions: [mass, length, time, K];
-ndim: 2;
+ndim: 3;
 
 /* Joule */
 J: mass*length^2/time^2;
@@ -45,7 +45,6 @@ D: k_l/cp_l/rho_l;
 is(dimension(D) = length^2/time);
 
 eq1: dm = dQ/Hwv;
-
 /* TODO: dimension */
 if ndim=3 then V: 4/3*%pi*R^3 else V: %pi*R^2;
 
@@ -66,5 +65,7 @@ Rexp: integrate(assoc('diff(R, t), sol[1]), t);
 is(dimension(Rexp)=length);
 
 infeval: true;
-env: [cp_l=0.04, k_l=0.2, rho_l=1.0, dT=1.0, Hwv=8.0, rho_v=0.01];
+env: [cp_l=0.04, k_l=0.2, rho_l=1, dT=1, Hwv=32, rho_v=0.1];
 float(ev(V, [R=Rexp, env]));
+
+fullratsimp(subst(R=Rexp, V));

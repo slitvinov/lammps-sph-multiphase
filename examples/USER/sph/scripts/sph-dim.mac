@@ -183,7 +183,7 @@ to_sim(k_g,  env_sim, [L, rho_l, eta_l, dT]);
 to_sim(alpha,  env_sim, [L, rho_l, eta_l, dT]);
 to_sim(eta_g,  env_sim, [L, rho_l, eta_l, dT]);
 
-env: [k_l=0.1, k_g=0.6, cv_g=0.04, cv_l=0.04, rho_l=1.0, rho_g=0.01, dT=1.0, Hwv=4.0];
+env: [k_l=0.2, k_g=0.6, cv_g=0.06, cv_l=0.04, rho_l=1.0, rho_g=0.01, dT=1, Hwv=8];
 
 B: sqrt(12/%pi*k_l/(rho_l*cv_l))*Ja;
 R: B*sqrt(t);
@@ -196,6 +196,8 @@ float(ev(R, env));
 V: 4/3*%pi*R^3;
 float(ev(V^(2/3), env));
 float(V^(2/3));
+
+float(ev(V, env));
 
 /* via Ja number */
 B_j: sqrt( 12/%pi * Ja^2 * k_l/(rho_l*cv_l) );

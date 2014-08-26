@@ -104,15 +104,12 @@ dump_modify        dump_xyz element A B C
 
 timestep           ${dt}
 variable           insert_every equal 1
-#variable          Hwv equal 0.00
 variable           dr equal 0.5*${dx}
-#variable           prob equal ${dt}/${dprob}
 variable           prob equal ${dprob}
-
 variable            time equal step*${dt}
 variable            natoms equal count(all)
 
-# create vapor atom in the center of the domain
+# create a vapor atom in the center of the domain
 #variable          xcenter_per equal ${xcenter}+0.5*${dx}
 #variable          ycenter_per equal ${y1}-0.5*${dx}
 #create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
@@ -133,6 +130,7 @@ set               type ${d_type} meso_rho ${sph_rho_d}
 set               type ${g_type} meso_rho ${sph_rho_g}
 set               type ${w_type} meso_rho ${sph_rho_w}
 
+# set a linear temperature profile
 variable          dL   equal 1.0
 variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
 fix               tpr         flow setmeso meso_t v_tprofile
@@ -177,10 +175,11 @@ fix                fdep droplet phase_change &
                    ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
                    ${pcutoff} ${g_type} ${d_type} ${insert_every} 12345 ${prob} region rflow units box
 
+# gravity force
 variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
-# stop if a bubble is too big
+# stop if the bubble is too big
 run               10000000 pre no  post no every 1000 &
 "if ${vmi}>2 then quit" &
 "if ${vnd}>1.0 then quit"
