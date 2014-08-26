@@ -159,7 +159,7 @@ Infinite slub simulation [3]
 #+NAME:   fig:infslab
 [[file:examples/USER/sph/img/infslab.png]]
 ** examples/USER/sph/square_to_sphere
-Cube changes to a sphere
+A cube changes to a sphere under the effect of surface tension
 
 ** examples/USER/sph/droplet_grid
 
@@ -174,7 +174,7 @@ forces [4]
 #+NAME:    fig:cap_waves100
 [[file:examples/USER/sph/img/cap_waves100.png]]
 
-** examples/USER/sph/bubble_growth
+** examples/USER/sph/bubble_random
 Bubble growth in super-heated liquid
 
 #+BEGIN_EXAMPLE
@@ -183,7 +183,7 @@ bash run.sh
 
 To see the particles in VMD
 #+BEGIN_EXAMPLE
-vmd -e deposit.tcl  -args data-ndim2/data.xyz
+vmd -e deposit.tcl  -args data-ndim3-nx40/data.xyz
 #+END_EXAMPLE
 
 To plot the volume of the bubble vs time
