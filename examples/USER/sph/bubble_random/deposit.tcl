@@ -26,6 +26,6 @@ proc slice {dw {dim x}} {
     mol modselect 0 0 (all) and user > 0 and ${dim}>$z1 and ${dim}<$z2
 }
 
-mol modstyle 0 0 VDW 0.250000 12.000000
-#mol modstyle 0 0 Points 16
-mol modselect 0 0 (all) and user > 0
+mol modstyle 0 0 VDW 0.200000 12.000000
+mol modmaterial 1 0 Transparent
+mol modselect 1 0 (all) and user > 0 and name A

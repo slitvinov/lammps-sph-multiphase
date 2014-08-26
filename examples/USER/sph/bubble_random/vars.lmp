@@ -1,5 +1,5 @@
 # number of particles in each of the directions
-variable          nx   equal 40
+variable          nx   equal 20
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"
@@ -15,7 +15,7 @@ variable          dx   equal  1.0/${nx}
 # density of the liquid (water)
 variable          sph_rho_l equal 1.00
 # density of the bubble (vapor) 
-variable          sph_rho_v equal 1.00
+variable          sph_rho_v equal 0.01
 
 # sound speed
 variable          sph_c_v equal 200.0/sqrt(${sph_rho_v})
@@ -49,7 +49,7 @@ variable           dT   equal 0.1
 variable           Tinf equal 1.0
 variable           Tc equal 0.0
 variable           Tt equal ${Tc}+${dT}
-variable           Hwv equal 32.0
+variable           Hwv equal 8.0
 # energy
 variable          e_v       equal ${cv_v}*${Tc}
 variable          e_l       equal ${cv_l}*${Tinf}
