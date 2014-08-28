@@ -48,6 +48,24 @@ make yes-USER-SPH
 make linux CC=mpicc LINK=mpicc CCFLAGS='-O2 -g' FFT_LIB=-lm MPI_LIB=
 #+END_EXAMPLE
 
+*** Debian Wheezy 7.5 x64
+
+- Install libraries
+#+BEGIN_EXAMPLE
+sudo apt-get install mpich2
+sudo apt-get install libjpeg8-dev
+#+END_EXAMPLE
+- Clone the repository
+#+BEGIN_EXAMPLE
+git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
+#+END_EXAMPLE
+- Build the package
+#+BEGIN_EXAMPLE
+cd lammps-sph/src
+make yes-USER-SPH
+make linux CC=mpicc LINK=mpicc CCFLAGS='-O2 -g' FFT_LIB=-lm MPI_LIB=
+#+END_EXAMPLE
+
 * Implementation
 We add the following extension to USER-SPH package:
 ** atom_style meso/multiphase
