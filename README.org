@@ -8,7 +8,7 @@ documentation of LAMMPS and to SPH-USER package:
 - http://lammps.sandia.gov/doc/USER/sph/SPH_LAMMPS_userguide.pdf
 
 ** Installation examples
-*** Ubuntu Linux 12.04
+*** Ubuntu 12.04.5 LTS (Precise Pangolin)
 
 - Install libraries
 #+BEGIN_EXAMPLE
@@ -28,6 +28,35 @@ make yes-USER-SPH
 make linux CC=mpicc LINK=mpicc CCFLAGS='-O2 -g' FFT_LIB=-lm
 #+END_EXAMPLE
 
+*** Ubuntu 14.04.1 LTS (Trusty Tahr)
+
+- Install libraries
+#+BEGIN_EXAMPLE
+sudo apt-get install git
+sudo apt-get install g++
+sudo apt-get install openmpi-bin
+sudo apt-get install libopenmpi-dev
+#+END_EXAMPLE
+- Install libjpeg from source
+#+BEGIN_EXAMPLE
+wget http://www.ijg.org/files/
+tar zxvf jpegsrc.v9a.tar.gz
+cd jpeg-9a
+./configure --prefix=${HOME}/prefix-jpeg-9a
+make install
+cd ..
+#+END_EXAMPLE
+
+- Clone the repository
+#+BEGIN_EXAMPLE
+git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
+#+END_EXAMPLE
+- Build the package
+#+BEGIN_EXAMPLE
+cd lammps-sph/src
+make yes-USER-SPH
+make linux CC=mpicc LINK=mpicc CCFLAGS="-O2 -g -I${HOME}/prefix-jpeg-9a/include" FFT_LIB=-lm LINKFLAG="-O -L${HOME}/prefix-jpeg-9a/lib"
+#+END_EXAMPLE
 *** CentOS Linux 6.5
 
 - Install libraries
