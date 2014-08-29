@@ -55,7 +55,7 @@ git clone https://github.com/slitvinov/lammps-sph-multiphase.git lammps-sph
 #+BEGIN_EXAMPLE
 cd lammps-sph/src
 make yes-USER-SPH
-make linux CC=mpicc LINK=mpicc CCFLAGS="-O2 -g -I${HOME}/prefix-jpeg-9a/include" FFT_LIB=-lm LINKFLAG="-O -L${HOME}/prefix-jpeg-9a/lib"
+make linux CC=mpic++ LINK=mpic++ CCFLAGS="-O2 -g -I${HOME}/prefix-jpeg-9a/include" FFT_LIB=-lm LINKFLAGS="-O -L${HOME}/prefix-jpeg-9a/lib" MPI_LIB=
 #+END_EXAMPLE
 *** CentOS Linux 6.5
 
