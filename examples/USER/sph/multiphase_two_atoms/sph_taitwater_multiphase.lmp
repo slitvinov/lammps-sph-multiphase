@@ -2,6 +2,13 @@ echo               both
 dimension          3
 units              si
 atom_modify        map array sort 0 0
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
 atom_style         meso/multiphase
 comm_modify    vel yes
 

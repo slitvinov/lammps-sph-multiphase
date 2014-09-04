@@ -5,6 +5,13 @@ shell              mkdir  ${dname}
 log                ${dname}/log.lammps
 # use SI units
 units              si
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
 atom_style         meso/multiphase
 
 # dimension (2 or 3)

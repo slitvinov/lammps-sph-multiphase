@@ -5,6 +5,13 @@ echo               both
 variable           ndim equal 2
 dimension          ${ndim}
 units              si
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
 atom_style         meso/multiphase
 boundary          p p p
 include           vars.lmp
