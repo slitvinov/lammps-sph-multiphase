@@ -95,6 +95,14 @@ make yes-USER-SPH
 make linux CC=mpicc LINK=mpicc CCFLAGS='-O2 -g' FFT_LIB=-lm MPI_LIB=
 #+END_EXAMPLE
 
+* Installation using src/Make.py
+
+#+BEGIN_EXAMPLE
+cd    src
+mkdir -p MAKE/MINE
+python Make.py -o linux  -v -p user-sph  -cc mpi -fft none -jpg no -a file mpi
+#+END_EXAMPLE
+
 * Implementation
 We add the following extension to USER-SPH package:
 ** atom_style meso/multiphase
