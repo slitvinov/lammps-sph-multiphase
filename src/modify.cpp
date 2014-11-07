@@ -661,7 +661,7 @@ void Modify::add_fix(int narg, char **arg, int trysuffix)
   // MUST change NEXCEPT above when add new fix to this list
 
   const char *exceptions[NEXCEPT] = 
-    {"GPU","OMP","Intel","property/atom","cmap"};
+    {"GPU","OMP","INTEL","property/atom","cmap"};
 
   if (domain->box_exist == 0) {
     int m;
@@ -861,10 +861,10 @@ int Modify::find_fix(const char *id)
 }
 
 /* ----------------------------------------------------------------------
-   check for fix associated with package name
+   check for fix associated with package name in compiled list
    return 1 if found else 0
    used to determine whether LAMMPS was built with
-     GPU, USER-INTEL, USER-OMP packages
+     GPU, USER-INTEL, USER-OMP packages, which have their own fixes
 ------------------------------------------------------------------------- */
 
 int Modify::check_package(const char *package_fix_name)

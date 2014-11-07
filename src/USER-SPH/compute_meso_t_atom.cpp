@@ -13,7 +13,6 @@
 
 #include "string.h"
 #include "compute_meso_t_atom.h"
-#include "sph_energy_equation.h"
 #include "atom.h"
 #include "update.h"
 #include "modify.h"
@@ -81,12 +80,12 @@ void ComputeMesoTAtom::compute_peratom()
 
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
-	if (cv[i] > 0.0) {
-	  tvector[i] = sph_energy2t(e[i],cv[i]);
-	}
+              if (cv[i] > 0.0) {
+                      tvector[i] = e[i] / cv[i];
+              }
       }
       else {
-	tvector[i] = 0.0;
+              tvector[i] = 0.0;
       }
     }
 }

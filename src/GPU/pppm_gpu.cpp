@@ -206,13 +206,13 @@ void PPPMGPU::compute(int eflag, int vflag)
   else evflag = evflag_atom = eflag_global = vflag_global = 
         eflag_atom = vflag_atom = 0;
 
-  // If need per-atom energies/virials, also do particle map on host
-  // concurrently with GPU calculations
+  // If need per-atom energies/virials, allocate per-atom arrays here
+  // so that particle map on host can be done concurrently with GPU calculations
+
   if (evflag_atom && !peratom_allocate_flag) {
     allocate_peratom();
     cg_peratom->ghost_notify();
     cg_peratom->setup();
-    peratom_allocate_flag = 1;
   }
 
   bool success = true;
@@ -233,12 +233,19 @@ void PPPMGPU::compute(int eflag, int vflag)
     domain->x2lamda(atom->nlocal);
   }
 
-  // extend size of per-atom arrays if necessary
+  // If need per-atom energies/virials, also do particle map on host
+  // concurrently with GPU calculations
 
-  if (evflag_atom && atom->nlocal > nmax) {
-    memory->destroy(part2grid);
-    nmax = atom->nmax;
-    memory->create(part2grid,nmax,3,"pppm:part2grid");
+  if (evflag_atom) {
+
+    // extend size of per-atom arrays if necessary
+
+    if (atom->nlocal > nmax) {
+      memory->destroy(part2grid);
+      nmax = atom->nmax;
+      memory->create(part2grid,nmax,3,"pppm:part2grid");
+    }
+
     particle_map();
   }
 
@@ -284,21 +291,24 @@ void PPPMGPU::compute(int eflag, int vflag)
 
   if (evflag_atom) fieldforce_peratom();
 
+  // update qsum and qsqsum, if needed
+
+  if (eflag_global || eflag_atom) {
+    if (qsum_update_flag || (atom->natoms != natoms_original)) {
+      qsum_qsq(0);
+      natoms_original = atom->natoms;
+    }
+  }
+
   // sum energy across procs and add in volume-dependent term
-  // reset qsum and qsqsum if atom count has changed
 
   if (eflag_global) {
     double energy_all;
     MPI_Allreduce(&energy,&energy_all,1,MPI_DOUBLE,MPI_SUM,world);
     energy = energy_all;
 
-    if (atom->natoms != natoms_original) {
-      qsum_qsq(0);
-      natoms_original = atom->natoms;
-    }
-
     energy *= 0.5*volume;
-    energy -= g_ewald*qsqsum/1.772453851 +
+    energy -= g_ewald*qsqsum/MY_PIS +
       MY_PI2*qsum*qsum / (g_ewald*g_ewald*volume);
     energy *= qscale;
   }

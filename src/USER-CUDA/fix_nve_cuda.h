@@ -1,4 +1,4 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
 
    Original Version:
@@ -47,7 +47,7 @@ class FixNVECuda : public Fix
                 void final_integrate_respa(int, int);
                 void reset_dt();
 
-                X_FLOAT triggerneighsq;
+                X_CFLOAT triggerneighsq;
 
         protected:
                 class Cuda *cuda;

@@ -34,7 +34,7 @@ FixNVEKokkos<DeviceType>::FixNVEKokkos(LAMMPS *lmp, int narg, char **arg) :
   execution_space = ExecutionSpaceFromDevice<DeviceType>::space;
 
   datamask_read = X_MASK | V_MASK | F_MASK | MASK_MASK | RMASS_MASK | TYPE_MASK;
-  datamask_modify = X_MASK | V_MASK | F_MASK;
+  datamask_modify = X_MASK | V_MASK;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -172,6 +172,6 @@ void FixNVEKokkos<DeviceType>::cleanup_copy()
 }
 
 template class FixNVEKokkos<LMPDeviceType>;
-#if DEVICE==2
+#ifdef KOKKOS_HAVE_CUDA
 template class FixNVEKokkos<LMPHostType>;
 #endif

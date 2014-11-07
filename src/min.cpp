@@ -53,7 +53,7 @@ Min::Min(LAMMPS *lmp) : Pointers(lmp)
 {
   dmax = 0.1;
   searchflag = 0;
-  linestyle = 0;
+  linestyle = 1;
 
   elist_global = elist_atom = NULL;
   vlist_global = vlist_atom = NULL;
@@ -282,7 +282,7 @@ void Min::setup()
   output->setup();
   update->setupflag = 0;
 
-  // stats for Finish to print
+  // stats for initial thermo output
 
   ecurrent = pe_compute->compute_scalar();
   if (nextra_global) ecurrent += modify->min_energy(fextra);

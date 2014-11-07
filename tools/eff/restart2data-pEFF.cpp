@@ -33,17 +33,6 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 #define MAX_GROUP 32
-#define PI (4.0*atan(1.0))
-
-// these should match settings in src/lmptype.h
-
-#include "stdint.h"
-#define __STDC_FORMAT_MACROS
-#include "inttypes.h"
-
-typedef int tagint;
-typedef int64_t bigint;
-#define BIGINT_FORMAT "%" PRId64
 
 // same as write_restart.cpp
 
@@ -83,12 +72,11 @@ class Data {
   int newton_pair,newton_bond;
   int xperiodic,yperiodic,zperiodic;
   int boundary[3][2];
-  
+
   char *atom_style;
   int style_angle,style_atomic,style_bond,style_charge,style_dipole;
-  int style_meso;
-  int style_ellipsoid,style_full;
-  int style_hybrid,style_molecular,style_peri,style_sphere;
+  int style_dpd,style_ellipsoid,style_full,style_granular;
+  int style_hybrid,style_molecular,style_peri,style_electron;
 
   int natoms,nbonds,nangles,ndihedrals,nimpropers;
   int ntypes,nbondtypes,nangletypes,ndihedraltypes,nimpropertypes;
@@ -195,12 +183,8 @@ class Data {
   double *omegax,*omegay,*omegaz;
   int *tag,*type,*mask,*image;
   int *molecule;
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   int *spin;
   double *ervel, *erforce;
-=======
-  double *rho, *e, *cv, *vestx, *vesty, *vestz;
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   double *q,*mux,*muy,*muz,*radius,*density,*vfrac,*rmass;
   double *s0,*x0x,*x0y,*x0z;
   double *quatw,*quati,*quatj,*quatk,*angmomx,*angmomy,*angmomz;
@@ -220,81 +204,53 @@ class Data {
   void write_atom_atomic(FILE *, int, int, int, int);
   void write_atom_bond(FILE *, int, int, int, int);
   void write_atom_charge(FILE *, int, int, int, int);
-  void write_atom_meso(FILE *, int, int, int, int);
   void write_atom_dipole(FILE *, int, int, int, int);
   void write_atom_dpd(FILE *, int, int, int, int);
   void write_atom_ellipsoid(FILE *, int, int, int, int);
   void write_atom_full(FILE *, int, int, int, int);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   void write_atom_granular(FILE *, int, int, int, int);
   void write_atom_molecular(FILE *, int, int, int, int);
   void write_atom_peri(FILE *, int, int, int, int);
   void write_atom_electron(FILE *, int, int, int, int);
-=======
-  void write_atom_molecular(FILE *, int, int, int, int);
-  void write_atom_peri(FILE *, int, int, int, int);
-  void write_atom_sphere(FILE *, int, int, int, int);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   void write_atom_angle_extra(FILE *, int);
   void write_atom_atomic_extra(FILE *, int);
   void write_atom_bond_extra(FILE *, int);
   void write_atom_charge_extra(FILE *, int);
-  void write_atom_meso_extra(FILE *, int);
   void write_atom_dipole_extra(FILE *, int);
   void write_atom_dpd_extra(FILE *, int);
   void write_atom_ellipsoid_extra(FILE *, int);
   void write_atom_full_extra(FILE *, int);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   void write_atom_granular_extra(FILE *, int);
   void write_atom_molecular_extra(FILE *, int);
   void write_atom_peri_extra(FILE *, int);
   void write_atom_electron_extra(FILE *, int);
-=======
-  void write_atom_molecular_extra(FILE *, int);
-  void write_atom_peri_extra(FILE *, int);
-  void write_atom_sphere_extra(FILE *, int);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   void write_vel_angle(FILE *, int);
   void write_vel_atomic(FILE *, int);
   void write_vel_bond(FILE *, int);
   void write_vel_charge(FILE *, int);
-  void write_vel_meso(FILE *, int);
   void write_vel_dipole(FILE *, int);
   void write_vel_dpd(FILE *, int);
   void write_vel_ellipsoid(FILE *, int);
   void write_vel_full(FILE *, int);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   void write_vel_granular(FILE *, int);
   void write_vel_molecular(FILE *, int);
   void write_vel_peri(FILE *, int);
   void write_vel_electron(FILE *, int);
-=======
-  void write_vel_molecular(FILE *, int);
-  void write_vel_peri(FILE *, int);
-  void write_vel_sphere(FILE *, int);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   void write_vel_angle_extra(FILE *, int);
   void write_vel_atomic_extra(FILE *, int);
   void write_vel_bond_extra(FILE *, int);
   void write_vel_charge_extra(FILE *, int);
-  void write_vel_meso_extra(FILE *, int);
   void write_vel_dipole_extra(FILE *, int);
   void write_vel_dpd_extra(FILE *, int);
   void write_vel_ellipsoid_extra(FILE *, int);
   void write_vel_full_extra(FILE *, int);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   void write_vel_granular_extra(FILE *, int);
   void write_vel_molecular_extra(FILE *, int);
   void write_vel_peri_extra(FILE *, int);
   void write_vel_electron_extra(FILE *, int);
-=======
-  void write_vel_molecular_extra(FILE *, int);
-  void write_vel_peri_extra(FILE *, int);
-  void write_vel_sphere_extra(FILE *, int);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 };
 
 // ---------------------------------------------------------------------
@@ -318,32 +274,23 @@ void allocate_angle(Data &data);
 void allocate_atomic(Data &data);
 void allocate_bond(Data &data);
 void allocate_charge(Data &data);
-void allocate_meso(Data &data);
 void allocate_dipole(Data &data);
 void allocate_dpd(Data &data);
 void allocate_ellipsoid(Data &data);
 void allocate_full(Data &data);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void allocate_granular(Data &data);
 void allocate_molecular(Data &data);
 void allocate_peri(Data &data);
 void allocate_electron(Data &data);
-=======
-void allocate_molecular(Data &data);
-void allocate_peri(Data &data);
-void allocate_sphere(Data &data);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
 int atom_angle(double *, Data &, int);
 int atom_atomic(double *, Data &, int);
 int atom_bond(double *, Data &, int);
 int atom_charge(double *, Data &, int);
-int atom_meso(double *, Data &, int);
 int atom_dipole(double *, Data &, int);
 int atom_dpd(double *, Data &, int);
 int atom_ellipsoid(double *, Data &, int);
 int atom_full(double *, Data &, int);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 int atom_granular(double *, Data &, int);
 int atom_molecular(double *, Data &, int);
 int atom_peri(double *, Data &, int);
@@ -352,18 +299,6 @@ int atom_electron(double *, Data &, int);
 int read_int(FILE *fp);
 double read_double(FILE *fp);
 char *read_char(FILE *fp);
-=======
-int atom_molecular(double *, Data &, int);
-int atom_peri(double *, Data &, int);
-int atom_sphere(double *, Data &, int);
-
-void strip_suffix(char *);
-
-int read_int(FILE *fp);
-double read_double(FILE *fp);
-char *read_char(FILE *fp);
-bigint read_bigint(FILE *fp);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
 // ---------------------------------------------------------------------
 // main program
@@ -371,7 +306,6 @@ bigint read_bigint(FILE *fp);
 
 int main (int argc, char **argv)
 {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   // syntax error check
 
     if ((argc != 3) && (argc !=4)) {
@@ -381,38 +315,6 @@ int main (int argc, char **argv)
 
   // if restart file contains '%', file = filename with % replaced by "base"
   // else file = single file
-=======
-  // process command-line args
-
-  int iarg = 1;
-  if (strcmp(arg[iarg],"-h") == 0) {
-    printf("Syntax: restart2data switch arg ... "
-	   "restart-file data-file (input-file)\n");
-    printf("  restart-file and data-file are mandatory");
-    printf("  input-file is optional");
-    printf("    if specified it will contain LAMMPS input script commands");
-    printf("    for mass and force field info");
-    printf("    only a few force field styles support this option");
-    return 0;
-  }
-
-  if ((narg-iarg != 2) && (narg-iarg != 3)) {
-    printf("Syntax: restart2data switch arg ... "
-	   "restart-file data-file (input-file)\n");
-    return 1;
-  }
-
-  char *restartfile = arg[iarg];
-  char *datafile = arg[iarg+1];
-  char *inputfile = NULL;
-  if (narg-iarg == 3) inputfile = arg[iarg+2];
-
-  // if restart file contains '%', file = filename with % replaced by "base"
-  // else file = single file
-  // open single restart file or base file for multiproc case
-
-  printf("Reading restart file ...\n");
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   int multiproc;
   char *file,*ptr;
@@ -421,7 +323,6 @@ int main (int argc, char **argv)
     multiproc = 1;
     file = new char[strlen(argv[1]) + 16];
     *ptr = '\0';
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     sprintf(file,"%s%s%s",argv[1],"base",ptr+1);
   } else {
     multiproc = 0;
@@ -435,20 +336,6 @@ int main (int argc, char **argv)
   if (fp == NULL) {
     printf("ERROR: Cannot open restart file %s\n",file);
     return 1;
-=======
-    sprintf(basefile,"%s%s%s",restartfile,"base",ptr+1);
-    fp = fopen(basefile,"rb");
-    if (fp == NULL) {
-      printf("ERROR: Cannot open restart file %s\n",basefile);
-      return 1;
-    }
-  } else {
-    fp = fopen(restartfile,"rb");
-    if (fp == NULL) {
-      printf("ERROR: Cannot open restart file %s\n",restartfile);
-      return 1;
-    }
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   }
 
   // read beginning of restart file
@@ -480,7 +367,6 @@ int main (int argc, char **argv)
       }
     }
     n = read_int(fp);
-    printf("DEBUG :n: %d\n", n);
 
     if (n > maxbuf) {
       maxbuf = n;
@@ -542,11 +428,7 @@ int main (int argc, char **argv)
 
 void header(FILE *fp, Data &data)
 {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   char *version = "7 Jul 2009";
-=======
-  char *version = "19 Aug 2011";
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   data.triclinic = 0;
 
@@ -588,17 +470,10 @@ void header(FILE *fp, Data &data)
     //   set sub-styles to 1 to N
 
     else if (flag == ATOM_STYLE) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
       data.style_angle = data.style_atomic = data.style_bond = 
 	data.style_charge = data.style_dipole =	data.style_dpd =
 	data.style_ellipsoid = data.style_full = data.style_granular =
 	data.style_hybrid = data.style_molecular = data.style_peri = data.style_electron = 0;
-=======
-      data.style_angle = data.style_atomic = data.style_bond =
-	data.style_charge = data.style_dipole =	data.style_meso =
-	data.style_ellipsoid = data.style_full = data.style_hybrid = 
-	data.style_molecular = data.style_peri = data.style_sphere = 0;
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
       data.atom_style = read_char(fp);
       set_style(data.atom_style,data,1);
@@ -669,23 +544,15 @@ void set_style(char *name, Data &data, int flag)
   else if (strcmp(name,"atomic") == 0) data.style_atomic = flag;
   else if (strcmp(name,"bond") == 0) data.style_bond = flag;
   else if (strcmp(name,"charge") == 0) data.style_charge = flag;
-  else if (strcmp(name,"meso") == 0) data.style_meso = flag;
   else if (strcmp(name,"dipole") == 0) data.style_dipole = flag;
   else if (strcmp(name,"dpd") == 0) data.style_dpd = flag;
   else if (strcmp(name,"ellipsoid") == 0) data.style_ellipsoid = flag;
   else if (strcmp(name,"full") == 0) data.style_full = flag;
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   else if (strcmp(name,"granular") == 0) data.style_granular = flag;
   else if (strcmp(name,"hybrid") == 0) data.style_hybrid = flag;
   else if (strcmp(name,"molecular") == 0) data.style_molecular = flag;
   else if (strcmp(name,"peri") == 0) data.style_peri = flag;
   else if (strcmp(name,"electron") == 0) data.style_electron = flag;
-=======
-  else if (strcmp(name,"hybrid") == 0) data.style_hybrid = flag;
-  else if (strcmp(name,"molecular") == 0) data.style_molecular = flag;
-  else if (strcmp(name,"peri") == 0) data.style_peri = flag;
-  else if (strcmp(name,"sphere") == 0) data.style_sphere = flag;
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   else {
     printf("ERROR: Unknown atom style %s\n",name);
     exit(1);
@@ -733,15 +600,12 @@ void type_arrays(FILE *fp, Data &data)
     if (flag == MASS) {
       data.mass = new double[data.ntypes+1];
       fread(&data.mass[1],sizeof(double),data.ntypes,fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     } else if (flag == SHAPE) {
       data.shape = new double[3*(data.ntypes+1)];
       fread(&data.shape[3],sizeof(double),3*data.ntypes,fp);
     } else if (flag == DIPOLE) {
       data.dipole = new double[data.ntypes+1];
       fread(&data.dipole[1],sizeof(double),data.ntypes,fp);
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     } else {
       printf("ERROR: Invalid flag in type arrays section of restart file %d\n",
 	     flag);
@@ -855,21 +719,14 @@ int atom(double *buf, Data &data)
     if (data.style_atomic) allocate_atomic(data);
     if (data.style_bond) allocate_bond(data);
     if (data.style_charge) allocate_charge(data);
-    if (data.style_meso) allocate_meso(data);
     if (data.style_dipole) allocate_dipole(data);
     if (data.style_dpd) allocate_dpd(data);
     if (data.style_ellipsoid) allocate_ellipsoid(data);
     if (data.style_full) allocate_full(data);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if (data.style_granular) allocate_granular(data);
     if (data.style_molecular) allocate_molecular(data);
     if (data.style_peri) allocate_peri(data);
     if (data.style_electron) allocate_electron(data);
-=======
-    if (data.style_molecular) allocate_molecular(data);
-    if (data.style_peri) allocate_peri(data);
-    if (data.style_sphere) allocate_sphere(data);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   }
 
   // read atom quantities from buf
@@ -886,21 +743,14 @@ int atom(double *buf, Data &data)
     if (k == data.style_atomic) m += atom_atomic(&buf[m],data,iatoms);
     if (k == data.style_bond) m += atom_bond(&buf[m],data,iatoms);
     if (k == data.style_charge) m += atom_charge(&buf[m],data,iatoms);
-    if (k == data.style_meso) m += atom_meso(&buf[m],data,iatoms);
     if (k == data.style_dipole) m += atom_dipole(&buf[m],data,iatoms);
     if (k == data.style_dpd) m += atom_dpd(&buf[m],data,iatoms);
     if (k == data.style_ellipsoid) m += atom_ellipsoid(&buf[m],data,iatoms);
     if (k == data.style_full) m += atom_full(&buf[m],data,iatoms);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if (k == data.style_granular) m += atom_granular(&buf[m],data,iatoms);
     if (k == data.style_molecular) m += atom_molecular(&buf[m],data,iatoms);
     if (k == data.style_peri) m += atom_peri(&buf[m],data,iatoms);
     if (k == data.style_electron) m += atom_electron(&buf[m],data,iatoms);
-=======
-    if (k == data.style_molecular) m += atom_molecular(&buf[m],data,iatoms);
-    if (k == data.style_peri) m += atom_peri(&buf[m],data,iatoms);
-    if (k == data.style_sphere) m += atom_sphere(&buf[m],data,iatoms);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   }
 
   data.iatoms++;
@@ -935,11 +785,7 @@ int atom_angle(double *buf, Data &data, int iatoms)
   for (int k = 0; k < n; k++) {
     type = static_cast<int> (buf[m++]);
     atom1 = static_cast<int> (buf[m++]);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if (data.newton_bond || data.tag[iatoms] < atom1) {
-=======
-    if (data.newton_bond || data.tag[iatoms] < atom1 ) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
       data.bond_type[data.ibonds] = type;
       data.bond_atom1[data.ibonds] = data.tag[iatoms];
       data.bond_atom2[data.ibonds] = atom1;
@@ -1034,31 +880,6 @@ int atom_charge(double *buf, Data &data, int iatoms)
   return m;
 }
 
-int atom_meso(double *buf, Data &data, int iatoms)
-{
-  int m = 1;
-  data.x[iatoms] = buf[m++];
-  data.y[iatoms] = buf[m++];
-  data.z[iatoms] = buf[m++];
-  data.tag[iatoms] = static_cast<int> (buf[m++]);
-  data.type[iatoms] = static_cast<int> (buf[m++]);
-  data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = static_cast<int> (buf[m++]);
-  data.vx[iatoms] = buf[m++];
-  data.vy[iatoms] = buf[m++];
-  data.vz[iatoms] = buf[m++];
-
-  data.rho[iatoms]=buf[m++];
-  data.e[iatoms]=buf[m++];
-  data.cv[iatoms]=buf[m++];
-  data.vestx[iatoms]=buf[m++];
-  data.vesty[iatoms]=buf[m++];
-  data.vestz[iatoms]=buf[m++];
-
-  return m;
-}
-
-
 int atom_dipole(double *buf, Data &data, int iatoms)
 {
   int m = 1;
@@ -1077,7 +898,6 @@ int atom_dipole(double *buf, Data &data, int iatoms)
   data.mux[iatoms] = buf[m++];
   data.muy[iatoms] = buf[m++];
   data.muz[iatoms] = buf[m++];
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   
   return m;
 }
@@ -1095,8 +915,6 @@ int atom_dpd(double *buf, Data &data, int iatoms)
   data.vx[iatoms] = buf[m++];
   data.vy[iatoms] = buf[m++];
   data.vz[iatoms] = buf[m++];
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   return m;
 }
@@ -1142,34 +960,6 @@ int atom_granular(double *buf, Data &data, int iatoms)
 
   data.radius[iatoms] = buf[m++];
   data.density[iatoms] = buf[m++];
-  data.omegax[iatoms] = buf[m++];
-  data.omegay[iatoms] = buf[m++];
-  data.omegaz[iatoms] = buf[m++];
-
-  return m;
-}
-
-int atom_sphere(double *buf, Data &data, int iatoms)
-{
-  int m = 1;
-  data.x[iatoms] = buf[m++];
-  data.y[iatoms] = buf[m++];
-  data.z[iatoms] = buf[m++];
-  data.tag[iatoms] = static_cast<int> (buf[m++]);
-  data.type[iatoms] = static_cast<int> (buf[m++]);
-  data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = static_cast<int> (buf[m++]);
-  data.vx[iatoms] = buf[m++];
-  data.vy[iatoms] = buf[m++];
-  data.vz[iatoms] = buf[m++];
-
-  data.radius[iatoms] = buf[m++];
-  data.rmass[iatoms] = buf[m++];
-  if (data.radius[iatoms] == 0.0) data.density[iatoms] = data.rmass[iatoms];
-  else 
-    data.density[iatoms] = data.rmass[iatoms] / 
-      (4.0*PI/3.0 * 
-       data.radius[iatoms]*data.radius[iatoms]*data.radius[iatoms]);
   data.omegax[iatoms] = buf[m++];
   data.omegay[iatoms] = buf[m++];
   data.omegaz[iatoms] = buf[m++];
@@ -1367,7 +1157,6 @@ int atom_peri(double *buf, Data &data, int iatoms)
   return m;
 }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 int atom_electron(double *buf, Data &data, int iatoms)
 {
   int m = 1;
@@ -1393,8 +1182,6 @@ int atom_electron(double *buf, Data &data, int iatoms)
 }
 
 
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 // ---------------------------------------------------------------------
 // per-atom memory allocation routines
 // one routine per atom style
@@ -1426,17 +1213,6 @@ void allocate_charge(Data &data)
 {
   data.q = new double[data.natoms];
 }
-
-void allocate_meso(Data &data)
-{
-  data.rho = new double[data.natoms];
-  data.e = new double[data.natoms];
-  data.cv = new double[data.natoms];
-  data.vestx = new double[data.natoms];
-  data.vesty = new double[data.natoms];
-  data.vestz = new double[data.natoms];
-}
-
 
 void allocate_dipole(Data &data)
 {
@@ -1524,7 +1300,6 @@ void allocate_peri(Data &data)
   data.x0z = new double[data.natoms];
 }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void allocate_electron(Data &data)
 {
   data.q = new double[data.natoms];
@@ -1534,8 +1309,6 @@ void allocate_electron(Data &data)
 }
 
 
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 // ---------------------------------------------------------------------
 // pair coeffs
 // one section for each pair style
@@ -1550,15 +1323,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
   double rtmp;
 
   if (strcmp(style,"none") == 0) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 
-=======
-  } else if (strcmp(style,"sph/rhosum_multiphase") == 0) {
-  } else if (strcmp(style,"sph/colorgradient") == 0) {
-  } else if (strcmp(style,"sph/taitwater/morris") == 0) {
-  } else if (strcmp(style,"sph/taitwater/multiphase") == 0) {
-  } else if (strcmp(style,"sph/surfacetension") == 0) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   } else if (strcmp(style,"airebo") == 0) {
 
   } else if (strcmp(style,"born/coul/long") == 0) {
@@ -1602,15 +1367,9 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       }
 
   } else if ((strcmp(style,"buck") == 0)  ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	   (strcmp(style,"buck/coul/cut") == 0) ||
 	   (strcmp(style,"buck/coul/long") == 0) ||
 	   (strcmp(style,"buck/coul") == 0)) {
-=======
-	     (strcmp(style,"buck/coul/cut") == 0) ||
-	     (strcmp(style,"buck/coul/long") == 0) ||
-	     (strcmp(style,"buck/coul") == 0)) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
     if (strcmp(style,"buck") == 0) {
       m = 0;
@@ -1704,11 +1463,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	  }
 	}
       }
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     
-=======
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   } else if ((strcmp(style,"coul/cut") == 0) ||
 	     (strcmp(style,"coul/debye") == 0) ||
 	     (strcmp(style,"coul/long") == 0)) {
@@ -1747,11 +1502,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	}
       }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   } else if (strcmp(style,"eff/cut") == 0) {
-=======
-  } else if (strcmp(style,"dipole/cut") == 0) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
     if (strcmp(style,"eff/cut") == 0) {
       double cut_eff = read_double(fp);
@@ -1777,7 +1528,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
         }
       }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   }  else if (strcmp(style,"dipole/cut") == 0) {
 
     double cut_lj_global = read_double(fp);
@@ -1812,8 +1562,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	}
       }
 
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   } else if (strcmp(style,"dpd") == 0) {
 
     double temperature = read_double(fp);
@@ -1913,16 +1661,10 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     int dampflag = read_int(fp);
 
   } else if ((strcmp(style,"lj/charmm/coul/charmm") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	   (strcmp(style,"lj/charmm/coul/charmm/implicit") == 0) ||
 	   (strcmp(style,"lj/charmm/coul/long") == 0) ||
 	   (strcmp(style,"lj/charmm/coul/long/opt") == 0)) {
 
-=======
-	     (strcmp(style,"lj/charmm/coul/charmm/implicit") == 0) ||
-	     (strcmp(style,"lj/charmm/coul/long") == 0)) {
-      
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     if (strcmp(style,"lj/charmm/coul/charmm") == 0) {
       double cut_lj_inner = read_double(fp);
       double cut_lj = read_double(fp);
@@ -1937,12 +1679,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       double cut_coul = read_double(fp);
       int offset_flag = read_int(fp);
       int mix_flag = read_int(fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     } else if ((strcmp(style,"lj/charmm/coul/long") == 0) ||
 	       (strcmp(style,"lj/charmm/coul/long/opt") == 0)) {
-=======
-    } else if (strcmp(style,"lj/charmm/coul/long") == 0) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
       double cut_lj_inner = read_double(fp);
       double cut_lj = read_double(fp);
       double cut_coul = read_double(fp);
@@ -1981,11 +1719,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 
   } else if ((strcmp(style,"lj/class2") == 0) ||
 	   (strcmp(style,"lj/class2/coul/cut") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	   (strcmp(style,"lj/class2/coul/long") == 0)) {
-=======
-	     (strcmp(style,"lj/class2/coul/long") == 0)) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
     if (strcmp(style,"lj/class2") == 0) {
       m = 0;
@@ -2034,7 +1768,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       }
 
   } else if ((strcmp(style,"lj/cut") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	   (strcmp(style,"lj/cut/opt") == 0) ||
 	   (strcmp(style,"lj/cut/coul/cut") == 0) ||
 	   (strcmp(style,"lj/cut/coul/debye") == 0) ||
@@ -2043,21 +1776,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 	   (strcmp(style,"lj/coul") == 0)) {
 
     if ((strcmp(style,"lj/cut") == 0) || (strcmp(style,"lj/cut/opt") == 0)) {
-=======
-	     (strcmp(style,"lj96/cut") == 0) ||
-	     (strcmp(style,"lj/cut/coul/cut") == 0) ||
-	     (strcmp(style,"lj/cut/coul/debye") == 0) ||
-	     (strcmp(style,"lj/cut/coul/long") == 0) ||
-	     (strcmp(style,"lj/cut/coul/long/tip4p") == 0) ||
-	     (strcmp(style,"lj/coul") == 0)) {
-
-    if (strcmp(style,"lj/cut") == 0) {
-      m = 0;
-      double cut_lj_global = read_double(fp);
-      int offset_flag = read_int(fp);
-      int mix_flag = read_int(fp);
-    } else if (strcmp(style,"lj96/cut") == 0) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
       m = 0;
       double cut_lj_global = read_double(fp);
       int offset_flag = read_int(fp);
@@ -2248,34 +1966,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 
   } else if (strcmp(style,"meam") == 0) {
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   } else if ((strcmp(style,"morse") == 0) ||
 	     (strcmp(style,"morse/opt") == 0)) {
-=======
-    if (!flag) return;
-
-    for (i = 1; i <= data.ntypes; i++)
-      for (j = i; j <= data.ntypes; j++) {
-	itmp = read_int(fp);
-	if (i == j && itmp == 0) {
-	  printf("ERROR: Pair coeff %d,%d is not in restart file\n",i,j);
-	  exit(1);
-	}
-	if (itmp) {
-	  if (i == j) {
-	    double cut_inner = read_double(fp);
-	    double cut = read_double(fp);
-	  } else {
-	    double cut_inner = read_double(fp);
-	    double cut = read_double(fp);
-	  }
-	}
-      }
-
-  } else if (strcmp(style,"meam") == 0) {
-
-  } else if (strcmp(style,"morse") == 0) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
     double cut_global = read_double(fp);
     int offset_flag = read_int(fp);
@@ -2349,10 +2041,6 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     int n = read_int(fp);
 
   } else if (strcmp(style,"tersoff") == 0) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-  } else if (strcmp(style,"tersoff/zbl") == 0) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(style,"yukawa") == 0) {
 
@@ -2385,12 +2073,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
 
   } else if ((strcmp(style,"cg/cmm") == 0) ||
              (strcmp(style,"cg/cmm/coul/cut") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
              (strcmp(style,"cg/cmm/coul/long") == 0) ) {
-=======
-             (strcmp(style,"cg/cmm/coul/long") == 0)) {
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     m = 0;
     data.cut_lj_global = read_double(fp);
     data.cut_coul_global = read_double(fp);
@@ -2406,13 +2089,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
     data.pair_cg_epsilon = new double*[numtyp];
     data.pair_cg_sigma = new double*[numtyp];
     data.pair_cut_lj = new double*[numtyp];
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if  ((strcmp(style,"cg/cmm/coul/cut") == 0) ||
              (strcmp(style,"cg/cmm/coul/long") == 0) ) {
-=======
-    if ((strcmp(style,"cg/cmm/coul/cut") == 0) ||
-	(strcmp(style,"cg/cmm/coul/long") == 0)) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
       data.pair_cut_coul = new double*[numtyp];
       m=1;
     } else {
@@ -2427,11 +2105,7 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       data.pair_cg_sigma[i] = new double[numtyp];
       data.pair_cut_lj[i] = new double[numtyp];
       if ((strcmp(style,"cg/cmm/coul/cut") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
           (strcmp(style,"cg/cmm/coul/long") == 0) ) {
-=======
-          (strcmp(style,"cg/cmm/coul/long") == 0)) {
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
         data.pair_cut_coul[i] = new double[numtyp];
       }
 
@@ -2524,28 +2198,6 @@ void bond(FILE *fp, Data &data)
     data.bond_harmonic_r0 = new double[data.nbondtypes+1];
     fread(&data.bond_harmonic_k[1],sizeof(double),data.nbondtypes,fp);
     fread(&data.bond_harmonic_r0[1],sizeof(double),data.nbondtypes,fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-
-  } else if (strcmp(data.bond_style,"harmonicshift") == 0) {
-
-    data.bond_harmonicshift_umin = new double[data.nbondtypes+1];
-    data.bond_harmonicshift_r0 = new double[data.nbondtypes+1];
-    data.bond_harmonicshift_rc = new double[data.nbondtypes+1];
-    fread(&data.bond_harmonicshift_umin[1],sizeof(double),data.nbondtypes,fp);
-    fread(&data.bond_harmonicshift_r0[1],sizeof(double),data.nbondtypes,fp);
-    fread(&data.bond_harmonicshift_rc[1],sizeof(double),data.nbondtypes,fp);
-
-  } else if (strcmp(data.bond_style,"harmonicshiftcut") == 0) {
-
-    data.bond_harmonicshiftcut_umin = new double[data.nbondtypes+1];
-    data.bond_harmonicshiftcut_r0 = new double[data.nbondtypes+1];
-    data.bond_harmonicshiftcut_rc = new double[data.nbondtypes+1];
-    fread(&data.bond_harmonicshiftcut_umin[1],sizeof(double),
-	  data.nbondtypes,fp);
-    fread(&data.bond_harmonicshiftcut_r0[1],sizeof(double),data.nbondtypes,fp);
-    fread(&data.bond_harmonicshiftcut_rc[1],sizeof(double),data.nbondtypes,fp);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(data.bond_style,"morse") == 0) {
 
@@ -2577,14 +2229,6 @@ void bond(FILE *fp, Data &data)
     fread(&data.bond_quartic_b2[1],sizeof(double),data.nbondtypes,fp);
     fread(&data.bond_quartic_rc[1],sizeof(double),data.nbondtypes,fp);
     fread(&data.bond_quartic_u0[1],sizeof(double),data.nbondtypes,fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-
-  } else if (strcmp(data.bond_style,"table") == 0) {
-
-    int tabstyle = read_int(fp);
-    int n = read_int(fp);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(data.bond_style,"hybrid") == 0) {
 
@@ -2607,25 +2251,6 @@ void angle(FILE *fp, Data &data)
 {
   if (strcmp(data.angle_style,"none") == 0) {
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-  } else if (strcmp(data.angle_style,"cg/cmm") == 0) {
-
-    data.angle_harmonic_k = new double[data.nangletypes+1];
-    data.angle_harmonic_theta0 = new double[data.nangletypes+1];
-    data.angle_cg_cmm_epsilon = new double[data.nangletypes+1];
-    data.angle_cg_cmm_sigma = new double[data.nangletypes+1];
-    double *angle_cg_cmm_rcut = new double[data.nangletypes+1];
-    data.angle_cg_cmm_type = new int[data.nangletypes+1];
-
-    fread(&data.angle_harmonic_k[1],sizeof(double),data.nangletypes,fp);
-    fread(&data.angle_harmonic_theta0[1],sizeof(double),data.nangletypes,fp);
-    fread(&data.angle_cg_cmm_epsilon[1],sizeof(double),data.nangletypes,fp);
-    fread(&data.angle_cg_cmm_sigma[1],sizeof(double),data.nangletypes,fp);
-    fread(angle_cg_cmm_rcut,sizeof(double),data.nangletypes,fp);
-    fread(&data.angle_cg_cmm_type[1],sizeof(int),data.nangletypes,fp);
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   } else if (strcmp(data.angle_style,"charmm") == 0) {
 
     data.angle_charmm_k = new double[data.nangletypes+1];
@@ -2666,37 +2291,6 @@ void angle(FILE *fp, Data &data)
     fread(&data.angle_class2_ba_k2[1],sizeof(double),data.nangletypes,fp);
     fread(&data.angle_class2_ba_r1[1],sizeof(double),data.nangletypes,fp);
     fread(&data.angle_class2_ba_r2[1],sizeof(double),data.nangletypes,fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-
-  } else if (strcmp(data.angle_style,"cosineshift") == 0) {
-
-    data.angle_cosineshift_umin = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshift_umin[1],sizeof(double),data.nangletypes,fp);
-    data.angle_cosineshift_cost = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshift_cost[1],sizeof(double),data.nangletypes,fp);
-    data.angle_cosineshift_sint = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshift_sint[1],sizeof(double),data.nangletypes,fp);
-    data.angle_cosineshift_theta0 = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshift_theta0[1],sizeof(double),data.nangletypes,fp);
-
-  } else if (strcmp(data.angle_style,"cosineshiftexp") == 0) {
-
-    data.angle_cosineshiftexp_umin = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshiftexp_umin[1],sizeof(double),
-	  data.nangletypes,fp);
-    data.angle_cosineshiftexp_a = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshiftexp_a[1],sizeof(double),data.nangletypes,fp);
-    data.angle_cosineshiftexp_cost = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshiftexp_cost[1],sizeof(double),
-	  data.nangletypes,fp);
-    data.angle_cosineshiftexp_sint = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshiftexp_sint[1],sizeof(double),
-	  data.nangletypes,fp);
-    data.angle_cosineshiftexp_theta0 = new double[data.nangletypes+1];
-    fread(&data.angle_cosineshiftexp_theta0[1],sizeof(double),
-	  data.nangletypes,fp);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(data.angle_style,"cosine") == 0) {
 
@@ -2711,7 +2305,6 @@ void angle(FILE *fp, Data &data)
     fread(&data.angle_cosine_squared_k[1],sizeof(double),data.nangletypes,fp);
     fread(&data.angle_cosine_squared_theta0[1],
 	  sizeof(double),data.nangletypes,fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 
   } else if (strcmp(data.angle_style,"harmonic") == 0) {
 
@@ -2719,14 +2312,11 @@ void angle(FILE *fp, Data &data)
     data.angle_harmonic_theta0 = new double[data.nangletypes+1];
     fread(&data.angle_harmonic_k[1],sizeof(double),data.nangletypes,fp);
     fread(&data.angle_harmonic_theta0[1],sizeof(double),data.nangletypes,fp);
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(data.angle_style,"cg/cmm") == 0) {
 
     data.angle_harmonic_k = new double[data.nangletypes+1];
     data.angle_harmonic_theta0 = new double[data.nangletypes+1];
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     data.angle_cg_cmm_epsilon = new double[data.nangletypes+1];
     data.angle_cg_cmm_sigma = new double[data.nangletypes+1];
     double *angle_cg_cmm_rcut = new double[data.nangletypes+1];
@@ -2738,15 +2328,6 @@ void angle(FILE *fp, Data &data)
     fread(&data.angle_cg_cmm_sigma[1],sizeof(double),data.nangletypes,fp);
     fread(angle_cg_cmm_rcut,sizeof(double),data.nangletypes,fp);
     fread(&data.angle_cg_cmm_type[1],sizeof(int),data.nangletypes,fp);
-=======
-    fread(&data.angle_harmonic_k[1],sizeof(double),data.nangletypes,fp);
-    fread(&data.angle_harmonic_theta0[1],sizeof(double),data.nangletypes,fp);
-
-  } else if (strcmp(data.angle_style,"table") == 0) {
-
-    int tabstyle = read_int(fp);
-    int n = read_int(fp);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(data.angle_style,"hybrid") == 0) {
 
@@ -2932,32 +2513,6 @@ void dihedral(FILE *fp, Data &data)
     fread(&data.dihedral_opls_k2[1],sizeof(double),data.ndihedraltypes,fp);
     fread(&data.dihedral_opls_k3[1],sizeof(double),data.ndihedraltypes,fp);
     fread(&data.dihedral_opls_k4[1],sizeof(double),data.ndihedraltypes,fp);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-  
-  } else if (strcmp(data.dihedral_style,"cosineshiftexp") == 0) {
-
-    data.dihedral_cosineshiftexp_umin = new double[data.ndihedraltypes+1];
-    fread(&data.dihedral_cosineshiftexp_umin[1],sizeof(double),
-	  data.ndihedraltypes,fp);
-    data.dihedral_cosineshiftexp_a = new double[data.ndihedraltypes+1];
-    fread(&data.dihedral_cosineshiftexp_a[1],sizeof(double),
-	  data.ndihedraltypes,fp);
-    data.dihedral_cosineshiftexp_cost = new double[data.ndihedraltypes+1];
-    fread(&data.dihedral_cosineshiftexp_cost[1],sizeof(double),
-	  data.ndihedraltypes,fp);
-    data.dihedral_cosineshiftexp_sint = new double[data.ndihedraltypes+1];
-    fread(&data.dihedral_cosineshiftexp_sint[1],sizeof(double),
-	  data.ndihedraltypes,fp);
-    data.dihedral_cosineshiftexp_theta = new double[data.ndihedraltypes+1];
-    fread(&data.dihedral_cosineshiftexp_theta[1],sizeof(double),
-	  data.ndihedraltypes,fp);
-
-  } else if (strcmp(data.dihedral_style,"table") == 0) {
-
-    int tabstyle = read_int(fp);
-    int n = read_int(fp);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   } else if (strcmp(data.dihedral_style,"hybrid") == 0) {
 
@@ -3055,23 +2610,11 @@ void Data::stats()
   printf("  Restart file version = %s\n",version);
   printf("  Ntimestep = %d\n",ntimestep);
   printf("  Nprocs = %d\n",nprocs);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   printf("  Natoms = %d\n",natoms);
   printf("  Nbonds = %d\n",nbonds);
   printf("  Nangles = %d\n",nangles);
   printf("  Ndihedrals = %d\n",ndihedrals);
   printf("  Nimpropers = %d\n",nimpropers);
-=======
-  printf("  Natoms = " BIGINT_FORMAT "\n",natoms);
-
-  if (nellipsoids) printf("  Nellipsoids = " BIGINT_FORMAT "\n",nellipsoids);
-
-  printf("  Nbonds = " BIGINT_FORMAT "\n",nbonds);
-  printf("  Nangles = " BIGINT_FORMAT "\n",nangles);
-  printf("  Ndihedrals = " BIGINT_FORMAT "\n",ndihedrals);
-  printf("  Nimpropers = " BIGINT_FORMAT "\n",nimpropers);
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   printf("  Unit style = %s\n",unit_style);
   printf("  Atom style = %s\n",atom_style);
   printf("  Pair style = %s\n",pair_style);
@@ -3079,10 +2622,6 @@ void Data::stats()
   printf("  Angle style = %s\n",angle_style);
   printf("  Dihedral style = %s\n",dihedral_style);
   printf("  Improper style = %s\n",improper_style);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   printf("  Xlo xhi = %g %g\n",xlo,xhi);
   printf("  Ylo yhi = %g %g\n",ylo,yhi);
   printf("  Zlo zhi = %g %g\n",zlo,zhi);
@@ -3103,20 +2642,11 @@ void Data::write(FILE *fp, FILE *fp2)
   
   fprintf(fp,"\n");
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   fprintf(fp,"%d atoms\n",natoms);
   if (nbonds) fprintf(fp,"%d bonds\n",nbonds);
   if (nangles) fprintf(fp,"%d angles\n",nangles);
   if (ndihedrals) fprintf(fp,"%d dihedrals\n",ndihedrals);
   if (nimpropers) fprintf(fp,"%d impropers\n",nimpropers);
-=======
-  fprintf(fp,BIGINT_FORMAT " atoms\n",natoms);
-  if (nellipsoids) fprintf(fp,BIGINT_FORMAT " ellipsoids\n",nellipsoids);
-  if (nbonds) fprintf(fp,BIGINT_FORMAT " bonds\n",nbonds);
-  if (nangles) fprintf(fp,BIGINT_FORMAT " angles\n",nangles);
-  if (ndihedrals) fprintf(fp,BIGINT_FORMAT " dihedrals\n",ndihedrals);
-  if (nimpropers) fprintf(fp,BIGINT_FORMAT " impropers\n",nimpropers);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 
   fprintf(fp,"\n");
 
@@ -3160,7 +2690,6 @@ void Data::write(FILE *fp, FILE *fp2)
       fprintf(fp,"\nMasses\n\n");
       for (int i = 1; i <= ntypes; i++) fprintf(fp,"%d %g\n",i,mass[i]);
     }
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   }
 
   // shape and dipole to data file
@@ -3176,39 +2705,23 @@ void Data::write(FILE *fp, FILE *fp2)
   if (dipole) {
     fprintf(fp,"\nDipoles\n\n");
     for (int i = 1; i <= ntypes; i++) fprintf(fp,"%d %g\n",i,dipole[i]);
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
   }
 
   // pair coeffs to data file
 
   if (pair_style && fp2 == NULL) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if ((strcmp(pair_style,"none") != 0) && 
 	(strcmp(pair_style,"airebo") != 0) &&
 	(strcmp(pair_style,"coul/cut") != 0) &&
 	(strcmp(pair_style,"coul/debye") != 0) &&
         (strcmp(pair_style,"eff/cut") != 0) &&
-=======
-    if ((strcmp(pair_style,"none") != 0) &&
-	(strcmp(pair_style,"adp") != 0) &&
-	(strcmp(pair_style,"airebo") != 0) &&
-	(strcmp(pair_style,"brownian") != 0) &&
-	(strcmp(pair_style,"coul/cut") != 0) &&
-	(strcmp(pair_style,"coul/debye") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(pair_style,"coul/long") != 0) &&
 	(strcmp(pair_style,"eam") != 0) &&
 	(strcmp(pair_style,"eam/opt") != 0) &&
 	(strcmp(pair_style,"eam/alloy") != 0) &&
 	(strcmp(pair_style,"eam/alloy/opt") != 0) &&
 	(strcmp(pair_style,"eam/fs") != 0) &&
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	(strcmp(pair_style,"eam/fs/opt") != 0) &&
-=======
-	(strcmp(pair_style,"eim") != 0) &&
-	(strcmp(pair_style,"eff/cut") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(pair_style,"gran/history") != 0) &&
 	(strcmp(pair_style,"gran/no_history") != 0) &&
 	(strcmp(pair_style,"gran/hertzian") != 0) &&
@@ -3217,10 +2730,6 @@ void Data::write(FILE *fp, FILE *fp2)
 	(strcmp(pair_style,"sw") != 0) &&
 	(strcmp(pair_style,"table") != 0) &&
 	(strcmp(pair_style,"tersoff") != 0) &&
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-	(strcmp(pair_style,"tersoff/zbl") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(pair_style,"hybrid") != 0) &&
 	(strcmp(pair_style,"hybrid/overlay") != 0))
       fprintf(fp,"\nPair Coeffs\n\n");
@@ -3264,10 +2773,7 @@ void Data::write(FILE *fp, FILE *fp2)
 
     } else if ((strcmp(pair_style,"lj/charmm/coul/charmm") == 0) ||
 	       (strcmp(pair_style,"lj/charmm/coul/charmm/implicit") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	       (strcmp(pair_style,"lj/charmm/coul/long") == 0) ||
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	       (strcmp(pair_style,"lj/charmm/coul/long") == 0)) {
       for (int i = 1; i <= ntypes; i++)
 	fprintf(fp,"%d %g %g %g %g\n",i,
@@ -3286,11 +2792,7 @@ void Data::write(FILE *fp, FILE *fp2)
 	       (strcmp(pair_style,"lj/cut/coul/cut") == 0) ||
 	       (strcmp(pair_style,"lj/cut/coul/debye") == 0) ||
 	       (strcmp(pair_style,"lj/cut/coul/long") == 0) ||
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	       (strcmp(pair_style,"lj/cut/coul/long/tip4p") == 0) |
-=======
-	       (strcmp(pair_style,"lj/cut/coul/long/tip4p") == 0) ||
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	       (strcmp(pair_style,"lj/coul") == 0)) {
       for (int i = 1; i <= ntypes; i++)
 	fprintf(fp,"%d %g %g\n",i,
@@ -3342,11 +2844,7 @@ void Data::write(FILE *fp, FILE *fp2)
   // only supported styles = cg/cmm
 
   if (pair_style && fp2) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if ((strcmp(pair_style,"cg/cmm") == 0) || 
-=======
-    if ((strcmp(pair_style,"cg/cmm") == 0) ||
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(pair_style,"cg/cmm/coul/cut") == 0) ||
 	(strcmp(pair_style,"cg/cmm/coul/long") == 0)) {
       for (int i = 1; i <= ntypes; i++) {
@@ -3367,12 +2865,7 @@ void Data::write(FILE *fp, FILE *fp2)
   // bond coeffs to data file
 
   if (bond_style && fp2 == NULL) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     if ((strcmp(bond_style,"none") != 0) && 
-=======
-    if ((strcmp(bond_style,"none") != 0) &&
-	(strcmp(bond_style,"table") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(bond_style,"hybrid") != 0))
       fprintf(fp,"\nBond Coeffs\n\n");
 
@@ -3438,14 +2931,9 @@ void Data::write(FILE *fp, FILE *fp2)
   // angle coeffs to data file
 
   if (angle_style && fp2 == NULL) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     double PI = 3.1415926;           // convert back to degrees
 
     if ((strcmp(angle_style,"none") != 0) && 
-=======
-    if ((strcmp(angle_style,"none") != 0) &&
-	(strcmp(angle_style,"table") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(angle_style,"hybrid") != 0))
       fprintf(fp,"\nAngle Coeffs\n\n");
     
@@ -3483,20 +2971,12 @@ void Data::write(FILE *fp, FILE *fp2)
 	fprintf(fp,"%d %g %g\n",i,
 		angle_cosine_squared_k[i],
 		angle_cosine_squared_theta0[i]/PI*180.0);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
       
-=======
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     } else if (strcmp(angle_style,"harmonic") == 0) {
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp,"%d %g %g\n",i,
 		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
       
-=======
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     } else if (strcmp(angle_style,"cg/cmm") == 0) {
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp,"%d %g %g %s %g %g\n",i,
@@ -3510,11 +2990,8 @@ void Data::write(FILE *fp, FILE *fp2)
   // only supported styles = cosine/squared, harmonic, cg/cmm
 
   if (angle_style && fp2) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     double PI = 3.1415926;           // convert back to degrees
 
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     if ((strcmp(angle_style,"cosine/squared") == 0) ||
         (strcmp(angle_style,"cosine/delta") == 0)) {
       for (int i = 1; i <= nangletypes; i++)
@@ -3526,11 +3003,7 @@ void Data::write(FILE *fp, FILE *fp2)
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp2,"angle_coeffs  %d %g %g\n",i,
 		angle_harmonic_k[i],angle_harmonic_theta0[i]/PI*180.0);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
       
-=======
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
     } else if (strcmp(angle_style,"cg/cmm") == 0) {
       for (int i = 1; i <= nangletypes; i++)
 	fprintf(fp2,"angle_coeffs  %d %g %g %s %g %g\n",i,
@@ -3546,14 +3019,9 @@ void Data::write(FILE *fp, FILE *fp2)
   }
 
   if (dihedral_style) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     double PI = 3.1415926;           // convert back to degrees
 
     if ((strcmp(dihedral_style,"none") != 0) && 
-=======
-    if ((strcmp(dihedral_style,"none") != 0) &&
-	(strcmp(dihedral_style,"table") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(dihedral_style,"hybrid") != 0))
       fprintf(fp,"\nDihedral Coeffs\n\n");
 
@@ -3639,13 +3107,9 @@ void Data::write(FILE *fp, FILE *fp2)
   }
 
   if (improper_style) {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     double PI = 3.1415926;           // convert back to degrees
 
     if ((strcmp(improper_style,"none") != 0) && 
-=======
-    if ((strcmp(improper_style,"none") != 0) &&
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	(strcmp(improper_style,"hybrid") != 0))
       fprintf(fp,"\nImproper Coeffs\n\n");
 
@@ -3686,33 +3150,19 @@ void Data::write(FILE *fp, FILE *fp2)
       iy = (image[i] >> 10 & 1023) - 512;
       iz = (image[i] >> 20) - 512;
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-      ix = (image[i] & 1023) - 512;
-      iy = (image[i] >> 10 & 1023) - 512;
-      iz = (image[i] >> 20) - 512;
-
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
       if (style_hybrid == 0) {
 	if (style_angle) write_atom_angle(fp,i,ix,iy,iz);
 	if (style_atomic) write_atom_atomic(fp,i,ix,iy,iz);
 	if (style_bond) write_atom_bond(fp,i,ix,iy,iz);
 	if (style_charge) write_atom_charge(fp,i,ix,iy,iz);
-	if (style_meso) write_atom_meso(fp,i,ix,iy,iz);
 	if (style_dipole) write_atom_dipole(fp,i,ix,iy,iz);
 	if (style_dpd) write_atom_dpd(fp,i,ix,iy,iz);
 	if (style_ellipsoid) write_atom_ellipsoid(fp,i,ix,iy,iz);
 	if (style_full) write_atom_full(fp,i,ix,iy,iz);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	if (style_granular) write_atom_granular(fp,i,ix,iy,iz);
 	if (style_molecular) write_atom_molecular(fp,i,ix,iy,iz);
 	if (style_peri) write_atom_peri(fp,i,ix,iy,iz);
         if (style_electron) write_atom_electron(fp,i,ix,iy,iz);
-=======
-	if (style_sphere) write_atom_sphere(fp,i,ix,iy,iz);
-	if (style_molecular) write_atom_molecular(fp,i,ix,iy,iz);
-	if (style_peri) write_atom_peri(fp,i,ix,iy,iz);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	fprintf(fp,"\n");
 
       } else {
@@ -3723,21 +3173,14 @@ void Data::write(FILE *fp, FILE *fp2)
 	  if (k == style_atomic) write_atom_atomic_extra(fp,i);
 	  if (k == style_bond) write_atom_bond_extra(fp,i);
 	  if (k == style_charge) write_atom_charge_extra(fp,i);
-	  if (k == style_meso) write_atom_meso_extra(fp,i);
 	  if (k == style_dipole) write_atom_dipole_extra(fp,i);
 	  if (k == style_dpd) write_atom_dpd_extra(fp,i);
 	  if (k == style_ellipsoid) write_atom_ellipsoid_extra(fp,i);
 	  if (k == style_full) write_atom_full_extra(fp,i);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	  if (k == style_granular) write_atom_granular_extra(fp,i);
 	  if (k == style_molecular) write_atom_molecular_extra(fp,i);
 	  if (k == style_peri) write_atom_peri_extra(fp,i);
           if (k == style_electron) write_atom_electron_extra(fp,i);
-=======
-	  if (k == style_sphere) write_atom_sphere_extra(fp,i);
-	  if (k == style_molecular) write_atom_molecular_extra(fp,i);
-	  if (k == style_peri) write_atom_peri_extra(fp,i);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	}
 	fprintf(fp," %d %d %d\n",ix,iy,iz);
       }
@@ -3753,21 +3196,14 @@ void Data::write(FILE *fp, FILE *fp2)
 	if (style_atomic) write_vel_atomic(fp,i);
 	if (style_bond) write_vel_bond(fp,i);
 	if (style_charge) write_vel_charge(fp,i);
-	if (style_meso) write_vel_meso(fp,i);
 	if (style_dipole) write_vel_dipole(fp,i);
 	if (style_dpd) write_vel_dpd(fp,i);
 	if (style_ellipsoid) write_vel_ellipsoid(fp,i);
 	if (style_full) write_vel_full(fp,i);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	if (style_granular) write_vel_granular(fp,i);
 	if (style_molecular) write_vel_molecular(fp,i);
 	if (style_peri) write_vel_peri(fp,i);
         if (style_electron) write_vel_electron(fp,i);
-=======
-	if (style_sphere) write_vel_sphere(fp,i);
-	if (style_molecular) write_vel_molecular(fp,i);
-	if (style_peri) write_vel_peri(fp,i);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	fprintf(fp,"\n");
 
       } else {
@@ -3777,21 +3213,14 @@ void Data::write(FILE *fp, FILE *fp2)
 	  if (k == style_atomic) write_vel_atomic_extra(fp,i);
 	  if (k == style_bond) write_vel_bond_extra(fp,i);
 	  if (k == style_charge) write_vel_charge_extra(fp,i);
-	  if (k == style_meso) write_vel_meso_extra(fp,i);
 	  if (k == style_dipole) write_vel_dipole_extra(fp,i);
 	  if (k == style_dpd) write_vel_dpd_extra(fp,i);
 	  if (k == style_ellipsoid) write_vel_ellipsoid_extra(fp,i);
 	  if (k == style_full) write_vel_full_extra(fp,i);
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 	  if (k == style_granular) write_vel_granular_extra(fp,i);
 	  if (k == style_molecular) write_vel_molecular_extra(fp,i);
 	  if (k == style_peri) write_vel_peri_extra(fp,i);
           if (k == style_electron) write_vel_electron_extra(fp,i);
-=======
-	  if (k == style_sphere) write_vel_sphere_extra(fp,i);
-	  if (k == style_molecular) write_vel_molecular_extra(fp,i);
-	  if (k == style_peri) write_vel_peri_extra(fp,i);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	}
 	fprintf(fp,"\n");
       }
@@ -3799,50 +3228,30 @@ void Data::write(FILE *fp, FILE *fp2)
 
   if (nbonds) {
     fprintf(fp,"\nBonds\n\n");
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     for (int i = 0; i < nbonds; i++)
       fprintf(fp,"%d %d %d %d\n",
-=======
-    for (bigint i = 0; i < nbonds; i++)
-      fprintf(fp,BIGINT_FORMAT " %d %d %d\n",
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	      i+1,bond_type[i],bond_atom1[i],bond_atom2[i]);
   }
 
   if (nangles) {
     fprintf(fp,"\nAngles\n\n");
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     for (int i = 0; i < nangles; i++)
       fprintf(fp,"%d %d %d %d %d\n",
-=======
-    for (bigint i = 0; i < nangles; i++)
-      fprintf(fp,BIGINT_FORMAT " %d %d %d %d\n",
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	      i+1,angle_type[i],angle_atom1[i],angle_atom2[i],angle_atom3[i]);
   }
 
   if (ndihedrals) {
     fprintf(fp,"\nDihedrals\n\n");
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     for (int i = 0; i < ndihedrals; i++)
       fprintf(fp,"%d %d %d %d %d %d\n",
-=======
-    for (bigint i = 0; i < ndihedrals; i++)
-      fprintf(fp,BIGINT_FORMAT " %d %d %d %d %d\n",
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	      i+1,dihedral_type[i],dihedral_atom1[i],dihedral_atom2[i],
 	      dihedral_atom3[i],dihedral_atom4[i]);
   }
 
   if (nimpropers) {
     fprintf(fp,"\nImpropers\n\n");
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
     for (int i = 0; i < nimpropers; i++)
       fprintf(fp,"%d %d %d %d %d %d\n",
-=======
-    for (bigint i = 0; i < nimpropers; i++)
-      fprintf(fp,BIGINT_FORMAT " %d %d %d %d %d\n",
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 	      i+1,improper_type[i],improper_atom1[i],improper_atom2[i],
 	      improper_atom3[i],improper_atom4[i]);
   }
@@ -3877,16 +3286,8 @@ void Data::write_atom_charge(FILE *fp, int i, int ix, int iy, int iz)
 	  tag[i],type[i],q[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
-void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
-	  tag[i],type[i],rho[i],e[i],cv[i],x[i],y[i],z[i],ix,iy,iz);
-}
-
-
 void Data::write_atom_dipole(FILE *fp, int i, int ix, int iy, int iz)
 {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
 	  tag[i],type[i],q[i],x[i],y[i],z[i],mux[i],muy[i],muz[i],ix,iy,iz);
 }
@@ -3895,12 +3296,6 @@ void Data::write_atom_dpd(FILE *fp, int i, int ix, int iy, int iz)
 {
   fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %d %d %d",
 	  tag[i],type[i],x[i],y[i],z[i],ix,iy,iz);
-=======
-  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e "
-	  "%-1.16e %-1.16e %d %d %d",
-	  tag[i],type[i],q[i],x[i],y[i],z[i],
-	  mux[i],muy[i],muz[i],ix,iy,iz);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 }
 
 void Data::write_atom_ellipsoid(FILE *fp, int i, int ix, int iy, int iz)
@@ -3916,11 +3311,7 @@ void Data::write_atom_full(FILE *fp, int i, int ix, int iy, int iz)
 	  tag[i],molecule[i],type[i],q[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void Data::write_atom_granular(FILE *fp, int i, int ix, int iy, int iz)
-=======
-void Data::write_atom_sphere(FILE *fp, int i, int ix, int iy, int iz)
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 {
   fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
 	  tag[i],type[i],2.0*radius[i],density[i],x[i],y[i],z[i],ix,iy,iz);
@@ -3934,7 +3325,6 @@ void Data::write_atom_molecular(FILE *fp, int i, int ix, int iy, int iz)
 
 void Data::write_atom_peri(FILE *fp, int i, int ix, int iy, int iz)
 {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
 	  tag[i],type[i],vfrac[i],density[i],rmass[i],x[i],y[i],z[i],ix,iy,iz);
 }
@@ -3943,10 +3333,6 @@ void Data::write_atom_electron(FILE *fp, int i, int ix, int iy, int iz)
 {
   fprintf(fp,"%d %d %-1.16e %d %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
           tag[i],type[i],q[i],spin[i],radius[i],x[i],y[i],z[i],ix,iy,iz);
-=======
-  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
-	  tag[i],type[i],vfrac[i],rmass[i],x[i],y[i],z[i],ix,iy,iz);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 }
 
 // ---------------------------------------------------------------------
@@ -3971,13 +3357,6 @@ void Data::write_atom_charge_extra(FILE *fp, int i)
   fprintf(fp," %-1.16e",q[i]);
 }
 
-void Data::write_atom_meso_extra(FILE *fp, int i)
-{
-  //fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",rho[i],e[i],vestx[i],vesty[i],vestz[i]);
-  fprintf(fp," %-1.16e %-1.16e %-1.16e",rho[i],e[i],cv[i]);
-}
-
-
 void Data::write_atom_dipole_extra(FILE *fp, int i)
 {
   fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e",q[i],mux[i],muy[i],muz[i]);
@@ -3995,11 +3374,7 @@ void Data::write_atom_full_extra(FILE *fp, int i)
   fprintf(fp," %d %-1.16e",molecule[i],q[i]);
 }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void Data::write_atom_granular_extra(FILE *fp, int i)
-=======
-void Data::write_atom_sphere_extra(FILE *fp, int i)
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 {
   fprintf(fp," %-1.16e %-1.16e",2.0*radius[i],density[i]);
 }
@@ -4011,16 +3386,12 @@ void Data::write_atom_molecular_extra(FILE *fp, int i)
 
 void Data::write_atom_peri_extra(FILE *fp, int i)
 {
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
   fprintf(fp," %-1.16e %-1.16e %-1.16e",vfrac[i],density[i],rmass[i]);
 }
 
 void Data::write_atom_electron_extra(FILE *fp, int i)
 {
   fprintf(fp," %-1.16e %d %-1.16e",q[i],spin[i],radius[i]);
-=======
-  fprintf(fp," %-1.16e %-1.16e",vfrac[i],rmass[i]);
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 }
 
 // ---------------------------------------------------------------------
@@ -4048,12 +3419,6 @@ void Data::write_vel_charge(FILE *fp, int i)
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
-void Data::write_vel_meso(FILE *fp, int i)
-{
-  fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
-}
-
-
 void Data::write_vel_dipole(FILE *fp, int i)
 {
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
@@ -4075,11 +3440,7 @@ void Data::write_vel_full(FILE *fp, int i)
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void Data::write_vel_granular(FILE *fp, int i)
-=======
-void Data::write_vel_sphere(FILE *fp, int i)
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 {
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",
 	  tag[i],vx[i],vy[i],vz[i],omegax[i],omegay[i],omegaz[i]);
@@ -4095,14 +3456,11 @@ void Data::write_vel_peri(FILE *fp, int i)
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void Data::write_vel_electron(FILE *fp, int i)
 {
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i],ervel[i]);
 }
 
-=======
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 // ---------------------------------------------------------------------
 // per-atom velocity write routines of extra quantities unique to style
 // one routine per atom style
@@ -4112,7 +3470,6 @@ void Data::write_vel_angle_extra(FILE *fp, int i) {}
 void Data::write_vel_atomic_extra(FILE *fp, int i) {}
 void Data::write_vel_bond_extra(FILE *fp, int i) {}
 void Data::write_vel_charge_extra(FILE *fp, int i) {}
-void Data::write_vel_meso_extra(FILE *fp, int i) {}
 void Data::write_vel_dipole_extra(FILE *fp, int i) {}
 void Data::write_vel_dpd_extra(FILE *fp, int i) {}
 
@@ -4123,27 +3480,14 @@ void Data::write_vel_ellipsoid_extra(FILE *fp, int i)
 
 void Data::write_vel_full_extra(FILE *fp, int i) {}
 
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void Data::write_vel_granular_extra(FILE *fp, int i)
-=======
-void Data::write_vel_sphere_extra(FILE *fp, int i)
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 {
   fprintf(fp," %-1.16e %-1.16e %-1.16e",omegax[i],omegay[i],omegaz[i]);
 }
 
 void Data::write_vel_molecular_extra(FILE *fp, int i) {}
 void Data::write_vel_peri_extra(FILE *fp, int i) {}
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
 void Data::write_vel_electron_extra(FILE *fp, int i) 
-=======
-
-// ---------------------------------------------------------------------
-// strip known accelerator suffixes from style name
-// ---------------------------------------------------------------------
-
-void strip_suffix(char *style)
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp
 {
   fprintf(fp," %-1.16e",ervel[i]);
 }
@@ -4174,13 +3518,3 @@ char *read_char(FILE *fp)
   fread(value,sizeof(char),n,fp);
   return value;
 }
-<<<<<<< HEAD:tools/eff/restart2data-pEFF.cpp
-=======
-
-bigint read_bigint(FILE *fp)
-{
-  bigint value;
-  fread(&value,sizeof(bigint),1,fp);
-  return value;
-}
->>>>>>> Modify core files of LAMMPS:tools/restart2data.cpp

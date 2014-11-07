@@ -70,8 +70,10 @@ class Atom : protected Pointers {
   double *eradius,*ervel,*erforce,*ervelforce;
   double *cs,*csforce,*vforce;
   int *etag;
-  double *rho, **colorgradient, *drho, *cv;
-  double *e, *de;
+
+  // USER-SPH package
+
+  double *rho,*drho,*e,*de,*cv;
   double **vest;
 
   int **nspecial;               // 0,1,2 = cummulative # of 1-2,1-3,1-4 neighs
@@ -119,7 +121,7 @@ class Atom : protected Pointers {
   int rmass_flag,radius_flag,omega_flag,torque_flag,angmom_flag;
   int vfrac_flag,spin_flag,eradius_flag,ervel_flag,erforce_flag;
   int cs_flag,csforce_flag,vforce_flag,ervelforce_flag,etag_flag;
-  int rho_flag,colorgradient_flag,e_flag,cv_flag,vest_flag;
+  int rho_flag,e_flag,cv_flag,vest_flag;
 
   // Peridynamics scale factor, used by dump cfg
 
@@ -220,6 +222,8 @@ class Atom : protected Pointers {
   int find_custom(char *, int &);
   int add_custom(char *, int);
   void remove_custom(int, int);
+  
+  virtual void sync_modify(ExecutionSpace, unsigned int, unsigned int) {}
 
   void *extract(char *);
 

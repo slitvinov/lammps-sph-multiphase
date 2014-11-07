@@ -51,8 +51,8 @@ class KSpace : protected Pointers {
                                  // for LJ coefficients
   int slabflag;
   int scalar_pressure_flag;      // 1 if using MSM fast scalar pressure
+  int qsum_update_flag;          // 1 if setup() needs to call qsum_qsq()
   double slab_volfactor;
-
 
   int order,order_6,order_allocated;
   double accuracy;                  // accuracy of KSpace solver (force units)
@@ -75,6 +75,10 @@ class KSpace : protected Pointers {
 
   unsigned int datamask;
   unsigned int datamask_ext;
+
+  // KOKKOS host/device flag and data masks
+  ExecutionSpace execution_space;
+  unsigned int datamask_read,datamask_modify;
 
   int compute_flag;               // 0 if skip compute()
   int fftbench;                   // 0 if skip FFT timing
@@ -164,6 +168,7 @@ class KSpace : protected Pointers {
   int minorder,overlap_allowed;
   int adjust_cutoff_flag;
   int suffix_flag;                  // suffix compatibility flag
+  int warn_neutral;                 // warn about non-neutral system if 1
   bigint natoms_original;
   double scale,qqrd2e;
   double qsum,qsqsum,q2;

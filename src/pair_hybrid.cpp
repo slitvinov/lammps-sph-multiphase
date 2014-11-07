@@ -697,14 +697,17 @@ double PairHybrid::single(int i, int j, int itype, int jtype,
 }
 
 /* ----------------------------------------------------------------------
-   modify parameters of the pair style
-   if 1st keyword is pair, then applies to one sub-style
-   else pass command args to every sub-style of hybrid
+   modify parameters of the pair style and its sub-styles
 ------------------------------------------------------------------------- */
 
 void PairHybrid::modify_params(int narg, char **arg)
 {
   if (narg == 0) error->all(FLERR,"Illegal pair_modify command");
+
+  // if 1st keyword is pair, then apply args to one sub-style
+  // else pass args to every sub-style
+  // also apply all args (except pair) to pair hybrid itself
+  //   important for some keywords like tail or compute
 
   if (strcmp(arg[0],"pair") == 0) {
     if (narg < 2) error->all(FLERR,"Illegal pair_modify command");
@@ -712,20 +715,24 @@ void PairHybrid::modify_params(int narg, char **arg)
     for (m = 0; m < nstyles; m++)
       if (strcmp(arg[1],keywords[m]) == 0) break;
     if (m == nstyles) error->all(FLERR,"Unknown pair_modify hybrid sub-style");
-    if (multiple[m] == 0)
+    if (multiple[m] == 0) {
+      Pair::modify_params(narg-2,&arg[2]);
       styles[m]->modify_params(narg-2,&arg[2]);
-    else {
+    } else {
       if (narg < 3) error->all(FLERR,"Illegal pair_modify command");
       int multiflag = force->inumeric(FLERR,arg[2]);
       for (m = 0; m < nstyles; m++)
         if (strcmp(arg[1],keywords[m]) == 0 && multiflag == multiple[m]) break;
       if (m == nstyles) 
         error->all(FLERR,"Unknown pair_modify hybrid sub-style");
+      Pair::modify_params(narg-2,&arg[3]);
       styles[m]->modify_params(narg-3,&arg[3]);
     }
     
-  } else
+  } else {
+    Pair::modify_params(narg,arg);
     for (int m = 0; m < nstyles; m++) styles[m]->modify_params(narg,arg);
+  }
 }
 
 /* ----------------------------------------------------------------------
@@ -739,7 +746,7 @@ void *PairHybrid::extract(const char *str, int &dim)
 {
   void *cutptr = NULL;
   void *ptr;
-  double cutvalue;
+  double cutvalue = 0.0;
 
   for (int m = 0; m < nstyles; m++) {
     ptr = styles[m]->extract(str,dim);

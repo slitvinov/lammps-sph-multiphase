@@ -32,54 +32,13 @@ using namespace LAMMPS_NS;
 #pragma offload_attribute(push,target(mic))
 #endif
 
-template <class flt_t>
-inline int mcoord2bin(const flt_t x0, const flt_t x1, const flt_t x2,
-		      const flt_t bboxlo0, const flt_t bboxlo1,
-		      const flt_t bboxlo2, const flt_t bboxhi0,
-		      const flt_t bboxhi1, const flt_t bboxhi2,
-		      const flt_t bininvx, const flt_t bininvy,
-		      const flt_t bininvz, const int nbinx, const int nbiny,
-		      const int nbinz, const int mbinx, const int mbiny,
-		      const int mbinz, const int mbinxlo, const int mbinylo,
-		      const int mbinzlo)
-{
-  int ix, iy, iz;
-
-  if (x0 >= bboxhi0)
-    ix = static_cast<int> ((x0 - bboxhi0) * bininvx) + nbinx;
-  else if (x0 >= bboxlo0) {
-    ix = static_cast<int> ((x0 - bboxlo0) * bininvx);
-    ix = MIN(ix, nbinx-1);
-  } else
-    ix = static_cast<int> ((x0 - bboxlo0) * bininvx) - 1;
-
-  if (x1 >= bboxhi1)
-    iy = static_cast<int> ((x1 - bboxhi1) * bininvy) + nbiny;
-  else if (x1 >= bboxlo1) {
-    iy = static_cast<int> ((x1 - bboxlo1) * bininvy);
-    iy = MIN(iy, nbiny-1);
-  } else
-    iy = static_cast<int> ((x1 - bboxlo1) * bininvy) - 1;
-
-  if (x2 >= bboxhi2)
-    iz = static_cast<int> ((x2 - bboxhi2) * bininvz) + nbinz;
-  else if (x2 >= bboxlo2) {
-    iz = static_cast<int> ((x2 - bboxlo2) * bininvz);
-    iz = MIN(iz, nbinz - 1);
-  } else
-    iz = static_cast<int> ((x2 - bboxlo2) * bininvz) - 1;
-
-  return (iz - mbinzlo) * mbiny * mbinx + (iy - mbinylo) * mbinx +
-    (ix - mbinxlo);
-}
-
 #define ofind_special(which, special, nspecial, i, tag, special_flag) \
 {                                                                     \
   which = 0;                                                          \
   const int n1 = nspecial[i * 3];                                     \
   const int n2 = nspecial[i * 3 + 1];                                 \
   const int n3 = nspecial[i * 3 + 2];                                 \
-  const int *sptr = special + i * maxspecial;                         \
+  const tagint *sptr = special + i * maxspecial;                      \
   for (int s = 0; s < n3; s++) {                                      \
     if (sptr[s] == tag) {                                             \
       if (s < n1) {                                                   \
@@ -104,20 +63,14 @@ inline int mcoord2bin(const flt_t x0, const flt_t x1, const flt_t x2,
 #endif
 
 template <class flt_t, class acc_t>
-void Neighbor::bin_atoms(void * xin) {
-  const ATOM_T * restrict const x = (const ATOM_T * restrict const)xin;
+void Neighbor::bin_atoms(void * xin, int * _noalias const atombin) {
+  const ATOM_T * _noalias const x = (const ATOM_T * _noalias const)xin;
   int nlocal = atom->nlocal;
   const int nall = nlocal + atom->nghost;
 
-  const flt_t bininvx = this->bininvx;
-  const flt_t bininvy = this->bininvy;
-  const flt_t bininvz = this->bininvz;
-  const flt_t bboxlo0 = this->bboxlo[0];
-  const flt_t bboxlo1 = this->bboxlo[1];
-  const flt_t bboxlo2 = this->bboxlo[2];
-  const flt_t bboxhi0 = this->bboxhi[0];
-  const flt_t bboxhi1 = this->bboxhi[1];
-  const flt_t bboxhi2 = this->bboxhi[2];
+  const double sboxlo0 = bboxlo[0] + mbinxlo/bininvx;
+  const double sboxlo1 = bboxlo[1] + mbinylo/bininvy;
+  const double sboxlo2 = bboxlo[2] + mbinzlo/bininvz;
 
   int i, ibin;
 
@@ -129,25 +82,26 @@ void Neighbor::bin_atoms(void * xin) {
     int bitmask = group->bitmask[includegroup];
     for (i = nall-1; i >= nlocal; i--) {
       if (mask[i] & bitmask) {
-        ibin = mcoord2bin(x[i].x, x[i].y, x[i].z, bboxlo0, bboxlo1, bboxlo2,
-            bboxhi0, bboxhi1, bboxhi2, bininvx, bininvy, bininvz, nbinx, nbiny,
-            nbinz, mbinx, mbiny, mbinz, mbinxlo, mbinylo, mbinzlo);
+        ibin = coord2bin(atom->x[i]);
         bins[i] = binhead[ibin];
         binhead[ibin] = i;
       }
     }
     for (i = atom->nfirst-1; i >= 0; i--) {
-      ibin = mcoord2bin(x[i].x, x[i].y, x[i].z, bboxlo0, bboxlo1, bboxlo2,
-          bboxhi0, bboxhi1, bboxhi2, bininvx, bininvy, bininvz, nbinx, nbiny,
-          nbinz, mbinx, mbiny, mbinz, mbinxlo, mbinylo, mbinzlo);
+      ibin = coord2bin(atom->x[i]);
+      atombin[i] = ibin;
       bins[i] = binhead[ibin];
       binhead[ibin] = i;
     }
   } else {
-    for (i = nall-1; i >= 0; i--) {
-      ibin = mcoord2bin(x[i].x, x[i].y, x[i].z, bboxlo0, bboxlo1, bboxlo2,
-          bboxhi0, bboxhi1, bboxhi2, bininvx, bininvy, bininvz, nbinx, nbiny,
-          nbinz, mbinx, mbiny, mbinz, mbinxlo, mbinylo, mbinzlo);
+    for (i = nall-1; i >= nlocal; i--) {
+      ibin = coord2bin(atom->x[i]);
+      bins[i] = binhead[ibin];
+      binhead[ibin] = i;
+    }
+    for (i = nlocal-1; i >= 0; i--) {
+      ibin = coord2bin(atom->x[i]);
+      atombin[i]=ibin;
       bins[i] = binhead[ibin];
       binhead[ibin] = i;
     }
@@ -228,7 +182,7 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
     fix->stop_watch(TIME_PACK);
 
     fix->start_watch(TIME_HOST_NEIGHBOR);
-    bin_atoms<flt_t,acc_t>(buffers->get_x());
+    bin_atoms<flt_t,acc_t>(buffers->get_x(), buffers->get_atombin());
     if (INTEL_MIC_NBOR_PAD > 1)
       pad = INTEL_MIC_NBOR_PAD * sizeof(float) / sizeof(flt_t);
   } else {
@@ -243,11 +197,12 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
     return;
   }
 
-  const ATOM_T * restrict const x = buffers->get_x();
-  int * restrict const firstneigh = buffers->firstneigh(list);
+  const ATOM_T * _noalias const x = buffers->get_x();
+  int * _noalias const firstneigh = buffers->firstneigh(list);
 
   const int molecular = atom->molecular;
-  int *ns = NULL, *s = NULL;
+  int *ns = NULL;
+  tagint *s = NULL;
   int tag_size, special_size;
   if (molecular) {
     s = atom->special[0];
@@ -260,23 +215,23 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
     tag_size = 0;
     special_size = 0;
   }
-  const int * restrict const special = s;
-  const int * restrict const nspecial = ns;
+  const tagint * _noalias const special = s;
+  const int * _noalias const nspecial = ns;
   const int maxspecial = atom->maxspecial;
-  const int * restrict const tag = atom->tag;
+  const tagint * _noalias const tag = atom->tag;
 
-  int * restrict const ilist = list->ilist;
-  int * restrict numneigh = list->numneigh;
-  int * restrict const cnumneigh = buffers->cnumneigh(list);
+  int * _noalias const ilist = list->ilist;
+  int * _noalias numneigh = list->numneigh;
+  int * _noalias const cnumneigh = buffers->cnumneigh(list);
   const int nstencil = list->nstencil;
-  const int * restrict const stencil = list->stencil;
-  const flt_t * restrict const cutneighsq = buffers->get_cutneighsq()[0];
+  const int * _noalias const stencil = list->stencil;
+  const flt_t * _noalias const cutneighsq = buffers->get_cutneighsq()[0];
   const int ntypes = atom->ntypes + 1;
   const int nlocal = atom->nlocal;
 
   #ifndef _LMP_INTEL_OFFLOAD
   int * const mask = atom->mask;
-  int * const molecule = atom->molecule;
+  tagint * const molecule = atom->molecule;
   #endif
 
   int tnum;
@@ -294,40 +249,22 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
   }
   const int nthreads = tnum;
   const int maxnbors = buffers->get_max_nbors();
+  int * _noalias const atombin = buffers->get_atombin();
 
-  const flt_t bboxlo0 = this->bboxlo[0];
-  const flt_t bboxlo1 = this->bboxlo[1];
-  const flt_t bboxlo2 = this->bboxlo[2];
-  const flt_t bboxhi0 = this->bboxhi[0];
-  const flt_t bboxhi1 = this->bboxhi[1];
-  const flt_t bboxhi2 = this->bboxhi[2];
-  const flt_t bininvx = this->bininvx;
-  const flt_t bininvy = this->bininvy;
-  const flt_t bininvz = this->bininvz;
-  
   // Make sure dummy coordinates to eliminate loop remainder not within cutoff
   {
-    const flt_t dx = (INTEL_BIGP - bboxhi0);
-    const flt_t dy = (INTEL_BIGP - bboxhi1);
-    const flt_t dz = (INTEL_BIGP - bboxhi2);
+    const flt_t dx = (INTEL_BIGP - bboxhi[0]);
+    const flt_t dy = (INTEL_BIGP - bboxhi[1]);
+    const flt_t dz = (INTEL_BIGP - bboxhi[2]);
     if (dx * dx + dy * dy + dz * dz < static_cast<flt_t>(cutneighmaxsq))
       error->one(FLERR,
 	"Intel package expects no atoms within cutoff of {1e15,1e15,1e15}.");
   }
 
   #ifdef _LMP_INTEL_OFFLOAD
-  const int * restrict const binhead = this->binhead;
-  const int * restrict const special_flag = this->special_flag;
-  const int nbinx = this->nbinx;
-  const int nbiny = this->nbiny;
-  const int nbinz = this->nbinz;
-  const int mbinxlo = this->mbinxlo;
-  const int mbinylo = this->mbinylo;
-  const int mbinzlo = this->mbinzlo;
-  const int mbinx = this->mbinx;
-  const int mbiny = this->mbiny;
-  const int mbinz = this->mbinz;
-  const int * restrict const bins = this->bins;
+  const int * _noalias const binhead = this->binhead;
+  const int * _noalias const special_flag = this->special_flag;
+  const int * _noalias const bins = this->bins;
   const int cop = fix->coprocessor_number();
   const int separate_buffers = fix->separate_buffers();
   #pragma offload target(mic:cop) if(offload) \
@@ -342,12 +279,11 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
     in(cnumneigh:length(0) alloc_if(0) free_if(0)) \
     out(numneigh:length(0) alloc_if(0) free_if(0)) \
     in(ilist:length(0) alloc_if(0) free_if(0)) \
+    in(atombin:length(aend) alloc_if(0) free_if(0)) \
     in(stencil:length(nstencil) alloc_if(0) free_if(0)) \
     in(special_flag:length(0) alloc_if(0) free_if(0)) \
-    in(maxnbors,nthreads,maxspecial,nstencil,nbinx,nbiny,nbinz) \
-    in(mbinxlo,mbinylo,mbinzlo,mbinx,mbiny,mbinz,pad_width,offload) \
-    in(bininvx,bininvy,bininvz,bboxlo0,bboxlo1,bboxlo2,separate_buffers) \
-    in(bboxhi0, bboxhi1, bboxhi2, astart, aend, nlocal, molecular, ntypes) \
+    in(maxnbors,nthreads,maxspecial,nstencil,pad_width,offload) \
+    in(separate_buffers, astart, aend, nlocal, molecular, ntypes) \
     out(overflow:length(5) alloc_if(0) free_if(0)) \
     out(timer_compute:length(1) alloc_if(0) free_if(0)) \
     signal(numneigh)
@@ -401,10 +337,7 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
         // stores own/own pairs only once
         // stores own/ghost pairs on both procs
 
-        ibin = mcoord2bin(x[i].x, x[i].y, x[i].z, bboxlo0, bboxlo1, bboxlo2,
-                          bboxhi0, bboxhi1, bboxhi2, bininvx, bininvy, bininvz,
-                          nbinx, nbiny, nbinz, mbinx, mbiny, mbinz,
-                          mbinxlo, mbinylo, mbinzlo);
+        ibin = atombin[i];
 
         for (k = 0; k < nstencil; k++) {
           for (j = binhead[ibin + stencil[k]]; j >= 0; j = bins[j]) {
@@ -486,7 +419,7 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
 
       if (molecular) {
         for (int i = ifrom; i < ito; ++i) {
-          int * restrict jlist = firstneigh + cnumneigh[i];
+          int * _noalias jlist = firstneigh + cnumneigh[i];
           const int jnum = numneigh[i];
           for (int jj = 0; jj < jnum; jj++) {
             const int j = jlist[jj];
@@ -507,7 +440,7 @@ void Neighbor::hbnni(const int offload, NeighList *list, void *buffers_in,
       #ifdef _LMP_INTEL_OFFLOAD
       else if (separate_buffers) {
 	for (int i = ifrom; i < ito; ++i) {
-          int * restrict jlist = firstneigh + cnumneigh[i];
+          int * _noalias jlist = firstneigh + cnumneigh[i];
           const int jnum = numneigh[i];
 	  int jj = 0;
 	  for (jj = 0; jj < jnum; jj++)
@@ -647,7 +580,7 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
     fix->stop_watch(TIME_PACK);
 
     fix->start_watch(TIME_HOST_NEIGHBOR);
-    bin_atoms<flt_t,acc_t>(buffers->get_x());
+    bin_atoms<flt_t,acc_t>(buffers->get_x(), buffers->get_atombin());
     if (INTEL_MIC_NBOR_PAD > 1)
       pad = INTEL_MIC_NBOR_PAD * sizeof(float) / sizeof(flt_t);
   } else {
@@ -662,14 +595,15 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
     return;
   }
 
-  const ATOM_T * restrict const x = buffers->get_x();
-  int * restrict const firstneigh = buffers->firstneigh(list);
+  const ATOM_T * _noalias const x = buffers->get_x();
+  int * _noalias const firstneigh = buffers->firstneigh(list);
   int nall_t = nall;
   if (offload_noghost && offload) nall_t = atom->nlocal;
   const int e_nall = nall_t;
 
   const int molecular = atom->molecular;
-  int *ns = NULL, *s = NULL;
+  int *ns = NULL;
+  tagint *s = NULL;
   int tag_size, special_size;
   if (molecular) {
     s = atom->special[0];
@@ -682,23 +616,23 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
     tag_size = 0;
     special_size = 0;
   }
-  const int * restrict const special = s;
-  const int * restrict const nspecial = ns;
+  const tagint * _noalias const special = s;
+  const int * _noalias const nspecial = ns;
   const int maxspecial = atom->maxspecial;
-  const int * restrict const tag = atom->tag;
+  const tagint * _noalias const tag = atom->tag;
 
-  int * restrict const ilist = list->ilist;
-  int * restrict numneigh = list->numneigh;
-  int * restrict const cnumneigh = buffers->cnumneigh(list);
+  int * _noalias const ilist = list->ilist;
+  int * _noalias numneigh = list->numneigh;
+  int * _noalias const cnumneigh = buffers->cnumneigh(list);
   const int nstencil = list->nstencil;
-  const int * restrict const stencil = list->stencil;
-  const flt_t * restrict const cutneighsq = buffers->get_cutneighsq()[0];
+  const int * _noalias const stencil = list->stencil;
+  const flt_t * _noalias const cutneighsq = buffers->get_cutneighsq()[0];
   const int ntypes = atom->ntypes + 1;
   const int nlocal = atom->nlocal;
 
   #ifndef _LMP_INTEL_OFFLOAD
   int * const mask = atom->mask;
-  int * const molecule = atom->molecule;
+  tagint * const molecule = atom->molecule;
   #endif
 
   int tnum;
@@ -716,39 +650,22 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
   }
   const int nthreads = tnum;
   const int maxnbors = buffers->get_max_nbors();
+  int * _noalias const atombin = buffers->get_atombin();
 
-  const flt_t bboxlo0 = this->bboxlo[0];
-  const flt_t bboxlo1 = this->bboxlo[1];
-  const flt_t bboxlo2 = this->bboxlo[2];
-  const flt_t bboxhi0 = this->bboxhi[0];
-  const flt_t bboxhi1 = this->bboxhi[1];
-  const flt_t bboxhi2 = this->bboxhi[2];
-  const flt_t bininvx = this->bininvx;
-  const flt_t bininvy = this->bininvy;
-  const flt_t bininvz = this->bininvz;
   // Make sure dummy coordinates to eliminate loop remainder not within cutoff
   {
-    const flt_t dx = (INTEL_BIGP - bboxhi0);
-    const flt_t dy = (INTEL_BIGP - bboxhi1);
-    const flt_t dz = (INTEL_BIGP - bboxhi2);
+    const flt_t dx = (INTEL_BIGP - bboxhi[0]);
+    const flt_t dy = (INTEL_BIGP - bboxhi[1]);
+    const flt_t dz = (INTEL_BIGP - bboxhi[2]);
     if (dx * dx + dy * dy + dz * dz < static_cast<flt_t>(cutneighmaxsq))
       error->one(FLERR,
 	"Intel package expects no atoms within cutoff of {1e15,1e15,1e15}.");
   }
 
   #ifdef _LMP_INTEL_OFFLOAD
-  const int * restrict const binhead = this->binhead;
-  const int * restrict const special_flag = this->special_flag;
-  const int nbinx = this->nbinx;
-  const int nbiny = this->nbiny;
-  const int nbinz = this->nbinz;
-  const int mbinxlo = this->mbinxlo;
-  const int mbinylo = this->mbinylo;
-  const int mbinzlo = this->mbinzlo;
-  const int mbinx = this->mbinx;
-  const int mbiny = this->mbiny;
-  const int mbinz = this->mbinz;
-  const int * restrict const bins = this->bins;
+  const int * _noalias const binhead = this->binhead;
+  const int * _noalias const special_flag = this->special_flag;
+  const int * _noalias const bins = this->bins;
   const int cop = fix->coprocessor_number();
   const int separate_buffers = fix->separate_buffers();
   #pragma offload target(mic:cop) if(offload) \
@@ -763,12 +680,11 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
     in(cnumneigh:length(0) alloc_if(0) free_if(0)) \
     out(numneigh:length(0) alloc_if(0) free_if(0)) \
     in(ilist:length(0) alloc_if(0) free_if(0)) \
+    in(atombin:length(aend) alloc_if(0) free_if(0)) \
     in(stencil:length(nstencil) alloc_if(0) free_if(0)) \
     in(special_flag:length(0) alloc_if(0) free_if(0)) \
-    in(maxnbors,nthreads,maxspecial,nstencil,nbinx,nbiny,nbinz,e_nall,offload)\
-    in(mbinxlo,mbinylo,mbinzlo,mbinx,mbiny,mbinz,pad_width,offload_end) \
-    in(bininvx,bininvy,bininvz,bboxlo0,bboxlo1,bboxlo2,separate_buffers) \
-    in(bboxhi0, bboxhi1, bboxhi2, astart, aend, nlocal, molecular, ntypes) \
+    in(maxnbors,nthreads,maxspecial,nstencil,e_nall,offload,pad_width) \
+    in(offload_end,separate_buffers,astart, aend, nlocal, molecular, ntypes) \
     out(overflow:length(5) alloc_if(0) free_if(0)) \
     out(timer_compute:length(1) alloc_if(0) free_if(0)) \
     signal(numneigh)
@@ -859,10 +775,7 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
         }
         // loop over all atoms in other bins in stencil, store every pair
 
-        ibin = mcoord2bin(x[i].x, x[i].y, x[i].z, bboxlo0, bboxlo1, bboxlo2,
-                          bboxhi0, bboxhi1, bboxhi2, bininvx, bininvy, bininvz,
-                          nbinx, nbiny, nbinz, mbinx, mbiny, mbinz,
-                          mbinxlo, mbinylo, mbinzlo);
+        ibin = atombin[i];
 
         for (k = 0; k < nstencil; k++) {
           for (j = binhead[ibin + stencil[k]]; j >= 0; j = bins[j]) {
@@ -948,7 +861,7 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
 
       if (molecular) {
         for (int i = ifrom; i < ito; ++i) {
-          int * restrict jlist = firstneigh + cnumneigh[i];
+          int * _noalias jlist = firstneigh + cnumneigh[i];
           const int jnum = numneigh[i];
           for (int jj = 0; jj < jnum; jj++) {
             const int j = jlist[jj];
@@ -970,7 +883,7 @@ void Neighbor::hbni(const int offload, NeighList *list, void *buffers_in,
       #ifdef _LMP_INTEL_OFFLOAD
       else if (separate_buffers) {
 	for (int i = ifrom; i < ito; ++i) {
-          int * restrict jlist = firstneigh + cnumneigh[i];
+          int * _noalias jlist = firstneigh + cnumneigh[i];
           const int jnum = numneigh[i];
 	  int jj = 0;
 	  for (jj = 0; jj < jnum; jj++)
@@ -1112,7 +1025,7 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
     fix->stop_watch(TIME_PACK);
 
     fix->start_watch(TIME_HOST_NEIGHBOR);
-    bin_atoms<flt_t,acc_t>(buffers->get_x());
+    bin_atoms<flt_t,acc_t>(buffers->get_x(), buffers->get_atombin());
     if (INTEL_MIC_NBOR_PAD > 1)
       pad = INTEL_MIC_NBOR_PAD * sizeof(float) / sizeof(flt_t);
   } else {
@@ -1127,14 +1040,15 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
     return;
   }
 
-  const ATOM_T * restrict const x = buffers->get_x();
-  int * restrict const firstneigh = buffers->firstneigh(list);
+  const ATOM_T * _noalias const x = buffers->get_x();
+  int * _noalias const firstneigh = buffers->firstneigh(list);
   int nall_t = nall;
   if (offload_noghost && offload) nall_t = atom->nlocal;
   const int e_nall = nall_t;
 
   const int molecular = atom->molecular;
-  int *ns = NULL, *s = NULL;
+  int *ns = NULL;
+  tagint *s = NULL;
   int tag_size, special_size;
   if (molecular) {
     s = atom->special[0];
@@ -1147,23 +1061,23 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
     tag_size = 0;
     special_size = 0;
   }
-  const int * restrict const special = s;
-  const int * restrict const nspecial = ns;
+  const tagint * _noalias const special = s;
+  const int * _noalias const nspecial = ns;
   const int maxspecial = atom->maxspecial;
-  const int * restrict const tag = atom->tag;
+  const tagint * _noalias const tag = atom->tag;
 
-  int * restrict const ilist = list->ilist;
-  int * restrict numneigh = list->numneigh;
-  int * restrict const cnumneigh = buffers->cnumneigh(list);
+  int * _noalias const ilist = list->ilist;
+  int * _noalias numneigh = list->numneigh;
+  int * _noalias const cnumneigh = buffers->cnumneigh(list);
   const int nstencil = list->nstencil;
-  const int * restrict const stencil = list->stencil;
-  const flt_t * restrict const cutneighsq = buffers->get_cutneighsq()[0];
+  const int * _noalias const stencil = list->stencil;
+  const flt_t * _noalias const cutneighsq = buffers->get_cutneighsq()[0];
   const int ntypes = atom->ntypes + 1;
   const int nlocal = atom->nlocal;
 
   #ifndef _LMP_INTEL_OFFLOAD
   int * const mask = atom->mask;
-  int * const molecule = atom->molecule;
+  tagint * const molecule = atom->molecule;
   #endif
 
   int tnum;
@@ -1181,39 +1095,22 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
   }
   const int nthreads = tnum;
   const int maxnbors = buffers->get_max_nbors();
+  int * _noalias const atombin = buffers->get_atombin();
 
-  const flt_t bboxlo0 = this->bboxlo[0];
-  const flt_t bboxlo1 = this->bboxlo[1];
-  const flt_t bboxlo2 = this->bboxlo[2];
-  const flt_t bboxhi0 = this->bboxhi[0];
-  const flt_t bboxhi1 = this->bboxhi[1];
-  const flt_t bboxhi2 = this->bboxhi[2];
-  const flt_t bininvx = this->bininvx;
-  const flt_t bininvy = this->bininvy;
-  const flt_t bininvz = this->bininvz;
   // Make sure dummy coordinates to eliminate loop remainder not within cutoff
   {
-    const flt_t dx = (INTEL_BIGP - bboxhi0);
-    const flt_t dy = (INTEL_BIGP - bboxhi1);
-    const flt_t dz = (INTEL_BIGP - bboxhi2);
+    const flt_t dx = (INTEL_BIGP - bboxhi[0]);
+    const flt_t dy = (INTEL_BIGP - bboxhi[1]);
+    const flt_t dz = (INTEL_BIGP - bboxhi[2]);
     if (dx * dx + dy * dy + dz * dz < static_cast<flt_t>(cutneighmaxsq))
       error->one(FLERR,
 	"Intel package expects no atoms within cutoff of {1e15,1e15,1e15}.");
   }
 
   #ifdef _LMP_INTEL_OFFLOAD
-  const int * restrict const binhead = this->binhead;
-  const int * restrict const special_flag = this->special_flag;
-  const int nbinx = this->nbinx;
-  const int nbiny = this->nbiny;
-  const int nbinz = this->nbinz;
-  const int mbinxlo = this->mbinxlo;
-  const int mbinylo = this->mbinylo;
-  const int mbinzlo = this->mbinzlo;
-  const int mbinx = this->mbinx;
-  const int mbiny = this->mbiny;
-  const int mbinz = this->mbinz;
-  const int * restrict const bins = this->bins;
+  const int * _noalias const binhead = this->binhead;
+  const int * _noalias const special_flag = this->special_flag;
+  const int * _noalias const bins = this->bins;
   const int cop = fix->coprocessor_number();
   const int separate_buffers = fix->separate_buffers();
   #pragma offload target(mic:cop) if(offload) \
@@ -1228,12 +1125,11 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
     in(cnumneigh:length(0) alloc_if(0) free_if(0)) \
     out(numneigh:length(0) alloc_if(0) free_if(0)) \
     in(ilist:length(0) alloc_if(0) free_if(0)) \
+    in(atombin:length(aend) alloc_if(0) free_if(0)) \
     in(stencil:length(nstencil) alloc_if(0) free_if(0)) \
     in(special_flag:length(0) alloc_if(0) free_if(0)) \
-    in(maxnbors,nthreads,maxspecial,nstencil,nbinx,nbiny,nbinz,offload_end) \
-    in(mbinxlo,mbinylo,mbinzlo,mbinx,mbiny,mbinz,pad_width,e_nall,offload) \
-    in(bininvx,bininvy,bininvz,bboxlo0,bboxlo1,bboxlo2,separate_buffers) \
-    in(bboxhi0, bboxhi1, bboxhi2, astart, aend, nlocal, molecular, ntypes) \
+    in(maxnbors,nthreads,maxspecial,nstencil,offload_end,pad_width,e_nall) \
+    in(offload,separate_buffers, astart, aend, nlocal, molecular, ntypes) \
     out(overflow:length(5) alloc_if(0) free_if(0)) \
     out(timer_compute:length(1) alloc_if(0) free_if(0)) \
     signal(numneigh)
@@ -1288,10 +1184,7 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
         //         (equal zyx and j <= i)
         // latter excludes self-self interaction but allows superposed atoms
 
-        ibin = mcoord2bin(x[i].x, x[i].y, x[i].z, bboxlo0, bboxlo1, bboxlo2,
-                          bboxhi0, bboxhi1, bboxhi2, bininvx, bininvy, bininvz,
-                          nbinx, nbiny, nbinz, mbinx, mbiny, mbinz,
-                          mbinxlo, mbinylo, mbinzlo);
+        ibin = atombin[i];
 
         for (k = 0; k < nstencil; k++) {
           for (j = binhead[ibin + stencil[k]]; j >= 0; j = bins[j]) {
@@ -1386,7 +1279,7 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
 
       if (molecular) {
         for (int i = ifrom; i < ito; ++i) {
-          int * restrict jlist = firstneigh + cnumneigh[i];
+          int * _noalias jlist = firstneigh + cnumneigh[i];
           const int jnum = numneigh[i];
           for (int jj = 0; jj < jnum; jj++) {
             const int j = jlist[jj];
@@ -1407,7 +1300,7 @@ void Neighbor::hbnti(const int offload, NeighList *list, void *buffers_in,
       #ifdef _LMP_INTEL_OFFLOAD
       else if (separate_buffers) {
 	for (int i = ifrom; i < ito; ++i) {
-          int * restrict jlist = firstneigh + cnumneigh[i];
+          int * _noalias jlist = firstneigh + cnumneigh[i];
           const int jnum = numneigh[i];
 	  int jj = 0;
 	  for (jj = 0; jj < jnum; jj++)

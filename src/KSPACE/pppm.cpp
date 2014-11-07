@@ -667,8 +667,16 @@ void PPPM::compute(int eflag, int vflag)
 
   if (evflag_atom) fieldforce_peratom();
 
+  // update qsum and qsqsum, if needed
+
+  if (eflag_global || eflag_atom) {
+    if (qsum_update_flag || (atom->natoms != natoms_original)) {
+      qsum_qsq(0);
+      natoms_original = atom->natoms;
+    }
+  }
+
   // sum global energy across procs and add in volume-dependent term
-  // reset qsum and qsqsum if atom count has changed
 
   const double qscale = qqrd2e * scale;
 
@@ -676,11 +684,6 @@ void PPPM::compute(int eflag, int vflag)
     double energy_all;
     MPI_Allreduce(&energy,&energy_all,1,MPI_DOUBLE,MPI_SUM,world);
     energy = energy_all;
-
-    if (atom->natoms != natoms_original) {
-      qsum_qsq(0);
-      natoms_original = atom->natoms;
-    }
 
     energy *= 0.5*volume;
     energy -= g_ewald*qsqsum/MY_PIS +
@@ -1875,6 +1878,10 @@ void PPPM::particle_map()
   int nlocal = atom->nlocal;
 
   int flag = 0;
+
+  if (!isfinite(boxlo[0]) || !isfinite(boxlo[1]) || !isfinite(boxlo[2]))
+    error->one(FLERR,"Non-numeric box dimensions - simulation unstable");
+
   for (int i = 0; i < nlocal; i++) {
 
     // (nx,ny,nz) = global coords of grid pt to "lower left" of charge

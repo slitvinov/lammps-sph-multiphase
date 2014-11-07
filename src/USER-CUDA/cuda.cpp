@@ -24,7 +24,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include "cuda.h"
+#include "user_cuda.h"
 #include "atom.h"
 #include "domain.h"
 #include "force.h"
@@ -47,32 +47,33 @@
 
 using namespace LAMMPS_NS;
 
-
+/* ---------------------------------------------------------------------- */
 
 Cuda::Cuda(LAMMPS* lmp) : Pointers(lmp)
 {
   cuda_exists = true;
   lmp->cuda = this;
 
-  if(universe->me == 0)
-    printf("# Using LAMMPS_CUDA \n");
+  if (universe->me == 0) printf("# Using LAMMPS_CUDA \n");
 
   shared_data.me = universe->me;
+
   device_set = false;
+  devicelist = NULL;
 
   Cuda_Cuda_GetCompileSettings(&shared_data);
 
-  if(shared_data.compile_settings.prec_glob != sizeof(CUDA_FLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: Global Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_glob, sizeof(CUDA_FLOAT) / 4);
+  if(shared_data.compile_settings.prec_glob != sizeof(CUDA_CFLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: Global Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_glob, sizeof(CUDA_CFLOAT) / 4);
 
-  if(shared_data.compile_settings.prec_x != sizeof(X_FLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: X Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_x, sizeof(X_FLOAT) / 4);
+  if(shared_data.compile_settings.prec_x != sizeof(X_CFLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: X Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_x, sizeof(X_CFLOAT) / 4);
 
-  if(shared_data.compile_settings.prec_v != sizeof(V_FLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: V Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_v, sizeof(V_FLOAT) / 4);
+  if(shared_data.compile_settings.prec_v != sizeof(V_CFLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: V Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_v, sizeof(V_CFLOAT) / 4);
 
-  if(shared_data.compile_settings.prec_f != sizeof(F_FLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: F Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_f, sizeof(F_FLOAT) / 4);
+  if(shared_data.compile_settings.prec_f != sizeof(F_CFLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: F Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_f, sizeof(F_CFLOAT) / 4);
 
-  if(shared_data.compile_settings.prec_pppm != sizeof(PPPM_FLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: PPPM Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_pppm, sizeof(PPPM_FLOAT) / 4);
+  if(shared_data.compile_settings.prec_pppm != sizeof(PPPM_CFLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: PPPM Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_pppm, sizeof(PPPM_CFLOAT) / 4);
 
-  if(shared_data.compile_settings.prec_fft != sizeof(FFT_FLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: FFT Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_fft, sizeof(FFT_FLOAT) / 4);
+  if(shared_data.compile_settings.prec_fft != sizeof(FFT_CFLOAT) / 4) printf("\n\n # CUDA WARNING: Compile Settings of cuda and cpp code differ! \n # CUDA WARNING: FFT Precision: cuda %i cpp %i\n\n", shared_data.compile_settings.prec_fft, sizeof(FFT_CFLOAT) / 4);
 
 #ifdef FFT_CUFFT
 
@@ -151,12 +152,15 @@ Cuda::Cuda(LAMMPS* lmp) : Pointers(lmp)
   //cCudaData<double, float, yx >
 }
 
+/* ---------------------------------------------------------------------- */
+
 Cuda::~Cuda()
 {
-
   print_timings();
 
-  if(universe->me == 0) printf("# CUDA: Free memory...\n");
+  if (universe->me == 0) printf("# CUDA: Free memory...\n");
+
+  delete [] devicelist;
 
   delete cu_q;
   delete cu_x;
@@ -201,82 +205,96 @@ Cuda::~Cuda()
   }
 }
 
-void Cuda::accelerator(int narg, char** arg)
+/* ----------------------------------------------------------------------
+   package cuda command
+   can be invoked multiple times: -c on, -pk, package command
+   can only init GPUs once in activate(), so just store params here
+------------------------------------------------------------------------- */
+
+void Cuda::accelerator(int narg, char **arg)
 {
-  if(device_set) return;
+  // this error should not happen 
 
-  if(universe->me == 0)
-    printf("# CUDA: Activate GPU \n");
+  if (device_set) error->all(FLERR,"USER-CUDA device is already activated");
 
-  int* devicelist = NULL;
-  int pppn = 2;
+  // pppn = # of GPUs/node
 
-  for(int i = 0; i < narg; i++) {
-    if(strcmp(arg[i], "gpu/node") == 0) {
-      if(++i == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting a number after 'gpu/node' option.");
+  pppn = force->inumeric(FLERR,arg[0]);
+  if (pppn <= 0) error->all(FLERR,"Illegal package cuda command");
 
-      pppn = force->inumeric(FLERR,arg[i]);
-    }
+  // optional args
 
-    if(strcmp(arg[i], "gpu/node/special") == 0) {
-      if(++i == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting number of GPUs to be used per node after keyword 'gpu/node/special'.");
+  delete [] devicelist;
+  devicelist = NULL;
+  int newtonflag = 0;
 
-      pppn = force->inumeric(FLERR,arg[i]);
-
-      if(pppn < 1) error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting number of GPUs to be used per node after keyword 'gpu/node special'.");
-
-      if(i + pppn == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting list of device ids after keyword 'gpu/node special'.");
-
+  int iarg = 1;
+  while (iarg < narg) {
+    if (strcmp(arg[iarg],"newton") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal package cuda command");
+      if (strcmp(arg[iarg+1],"off") == 0) newtonflag = 0;
+      else if (strcmp(arg[iarg+1],"on") == 0) newtonflag = 1;
+      else error->all(FLERR,"Illegal package cuda command");
+    } else if (strcmp(arg[iarg],"gpuID") == 0) {
+      if (iarg+pppn+1 > narg) error->all(FLERR,"Illegal package cuda command");
       devicelist = new int[pppn];
-
-      for(int k = 0; k < pppn; k++) {
-        i++;
-        devicelist[k] = force->inumeric(FLERR,arg[i]);
-      }
-    }
-
-    if(strcmp(arg[i], "pinned") == 0) {
-      if(++i == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting a number after 'pinned' option.");
-
-      pinned = force->inumeric(FLERR,arg[i]) == 0 ? false : true;
-
-      if((pinned == false) && (universe->me == 0)) printf(" #CUDA: Pinned memory is not used for communication\n");
-    }
-
-    if(strcmp(arg[i], "timing") == 0) {
+      for (int k = 0; k < pppn; k++)
+        devicelist[k] = force->inumeric(FLERR,arg[iarg+k+1]);
+      iarg += pppn + 1;
+    } else if (strcmp(arg[iarg],"timing") == 0) {
       dotiming = true;
-    }
-
-    if(strcmp(arg[i], "suffix") == 0) {
-      if(++i == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting a string after 'suffix' option.");
-
-      strcpy(lmp->suffix, arg[i]);
-    }
-
-    if(strcmp(arg[i], "overlap_comm") == 0) {
-      shared_data.overlap_comm = 1;
-    }
-
-    if(strcmp(arg[i], "test") == 0) {
-      if(++i == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting a number after 'test' option.");
-
-      testatom = force->numeric(FLERR,arg[i]);
+      iarg++;
+    } else if (strcmp(arg[iarg],"test") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal package cuda command");
+      testatom = force->numeric(FLERR,arg[iarg+1]);
       dotestatom = true;
+      iarg += 2;
+    } else if (strcmp(arg[iarg],"thread") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal package cuda command");
+      if (strcmp(arg[iarg+1],"auto") == 0) 
+        shared_data.pair.override_block_per_atom = -1;
+      else if (strcmp(arg[iarg+1],"tpa") == 0) 
+        shared_data.pair.override_block_per_atom = 0;
+      else if (strcmp(arg[iarg+1],"bpa") == 0) 
+        shared_data.pair.override_block_per_atom = 1;
+      else error->all(FLERR,"Illegal package cuda command");
+      iarg += 2;
     }
 
-    if(strcmp(arg[i], "override/bpa") == 0) {
-      if(++i == narg)
-        error->all(FLERR, "Invalid Options for 'accelerator' command. Expecting a number after 'override/bpa' option.");
+    // undocumented options
 
-      shared_data.pair.override_block_per_atom = force->inumeric(FLERR,arg[i]);
-    }
+    else if (strcmp(arg[iarg],"suffix") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal package cuda command");
+      strcpy(lmp->suffix,arg[iarg+1]);
+      iarg += 2;
+    } else if (strcmp(arg[iarg],"overlap_comm") == 0) {
+      shared_data.overlap_comm = 1;
+      iarg++;
+    } else if (strcmp(arg[iarg],"pinned") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal package cuda command");
+      pinned = force->inumeric(FLERR,arg[iarg+1]) == 0 ? false : true;
+      if ((pinned == false) && (universe->me == 0)) 
+        printf(" #CUDA: Pinned memory is not used for communication\n");
+      iarg += 2;
+    } else error->all(FLERR,"Illegal package cuda command");
   }
+
+  // set newton flags
+
+  force->newton = force->newton_pair = force->newton_bond = newtonflag;
+}
+
+/* ----------------------------------------------------------------------
+   activate the GPUs
+   only done once with whatever settings used by the last package command
+------------------------------------------------------------------------- */
+
+void Cuda::activate()
+{
+  if (device_set) return;
+  device_set = true;
+
+  if (universe->me == 0) printf("# CUDA: Activate GPU \n");
 
   CudaWrapper_Init(0, (char**)0, universe->me, pppn, devicelist);
   //if(shared_data.overlap_comm)
@@ -311,10 +329,10 @@ void Cuda::accelerator(int narg, char** arg)
 
   cu_binned_id  = 0;
   cu_binned_idnew = 0;
-  device_set = true;
   allocate();
-  delete devicelist;
 }
+
+/* ---------------------------------------------------------------------- */
 
 void Cuda::setSharedDataZero()
 {
@@ -361,13 +379,12 @@ void Cuda::setSharedDataZero()
 
 void Cuda::allocate()
 {
-  accelerator(0, NULL);
   MYDBG(printf("# CUDA: Cuda::allocate ...\n");)
 
   if(not cu_virial) {
-    cu_virial    = new cCudaData<double, ENERGY_FLOAT, x > (NULL, & shared_data.pair.virial , 6);
-    cu_eng_vdwl  = new cCudaData<double, ENERGY_FLOAT, x > (NULL, & shared_data.pair.eng_vdwl , 1);
-    cu_eng_coul  = new cCudaData<double, ENERGY_FLOAT, x > (NULL, & shared_data.pair.eng_coul , 1);
+    cu_virial    = new cCudaData<double, ENERGY_CFLOAT, x > (NULL, & shared_data.pair.virial , 6);
+    cu_eng_vdwl  = new cCudaData<double, ENERGY_CFLOAT, x > (NULL, & shared_data.pair.eng_vdwl , 1);
+    cu_eng_coul  = new cCudaData<double, ENERGY_CFLOAT, x > (NULL, & shared_data.pair.eng_coul , 1);
     cu_extent          = new cCudaData<double, double, x> (extent, 6);
     shared_data.flag = CudaWrapper_AllocCudaData(sizeof(int));
     int size = 2 * CUDA_MAX_DEBUG_SIZE;
@@ -436,7 +453,6 @@ void Cuda::setDomainParams()
 void Cuda::checkResize()
 {
   MYDBG(printf("# CUDA: Cuda::checkResize ...\n");)
-  accelerator(0, NULL);
   cuda_shared_atom* cu_atom = & shared_data.atom;
   cuda_shared_pair* cu_pair = & shared_data.pair;
   cu_atom->q_flag      = atom->q_flag;
@@ -448,11 +464,11 @@ void Cuda::checkResize()
   // do we have more atoms to upload than currently allocated memory on device? (also true if nothing yet allocated)
   if(atom->nmax > cu_atom->nmax || cu_tag == NULL) {
     delete cu_x;
-    cu_x         = new cCudaData<double, X_FLOAT, yx> ((double*)atom->x , & cu_atom->x        , atom->nmax, 3, 0, true); //cu_x->set_buffer(&(shared_data.buffer),&(shared_data.buffersize),true);
+    cu_x         = new cCudaData<double, X_CFLOAT, yx> ((double*)atom->x , & cu_atom->x        , atom->nmax, 3, 0, true); //cu_x->set_buffer(&(shared_data.buffer),&(shared_data.buffersize),true);
     delete cu_v;
-    cu_v         = new cCudaData<double, V_FLOAT, yx> ((double*)atom->v, & cu_atom->v         , atom->nmax, 3);
+    cu_v         = new cCudaData<double, V_CFLOAT, yx> ((double*)atom->v, & cu_atom->v         , atom->nmax, 3);
     delete cu_f;
-    cu_f         = new cCudaData<double, F_FLOAT, yx> ((double*)atom->f, & cu_atom->f         , atom->nmax, 3, 0, true);
+    cu_f         = new cCudaData<double, F_CFLOAT, yx> ((double*)atom->f, & cu_atom->f         , atom->nmax, 3, 0, true);
     delete cu_tag;
     cu_tag       = new cCudaData<int   , int    , x > (atom->tag       , & cu_atom->tag       , atom->nmax, 0, true);
     delete cu_type;
@@ -464,31 +480,31 @@ void Cuda::checkResize()
 
     if(atom->rmass) {
       delete cu_rmass;
-      cu_rmass     = new cCudaData<double, V_FLOAT, x > (atom->rmass     , & cu_atom->rmass     , atom->nmax);
+      cu_rmass     = new cCudaData<double, V_CFLOAT, x > (atom->rmass     , & cu_atom->rmass     , atom->nmax);
     }
 
     if(cu_atom->q_flag) {
       delete cu_q;
-      cu_q         = new cCudaData<double, F_FLOAT, x > ((double*)atom->q, & cu_atom->q         , atom->nmax, 0 , true);
+      cu_q         = new cCudaData<double, F_CFLOAT, x > ((double*)atom->q, & cu_atom->q         , atom->nmax, 0 , true);
     }// cu_q->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
 
     if(atom->radius) {
       delete cu_radius;
-      cu_radius    = new cCudaData<double, X_FLOAT, x > (atom->radius    , & cu_atom->radius     , atom->nmax);
+      cu_radius    = new cCudaData<double, X_CFLOAT, x > (atom->radius    , & cu_atom->radius     , atom->nmax);
       delete cu_v_radius;
-      cu_v_radius  = new cCudaData<V_FLOAT, V_FLOAT, x> (v_radius , & cu_atom->v_radius      , atom->nmax * 4);
+      cu_v_radius  = new cCudaData<V_CFLOAT, V_CFLOAT, x> (v_radius , & cu_atom->v_radius      , atom->nmax * 4);
       delete cu_omega_rmass;
-      cu_omega_rmass  = new cCudaData<V_FLOAT, V_FLOAT, x> (omega_rmass , & cu_atom->omega_rmass      , atom->nmax * 4);
+      cu_omega_rmass  = new cCudaData<V_CFLOAT, V_CFLOAT, x> (omega_rmass , & cu_atom->omega_rmass      , atom->nmax * 4);
     }
 
     if(atom->omega) {
       delete cu_omega;
-      cu_omega     = new cCudaData<double, V_FLOAT, yx > (((double*) atom->omega)    , & cu_atom->omega     , atom->nmax, 3);
+      cu_omega     = new cCudaData<double, V_CFLOAT, yx > (((double*) atom->omega)    , & cu_atom->omega     , atom->nmax, 3);
     }
 
     if(atom->torque) {
       delete cu_torque;
-      cu_torque    = new cCudaData<double, F_FLOAT, yx > (((double*) atom->torque)   , & cu_atom->torque     , atom->nmax, 3);
+      cu_torque    = new cCudaData<double, F_CFLOAT, yx > (((double*) atom->torque)   , & cu_atom->torque     , atom->nmax, 3);
     }
 
     if(atom->special) {
@@ -514,17 +530,17 @@ void Cuda::checkResize()
     cu_atom->nmax        = atom->nmax;
 
     delete cu_x_type;
-    cu_x_type   = new cCudaData<X_FLOAT, X_FLOAT, x> (x_type , & cu_atom->x_type      , atom->nmax * 4);
+    cu_x_type   = new cCudaData<X_CFLOAT, X_CFLOAT, x> (x_type , & cu_atom->x_type      , atom->nmax * 4);
   }
 
   if(((cu_xhold == NULL) || (cu_xhold->get_dim()[0] < neighbor->maxhold)) && neighbor->xhold) {
     delete cu_xhold;
-    cu_xhold     = new cCudaData<double, X_FLOAT, yx> ((double*)neighbor->xhold, & cu_atom->xhold         , neighbor->maxhold, 3);
+    cu_xhold     = new cCudaData<double, X_CFLOAT, yx> ((double*)neighbor->xhold, & cu_atom->xhold         , neighbor->maxhold, 3);
     shared_data.atom.maxhold = neighbor->maxhold;
   }
 
   if(atom->mass && !cu_mass) {
-    cu_mass      = new cCudaData<double, V_FLOAT, x > (atom->mass      , & cu_atom->mass      , atom->ntypes + 1);
+    cu_mass      = new cCudaData<double, V_CFLOAT, x > (atom->mass      , & cu_atom->mass      , atom->ntypes + 1);
   }
 
   cu_atom->mass_host   = atom->mass;
@@ -602,11 +618,11 @@ void Cuda::evsetup_eatom_vatom(int eflag_atom, int vflag_atom)
 {
   if(eflag_atom) {
     if(not cu_eatom)
-      cu_eatom         = new cCudaData<double, ENERGY_FLOAT, x > (force->pair->eatom, & (shared_data.atom.eatom)         , atom->nmax);  // cu_eatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
+      cu_eatom         = new cCudaData<double, ENERGY_CFLOAT, x > (force->pair->eatom, & (shared_data.atom.eatom)         , atom->nmax);  // cu_eatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
 
     if(cu_eatom->get_dim()[0] != atom->nmax) {
       //delete cu_eatom;
-      //cu_eatom         = new cCudaData<double, ENERGY_FLOAT, x > (force->pair->eatom, & (shared_data.atom.eatom)         , atom->nmax  );// cu_eatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
+      //cu_eatom         = new cCudaData<double, ENERGY_CFLOAT, x > (force->pair->eatom, & (shared_data.atom.eatom)         , atom->nmax  );// cu_eatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
       shared_data.atom.update_nmax = 2;
     }
 
@@ -616,11 +632,11 @@ void Cuda::evsetup_eatom_vatom(int eflag_atom, int vflag_atom)
 
   if(vflag_atom) {
     if(not cu_vatom)
-      cu_vatom         = new cCudaData<double, ENERGY_FLOAT, yx > ((double*)force->pair->vatom, & (shared_data.atom.vatom)         , atom->nmax , 6);// cu_vatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
+      cu_vatom         = new cCudaData<double, ENERGY_CFLOAT, yx > ((double*)force->pair->vatom, & (shared_data.atom.vatom)         , atom->nmax , 6);// cu_vatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
 
     if(cu_vatom->get_dim()[0] != atom->nmax) {
       //delete cu_vatom;
-      //cu_vatom         = new cCudaData<double, ENERGY_FLOAT, yx > ((double*)force->pair->vatom, & (shared_data.atom.vatom)         , atom->nmax ,6 );// cu_vatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
+      //cu_vatom         = new cCudaData<double, ENERGY_CFLOAT, yx > ((double*)force->pair->vatom, & (shared_data.atom.vatom)         , atom->nmax ,6 );// cu_vatom->set_buffer(&(copy_buffer),&(copy_buffersize),true);}
       shared_data.atom.update_nmax = 2;
     }
 
@@ -883,11 +899,11 @@ void Cuda::update_xhold(int &maxhold, double* xhold)
   if(this->shared_data.atom.maxhold < atom->nmax) {
     maxhold = atom->nmax;
     delete this->cu_xhold;
-    this->cu_xhold     = new cCudaData<double, X_FLOAT, yx> ((double*)xhold, & this->shared_data.atom.xhold         , maxhold, 3);
+    this->cu_xhold     = new cCudaData<double, X_CFLOAT, yx> ((double*)xhold, & this->shared_data.atom.xhold         , maxhold, 3);
   }
 
   this->shared_data.atom.maxhold = maxhold;
-  CudaWrapper_CopyData(this->cu_xhold->dev_data(), this->cu_x->dev_data(), 3 * atom->nmax * sizeof(X_FLOAT));
+  CudaWrapper_CopyData(this->cu_xhold->dev_data(), this->cu_x->dev_data(), 3 * atom->nmax * sizeof(X_CFLOAT));
 }
 
 void Cuda::setTimingsZero()

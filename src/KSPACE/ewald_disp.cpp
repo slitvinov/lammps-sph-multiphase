@@ -246,6 +246,9 @@ void EwaldDisp::setup()
     error->all(FLERR,"KSpace accuracy too low");
   }
 
+  if (qsum_update_flag)
+    error->all(FLERR,"Kspace style ewald/disp does not support dynamic charges");
+
   bigint natoms = atom->natoms;
   double err;
   int kxmax = 1;
@@ -408,8 +411,15 @@ void EwaldDisp::allocate_peratom()
 
 void EwaldDisp::deallocate_peratom()                        // free memory
 {
-  memory->destroy(energy_self_peratom);
-  memory->destroy(virial_self_peratom);
+  if (energy_self_peratom) {
+    memory->destroy(energy_self_peratom);
+    energy_self_peratom = NULL;
+  }
+
+  if (virial_self_peratom) {
+    memory->destroy(virial_self_peratom);
+    virial_self_peratom = NULL;
+  }
 }
 
 

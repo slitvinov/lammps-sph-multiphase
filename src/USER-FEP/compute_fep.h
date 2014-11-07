@@ -1,4 +1,4 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
@@ -41,6 +41,8 @@ class ComputeFEP : public Compute {
   int chgflag;
   int tailflag, volumeflag;
   int fepinitflag;
+  int eflag, vflag;
+  int sys_qsum_update_flag;
   double temp_fep;
 
   int nmax;
@@ -52,6 +54,8 @@ class ComputeFEP : public Compute {
   double energy_orig;
   double kvirial_orig[6];
   double *keatom_orig,**kvatom_orig;
+
+  class Fix *fixgpu;
 
   struct Perturb {
     int which,ivar;

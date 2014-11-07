@@ -126,6 +126,7 @@ class IntelBuffers {
   inline int * firstneigh(const NeighList *list) { return _list_alloc; }
   inline int * cnumneigh(const NeighList *list) { return _cnumneigh; }
 
+  inline int * get_atombin() { return _atombin; }
   inline atom_t * get_x(const int offload = 1) { 
     #ifdef _LMP_INTEL_OFFLOAD
     if (_separate_buffers && offload == 0) return _host_x;
@@ -235,7 +236,8 @@ class IntelBuffers {
 
   double memory_usage(const int nthreads);
 
-  int _special_holder, _nspecial_holder;
+  tagint _special_holder;
+  int _nspecial_holder;
 
  protected:
   LAMMPS *lmp;
@@ -248,6 +250,7 @@ class IntelBuffers {
   int _list_alloc_atoms;
   int * _list_alloc;
   int * _cnumneigh;
+  int * _atombin;
 
   flt_t **_cutneighsq;
   int _ntypes;
@@ -266,8 +269,8 @@ class IntelBuffers {
   #endif
   
   int _buf_size, _buf_local_size;
-  __declspec(align(64)) acc_t _ev_global[8];
-  __declspec(align(64)) acc_t _ev_global_host[8];
+  _alignvar(acc_t _ev_global[8],64);
+  _alignvar(acc_t _ev_global_host[8],64);
 
   void _grow(const int nall, const int nlocal, const int nthreads,
 	     const int offload_end);

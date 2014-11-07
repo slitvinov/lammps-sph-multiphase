@@ -1,3 +1,5 @@
+/// -*- c++ -*-
+
 #ifndef COLVARTYPES_H
 #define COLVARTYPES_H
 
@@ -35,8 +37,17 @@ public:
   {}
 
   /// \brief Set all components to a scalar value
-  inline void set (cvm::real const value = 0.0) {
+  inline void set (cvm::real const &value) {
     x = y = z = value;
+  }
+
+  /// \brief Assign all components
+  inline void set (cvm::real const &x_i,
+                   cvm::real const &y_i,
+                   cvm::real const &z_i) {
+    x = x_i;
+    y = y_i;
+    z = z_i;
   }
 
   /// \brief Set all components to zero
@@ -539,13 +550,13 @@ inline cvm::rvector operator * (cvm::rmatrix const &m,
 
 
 /// Numerical recipes diagonalization
-void jacobi (cvm::real **a, int n, cvm::real d[], cvm::real **v, int *nrot);
+void jacobi (cvm::real **a, cvm::real d[], cvm::real **v, int *nrot);
 
 /// Eigenvector sort
-void eigsrt (cvm::real d[], cvm::real **v, int n);
+void eigsrt (cvm::real d[], cvm::real **v);
 
 /// Transpose the matrix
-void transpose (cvm::real **v, int n);
+void transpose (cvm::real **v);
 
 
 
@@ -603,7 +614,7 @@ public:
   }
 
   /// \brief Set all components to a scalar
-  inline void set (cvm::real const value = 0.0)
+  inline void set (cvm::real const &value = 0.0)
   {
     q0 = q1 = q2 = q3 = value;
   }
@@ -645,7 +656,7 @@ public:
     case 3:
       return this->q3;
     default:
-      cvm::fatal_error ("Error: incorrect quaternion component.\n");
+      cvm::error ("Error: incorrect quaternion component.\n");
       return q0;
     }
   }
@@ -662,9 +673,9 @@ public:
     case 3:
       return this->q3;
     default:
-      cvm::fatal_error ("Error: trying to access a quaternion "
-                        "component which is not between 0 and 3.\n");
-      return this->q0;
+      cvm::error ("Error: trying to access a quaternion "
+                 "component which is not between 0 and 3.\n");
+      return 0.0;
     }
   }
 
@@ -943,9 +954,9 @@ public:
 
   /// Constructor after a quaternion
   inline rotation (cvm::quaternion const &qi)
-    : b_debug_gradients (false)
+    : q (qi),
+      b_debug_gradients (false)
   {
-    q = qi;
   }
 
   /// Constructor after an axis of rotation and an angle (in radians)
@@ -1091,8 +1102,3 @@ protected:
 
 
 #endif
-
-// Emacs
-// Local Variables:
-// mode: C++
-// End:

@@ -2,7 +2,6 @@
 #include "mpi.h"
 #include "lammps.h"
 #include "atom.h"
-#include "comm.h"
 #include "error.h"
 #include "output.h"
 #include "random_park.h"
@@ -32,7 +31,7 @@
 // local helper functions
 
 // safely move filename to filename.extension
-static void my_backup_file(const char *filename, const char *extension)
+static int my_backup_file(const char *filename, const char *extension)
 {
   struct stat sbuf;
   if (stat(filename, &sbuf) == 0) {
@@ -48,9 +47,12 @@ static void my_backup_file(const char *filename, const char *extension)
       if ( !sys_err_msg ) sys_err_msg = (char *) "(unknown error)";
       fprintf(stderr,"Error renaming file %s to %s: %s\n",
               filename, backup, sys_err_msg);
+      delete [] backup;
+      return COLVARS_ERROR;
     }
     delete [] backup;
   }
+  return COLVARS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -59,8 +61,9 @@ colvarproxy_lammps::colvarproxy_lammps(LAMMPS_NS::LAMMPS *lmp,
                                        const char *inp_name,
                                        const char *out_name,
                                        const int seed,
-                                       const double temp)
-  : _lmp(lmp)
+                                       const double temp,
+                                       MPI_Comm root2root)
+  : _lmp(lmp), inter_comm(root2root)
 {
   if (cvm::debug())
     log("Initializing the colvars proxy object.\n");
@@ -74,6 +77,10 @@ colvarproxy_lammps::colvarproxy_lammps(LAMMPS_NS::LAMMPS *lmp,
   do_exit=false;
   restart_every=0;
 
+  // User-scripted forces are not available in LAMMPS
+  force_script_defined = false;
+  have_scripts = false;
+
   // set input restart name and strip the extension, if present
   input_prefix_str = std::string(inp_name ? inp_name : "");
   if (input_prefix_str.rfind(".colvars.state") != std::string::npos)
@@ -83,25 +90,42 @@ colvarproxy_lammps::colvarproxy_lammps(LAMMPS_NS::LAMMPS *lmp,
   // output prefix is always given
   output_prefix_str = std::string(out_name);
   // not so for restarts
-  restart_prefix_str = std::string("rest");
+  restart_output_prefix_str = std::string("rest");
+
+  // check if it is possible to save output configuration
+  if ((!output_prefix_str.size()) && (!restart_output_prefix_str.size())) {
+    fatal_error ("Error: neither the final output state file or "
+                 "the output restart file could be defined, exiting.\n");
+  }
 
   // try to extract a restart prefix from a potential restart command.
   LAMMPS_NS::Output *outp = _lmp->output;
   if ((outp->restart_every_single > 0) && (outp->restart1 != 0)) {
-      restart_prefix_str = std::string(outp->restart1);
+      restart_output_prefix_str = std::string(outp->restart1);
   } else if  ((outp->restart_every_double > 0) && (outp->restart2a != 0)) {
-    restart_prefix_str = std::string(outp->restart2a);
+    restart_output_prefix_str = std::string(outp->restart2a);
   }
   // trim off unwanted stuff from the restart prefix
-  if (restart_prefix_str.rfind(".*") != std::string::npos)
-    restart_prefix_str.erase(restart_prefix_str.rfind(".*"),2);
+  if (restart_output_prefix_str.rfind(".*") != std::string::npos)
+    restart_output_prefix_str.erase(restart_output_prefix_str.rfind(".*"),2);
+
+  // initialize multi-replica support, if available
+  if (replica_enabled()) {
+    MPI_Comm_rank(inter_comm, &inter_me);
+    MPI_Comm_size(inter_comm, &inter_num);
+  }
 }
 
 
 void colvarproxy_lammps::init(const char *conf_file)
 {
   // create the colvarmodule instance
-  colvars = new colvarmodule(conf_file,this);
+  colvars = new colvarmodule (this);
+
+  // TODO move one or more of these to setup() if needed
+  colvars->config_file (conf_file);
+  colvars->setup_input();
+  colvars->setup_output();
 
   if (_lmp->update->ntimestep != 0) {
     cvm::log ("Initializing step number as firstTimestep.\n");
@@ -245,6 +269,12 @@ void colvarproxy_lammps::log(std::string const &message)
   }
 }
 
+void colvarproxy_lammps::error(std::string const &message)
+{
+  // In LAMMPS, all errors are fatal
+  fatal_error(message);
+}
+
 void colvarproxy_lammps::fatal_error(std::string const &message)
 {
   log(message);
@@ -311,33 +341,34 @@ e_pdb_field pdb_field_str2enum(std::string const &pdb_field_str)
   return pdb_field;
 }
 
-void colvarproxy_lammps::load_coords(char const *pdb_filename,
+int colvarproxy_lammps::load_coords(char const *pdb_filename,
                                     std::vector<cvm::atom_pos> &pos,
                                     const std::vector<int> &indices,
-                                    std::string const pdb_field_str,
+                                    std::string const &pdb_field_str,
                                     double const pdb_field_value)
 {
-
   cvm::fatal_error("Reading collective variable coordinates "
-                    "from a PDB file is currently not supported.\n");
+                   "from a PDB file is currently not supported.\n");
+  return COLVARS_ERROR;
 }
 
-void colvarproxy_lammps::load_atoms(char const *pdb_filename,
+int colvarproxy_lammps::load_atoms(char const *pdb_filename,
                                    std::vector<cvm::atom> &atoms,
-                                   std::string const pdb_field_str,
+                                   std::string const &pdb_field_str,
                                    double const pdb_field_value)
 {
   cvm::fatal_error("Selecting collective variable atoms "
                     "from a PDB file is currently not supported.\n");
+  return COLVARS_ERROR;
 }
 
-void colvarproxy_lammps::backup_file(char const *filename)
+int colvarproxy_lammps::backup_file(char const *filename)
 {
   if (std::string(filename).rfind(std::string(".colvars.state"))
       != std::string::npos) {
-    my_backup_file(filename, ".old");
+    return my_backup_file(filename, ".old");
   } else {
-    my_backup_file(filename, ".BAK");
+    return my_backup_file(filename, ".BAK");
   }
 }
 
@@ -366,6 +397,36 @@ int colvarproxy_lammps::init_lammps_atom(const int &aid, cvm::atom *atom)
   applied_forces.push_back(c);
 
   return colvars_atoms.size()-1;
+}
+
+// multi-replica support
+
+void colvarproxy_lammps::replica_comm_barrier() {
+  MPI_Barrier(inter_comm);
+}
+
+int colvarproxy_lammps::replica_comm_recv(char* msg_data,
+                                          int buf_len, int src_rep)
+{
+  MPI_Status status;
+  int retval;
+
+  retval = MPI_Recv(msg_data,buf_len,MPI_CHAR,src_rep,0,inter_comm,&status);
+  if (retval == MPI_SUCCESS) {
+    MPI_Get_count(&status, MPI_CHAR, &retval);
+  } else retval = 0;
+  return retval;
+}
+
+int colvarproxy_lammps::replica_comm_send(char* msg_data,
+                                                  int msg_len, int dest_rep)
+{
+  int retval;
+  retval = MPI_Send(msg_data,msg_len,MPI_CHAR,dest_rep,0,inter_comm);
+  if (retval == MPI_SUCCESS) {
+    retval = msg_len;
+  } else retval = 0;
+  return retval;
 }
 
 // atom member functions, LAMMPS specific implementations

@@ -38,6 +38,9 @@ class Neighbor : protected Pointers {
   double cutneighmax;              // max neighbor cutoff for all type pairs
   double *cuttype;                 // for each type, max neigh cut w/ others
 
+  int binsizeflag;                 // user-chosen bin size
+  double binsize_user;             // set externally by some accelerator pkgs
+
   bigint ncalls;                   // # of times build has been called
   bigint ndanger;                  // # of dangerous builds
   bigint lastcall;                 // timestep of last neighbor::build() call
@@ -75,7 +78,7 @@ class Neighbor : protected Pointers {
   void setup_bins();                // setup bins based on box and cutoff
   virtual void build(int topoflag=1);  // create all neighbor lists (pair,bond)
   virtual void build_topology();    // create all topology neighbor lists
-  void build_one(int, int preflag=0);  // create a single neighbor list
+  void build_one(class NeighList *list, int preflag=0);  // create a single neighbor list
   void set(int, char **);           // set neighbor style and skin distance
   void modify_params(int, char**);  // modify parameters that control builds
   bigint memory_usage();
@@ -120,9 +123,6 @@ class Neighbor : protected Pointers {
   int mbins;                       // # of local bins and offset
   int mbinx,mbiny,mbinz;
   int mbinxlo,mbinylo,mbinzlo;
-
-  int binsizeflag;                 // user-chosen bin size
-  double binsize_user;
 
   double binsizex,binsizey,binsizez;  // actual bin sizes and inverse sizes
   double bininvx,bininvy,bininvz;

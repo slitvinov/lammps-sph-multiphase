@@ -80,7 +80,6 @@ void DeleteBonds::command(int narg, char **arg)
   int *tlist = NULL;
 
   int iarg = 2;
-  int which;
   if (style != MULTI && style != STATS) {
     if (narg < 3) error->all(FLERR,"Illegal delete_bonds command");
 
