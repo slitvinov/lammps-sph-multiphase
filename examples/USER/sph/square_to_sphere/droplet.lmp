@@ -48,16 +48,15 @@ set                 type ${d_type} meso_rho ${sph_rho_d}
 set                 type ${g_type} meso_rho ${sph_rho_g}
 
 compute            rho_peratom all meso_rho/atom
-compute            colorgradient_peratom all meso_colorgradient/atom
 compute            ie_atom all meso_e/atom
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &
-id type  &
-x y z vx vy vz fx fy fz &
-c_rho_peratom c_colorgradient_peratom c_ie_atom
+                                id type  &
+                                x y z vx vy vz fx fy fz &
+                                c_rho_peratom c_ie_atom
 
 dump_modify        dump_id first yes sort id pad 8
 
@@ -70,15 +69,15 @@ neigh_modify       delay 0 every 1
 comm_modify        vel yes
 set                group all meso_rho ${sph_rho_g}
 
-pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 &
                    sph/taitwater/multiphase sph/surfacetension
 
 pair_coeff         * * sph/rhosum/multiphase   ${h}
 
 variable           cg_cutoff equal 3.0*${dx}
-pair_coeff         ${d_type} ${d_type} sph/colorgradient ${cg_cutoff} 0
-pair_coeff         ${g_type} ${d_type} sph/colorgradient ${cg_cutoff} ${alpha}
-pair_coeff         ${g_type} ${g_type} sph/colorgradient ${cg_cutoff} 0
+pair_coeff         ${d_type} ${d_type} sph/surface_stress ${cg_cutoff} 0
+pair_coeff         ${g_type} ${d_type} sph/surface_stress ${cg_cutoff} ${alpha}
+pair_coeff         ${g_type} ${g_type} sph/surface_stress ${cg_cutoff} 0
 
 # harmonic mean of viscosities
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
