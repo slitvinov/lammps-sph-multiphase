@@ -1,0 +1,70 @@
+include            in.vars
+
+read_data          ${dname}/initial.dat
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_colorgradient_peratom
+dump_modify        dump_id first yes sort id pad 8
+
+include            ${ndim}-image.lmp
+variable           sph_mu  equal ${sph_eta_d}/${sph_rho_d}
+include            settimestep.lmp
+
+neighbor           0       bin
+neigh_modify       delay 0 every 1
+comm_modify        vel yes
+set                group all meso_rho ${sph_rho_g}
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
+                   sph/taitwater/multiphase sph/surfacetension
+pair_coeff         * * sph/rhosum/multiphase   ${h}
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha_gd}
+pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} ${alpha_dw}
+pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} ${alpha_gw}
+pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+
+variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
+variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
+variable           sph_eta_dw equal 2*${sph_eta_d}*${sph_eta_w}/(${sph_eta_d}+${sph_eta_w})
+
+variable           gamma equal 1.0
+variable           rbackground equal 0.0
+include            pairs.lmp
+
+pair_coeff         * * sph/surfacetension ${h}
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/droplet.dcd
+dump_modify        dump_dcd sort id
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/droplet.xyz
+dump_modify        dump_xyz element A B C
+
+set                 type ${d_type} meso_rho ${sph_rho_d}
+set                 type ${g_type} meso_rho ${sph_rho_g}
+set                 type ${w_type} meso_rho ${sph_rho_w}
+
+variable            time equal step*dt
+thermo_style        custom step v_time
+thermo              10 
+
+timestep           ${dt}
+
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+set               type ${w_type} mass ${sph_mass_w}
+
+group             droplet type ${d_type}
+write_data         ${dname}/droplet.dat
+
+variable          ntime         equal round(0.50/${dt})
+variable           gamma equal 1.0
+variable           rbackground equal 0.00
+include            pairs.lmp
+
+run               ${ntime}

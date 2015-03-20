@@ -1,0 +1,10 @@
+include            in.vars
+
+# create box with two types of particles (gas and droplet)
+create_box         3 box
+
+# create gas particles
+lattice            sq ${dx} origin 0.5 0.5 0.0
+create_atoms       ${g_type} region box
+
+write_data         ${dname}/initial.dat
