@@ -38,9 +38,6 @@ variable          alpha_gd equal 1.0
 variable          alpha_gw equal 1.0
 variable          alpha_dw equal 1.5
 
-# radios of the droplet
-variable          cyl_r equal 0.1875
-
 # type of the gas particle
 variable          g_type equal 1
 # type of the droplet particle

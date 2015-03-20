@@ -1,0 +1,6 @@
+pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} ${gamma} ${h} ${rbackground}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${gamma} ${h} ${rbackground}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${gamma} ${h} ${rbackground}
+pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gw} ${gamma} ${h} ${rbackground}
+pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_dw} ${gamma} ${h} ${rbackground}
+pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} ${gamma} ${h} ${rbackground}

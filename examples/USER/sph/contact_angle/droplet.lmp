@@ -40,7 +40,7 @@ variable     xhi  equal ${Lx}+3*${dx}
 region	     rflow block INF INF ${ylow} ${yhi} INF INF units box
 group	     flow region rflow
 group	     boundary subtract all flow
-set               group boundary type ${w_type}
+set          group boundary type ${w_type}
 
 # fix wall particles
 fix          wallim boundary setforce 0 0 0
@@ -75,12 +75,10 @@ pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
 variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
 variable           sph_eta_dw equal 2*${sph_eta_d}*${sph_eta_w}/(${sph_eta_d}+${sph_eta_w})
-pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} 1.0 ${h} 0.0
-pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} 1.0 ${h} 0.0
-pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} 1.0 ${h} 0.0
-pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gw} 1.0 ${h} 0.0
-pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_dw} 1.0 ${h} 0.0
-pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} 1.0 ${h} 0.0
+
+variable           gamma equal 1.0
+variable           rbackground equal 0.0
+include            pairs.lmp
 
 pair_coeff         * * sph/surfacetension ${h}
 
@@ -90,8 +88,12 @@ dump_modify        dump_dcd sort id
 dump               dump_xyz all xyz ${Nfreq} ${dname}/droplet.xyz
 dump_modify        dump_xyz element A B C
 
-# create droplet
-region             rdroplet cylinder z ${xcenter} ${ylow} ${cyl_r} EDGE EDGE units box
+# create           a droplet
+variable           yhi equal 0.3
+variable           xlo equal ${xcenter}-0.25
+variable           xhi equal ${xcenter}+0.25
+region             rdroplet block     ${xlo} ${xhi} EDGE ${yhi} EDGE EDGE units box
+
 region             udroplet intersect 2 rdroplet rflow
 set	           region  udroplet type ${d_type}
 
@@ -120,5 +122,22 @@ fix extra all print 1 "${time} ${vrg} ${vspher}" file ${dname}/com.dat screen no
 
 write_data         ${dname}/droplet.dat
 
-variable          ntime equal round(0.5/${dt})
+variable          ntime         equal round(0.50/${dt})
+variable          prerun_ntime  equal round(0.05/${dt})
+
+variable          langevin_T0   equal 1e22*64/${nx}
+variable          langevin_dump equal 1.0
+
+fix               fix_la    flow langevin  ${langevin_T0} ${langevin_T0} ${langevin_dump} 1234567
+run               ${prerun_ntime}
+
+unfix             fix_la
+velocity          flow zero linear
+run               ${prerun_ntime}
+velocity          flow zero linear
+
+variable           gamma equal 1.0
+variable           rbackground equal 0.00
+include            pairs.lmp
+
 run               ${ntime}
