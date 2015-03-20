@@ -34,9 +34,9 @@ AtomVecMesoMultiPhase::AtomVecMesoMultiPhase(LAMMPS *lmp) :
 
 	comm_x_only = 0; // we communicate not only x forward but also vest ...
 	comm_f_only = 0; // we also communicate de and drho in reverse direction
-	size_forward = 12; // 3 + rmass + rho + colorgradient[3] + e + vest[3], that means we may only communicate 8 in hybrid
+	size_forward = 15; // 3 + rmass + rho + surface_stress[6] + e + vest[3], that means we may only communicate 8 in hybrid
 	size_reverse = 5; // 3 + drho + de
-	size_border = 16; // 6 + rmass + rho + colorgradient[3] + e + vest[3] + cv
+	size_border = 19; // 6 + rmass + rho + surface_stress[6] + e + vest[3] + cv
 	size_velocity = 3;
 	size_data_atom = 8;
 	size_data_vel = 4;
@@ -45,7 +45,7 @@ AtomVecMesoMultiPhase::AtomVecMesoMultiPhase(LAMMPS *lmp) :
 	atom->rmass_flag = 1;
 	atom->e_flag = 1;
 	atom->rho_flag = 1;
-	atom->colorgradient_flag = 1;
+	atom->surface_stress_flag = 1;
 	atom->cv_flag = 1;
 	atom->vest_flag = 1;
 }
@@ -72,8 +72,8 @@ void AtomVecMesoMultiPhase::grow(int n) {
 	f = memory->grow(atom->f, nmax*comm->nthreads, 3, "atom:f");
 
 	rho = memory->grow(atom->rho, nmax, "atom:rho");
-	colorgradient = memory->grow(atom->colorgradient, nmax, 3, "atom:colorgradient");
-	drho = memory->grow(atom->drho, nmax*comm->nthreads, "atom:drho");
+	surface_stress = memory->grow(atom->surface_stress, nmax, 6, "atom:surface_stress");
+	drho =          memory->grow(atom->drho, nmax*comm->nthreads, "atom:drho");
 	rmass = memory->grow(atom->rmass, nmax, "atom:rmass");
 	e = memory->grow(atom->e, nmax, "atom:e");
 	de = memory->grow(atom->de, nmax*comm->nthreads, "atom:de");
@@ -98,7 +98,7 @@ void AtomVecMesoMultiPhase::grow_reset() {
 	v = atom->v;
 	f = atom->f;
 	rho = atom->rho;
-	colorgradient = atom->colorgradient;
+	surface_stress = atom->surface_stress;
 	drho = atom->drho;
 	rmass = atom->rmass;
 	e = atom->e;
@@ -123,9 +123,12 @@ void AtomVecMesoMultiPhase::copy(int i, int j, int delflag) {
 	v[j][2] = v[i][2];
 
 	rho[j] = rho[i];
-	colorgradient[j][0] = colorgradient[i][0];
-	colorgradient[j][1] = colorgradient[i][1];
-	colorgradient[j][2] = colorgradient[i][2];
+	surface_stress[j][0] = surface_stress[i][0];
+	surface_stress[j][1] = surface_stress[i][1];
+	surface_stress[j][2] = surface_stress[i][2];
+	surface_stress[j][3] = surface_stress[i][3];
+	surface_stress[j][4] = surface_stress[i][4];
+	surface_stress[j][5] = surface_stress[i][5];
 	drho[j] = drho[i];
 	rmass[j] = rmass[i];
 	e[j] = e[i];
@@ -159,9 +162,12 @@ int AtomVecMesoMultiPhase::pack_comm_hybrid(int n, int *list, double *buf, int p
 	  for (i = 0; i < n; i++) {
 	    j = list[i];
 	    buf[m++] = rho[j];
-	    buf[m++] = colorgradient[j][0];
-	    buf[m++] = colorgradient[j][1];
-	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = surface_stress[j][0];
+	    buf[m++] = surface_stress[j][1];
+	    buf[m++] = surface_stress[j][2];
+	    buf[m++] = surface_stress[j][3];
+	    buf[m++] = surface_stress[j][4];
+	    buf[m++] = surface_stress[j][5];
 	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    buf[m++] = vest[j][0];
@@ -175,9 +181,12 @@ int AtomVecMesoMultiPhase::pack_comm_hybrid(int n, int *list, double *buf, int p
 	  for (i = 0; i < n; i++) {
 	    j = list[i];
 	    buf[m++] = rho[j];
-	    buf[m++] = colorgradient[j][0];
-	    buf[m++] = colorgradient[j][1];
-	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = surface_stress[j][0];
+	    buf[m++] = surface_stress[j][1];
+	    buf[m++] = surface_stress[j][2];
+	    buf[m++] = surface_stress[j][3];
+	    buf[m++] = surface_stress[j][4];
+	    buf[m++] = surface_stress[j][5];
 	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    if (mask[i] & deform_groupbit) {
@@ -204,9 +213,12 @@ int AtomVecMesoMultiPhase::unpack_comm_hybrid(int n, int first, double *buf) {
 	last = first + n;
 	for (i = first; i < last; i++) {
 		rho[i] = buf[m++];
-		colorgradient[i][0] = buf[m++];
-		colorgradient[i][1] = buf[m++];
-		colorgradient[i][2] = buf[m++];
+		surface_stress[i][0] = buf[m++];
+		surface_stress[i][1] = buf[m++];
+		surface_stress[i][2] = buf[m++];
+		surface_stress[i][3] = buf[m++];
+		surface_stress[i][4] = buf[m++];
+		surface_stress[i][5] = buf[m++];
 		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
@@ -227,9 +239,12 @@ int AtomVecMesoMultiPhase::pack_border_hybrid(int n, int *list, double *buf, int
 	  for (i = 0; i < n; i++) {
 	    j = list[i];
 	    buf[m++] = rho[j];
-	    buf[m++] = colorgradient[j][0];
-	    buf[m++] = colorgradient[j][1];
-	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = surface_stress[j][0];
+	    buf[m++] = surface_stress[j][1];
+	    buf[m++] = surface_stress[j][2];
+	    buf[m++] = surface_stress[j][3];
+	    buf[m++] = surface_stress[j][4];
+	    buf[m++] = surface_stress[j][5];
 	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    buf[m++] = vest[j][0];
@@ -243,9 +258,12 @@ int AtomVecMesoMultiPhase::pack_border_hybrid(int n, int *list, double *buf, int
 	  for (i = 0; i < n; i++) {
 	    j = list[i];
 	    buf[m++] = rho[j];
-	    buf[m++] = colorgradient[j][0];
-	    buf[m++] = colorgradient[j][1];
-	    buf[m++] = colorgradient[j][2];
+	    buf[m++] = surface_stress[j][0];
+	    buf[m++] = surface_stress[j][1];
+	    buf[m++] = surface_stress[j][2];
+	    buf[m++] = surface_stress[j][3];
+	    buf[m++] = surface_stress[j][4];
+	    buf[m++] = surface_stress[j][5];
 	    buf[m++] = rmass[j];
 	    buf[m++] = e[j];
 	    if (mask[i] & deform_groupbit) {
@@ -272,9 +290,12 @@ int AtomVecMesoMultiPhase::unpack_border_hybrid(int n, int first, double *buf) {
 	last = first + n;
 	for (i = first; i < last; i++) {
 		rho[i] = buf[m++];
-		colorgradient[i][0] = buf[m++];
-		colorgradient[i][1] = buf[m++];
-		colorgradient[i][2] = buf[m++];
+		surface_stress[i][0] = buf[m++];
+		surface_stress[i][1] = buf[m++];
+		surface_stress[i][2] = buf[m++];
+		surface_stress[i][3] = buf[m++];
+		surface_stress[i][4] = buf[m++];
+		surface_stress[i][5] = buf[m++];
 		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
@@ -330,9 +351,12 @@ int AtomVecMesoMultiPhase::pack_comm(int n, int *list, double *buf, int pbc_flag
 			buf[m++] = x[j][1];
 			buf[m++] = x[j][2];
 			buf[m++] = rho[j];
-			buf[m++] = colorgradient[j][0];
-			buf[m++] = colorgradient[j][1];
-			buf[m++] = colorgradient[j][2];
+			buf[m++] = surface_stress[j][0];
+			buf[m++] = surface_stress[j][1];
+			buf[m++] = surface_stress[j][2];
+			buf[m++] = surface_stress[j][3];
+			buf[m++] = surface_stress[j][4];
+			buf[m++] = surface_stress[j][5];
 			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = vest[j][0];
@@ -355,9 +379,12 @@ int AtomVecMesoMultiPhase::pack_comm(int n, int *list, double *buf, int pbc_flag
 			buf[m++] = x[j][1] + dy;
 			buf[m++] = x[j][2] + dz;
 			buf[m++] = rho[j];
-			buf[m++] = colorgradient[j][0];
-			buf[m++] = colorgradient[j][1];
-			buf[m++] = colorgradient[j][2];
+			buf[m++] = surface_stress[j][0];
+			buf[m++] = surface_stress[j][1];
+			buf[m++] = surface_stress[j][2];
+			buf[m++] = surface_stress[j][3];
+			buf[m++] = surface_stress[j][4];
+			buf[m++] = surface_stress[j][5];
 			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = vest[j][0];
@@ -387,9 +414,12 @@ int AtomVecMesoMultiPhase::pack_comm_vel(int n, int *list, double *buf, int pbc_
 			buf[m++] = v[j][1];
 			buf[m++] = v[j][2];
 			buf[m++] = rho[j];
-			buf[m++] = colorgradient[j][0];
-			buf[m++] = colorgradient[j][1];
-			buf[m++] = colorgradient[j][2];
+			buf[m++] = surface_stress[j][0];
+			buf[m++] = surface_stress[j][1];
+			buf[m++] = surface_stress[j][2];
+			buf[m++] = surface_stress[j][3];
+			buf[m++] = surface_stress[j][4];
+			buf[m++] = surface_stress[j][5];
 			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = vest[j][0];
@@ -416,9 +446,12 @@ int AtomVecMesoMultiPhase::pack_comm_vel(int n, int *list, double *buf, int pbc_
 		    buf[m++] = v[j][1];
 		    buf[m++] = v[j][2];
 		    buf[m++] = rho[j];
-		    buf[m++] = colorgradient[j][0];
-		    buf[m++] = colorgradient[j][1];
-		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = surface_stress[j][0];
+		    buf[m++] = surface_stress[j][1];
+		    buf[m++] = surface_stress[j][2];
+		    buf[m++] = surface_stress[j][3];
+		    buf[m++] = surface_stress[j][4];
+		    buf[m++] = surface_stress[j][5];
 		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    buf[m++] = vest[j][0];
@@ -444,9 +477,12 @@ int AtomVecMesoMultiPhase::pack_comm_vel(int n, int *list, double *buf, int pbc_
 		      buf[m++] = v[j][2];
 		    }
 		    buf[m++] = rho[j];
-		    buf[m++] = colorgradient[j][0];
-		    buf[m++] = colorgradient[j][1];
-		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = surface_stress[j][0];
+		    buf[m++] = surface_stress[j][1];
+		    buf[m++] = surface_stress[j][2];
+		    buf[m++] = surface_stress[j][3];
+		    buf[m++] = surface_stress[j][4];
+		    buf[m++] = surface_stress[j][5];
 		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    if (mask[i] & deform_groupbit) {
@@ -477,9 +513,12 @@ void AtomVecMesoMultiPhase::unpack_comm(int n, int first, double *buf) {
 		x[i][1] = buf[m++];
 		x[i][2] = buf[m++];
 		rho[i] = buf[m++];
-		colorgradient[i][0] = buf[m++];
-		colorgradient[i][1] = buf[m++];
-		colorgradient[i][2] = buf[m++];
+		surface_stress[i][0] = buf[m++];
+		surface_stress[i][1] = buf[m++];
+		surface_stress[i][2] = buf[m++];
+		surface_stress[i][3] = buf[m++];
+		surface_stress[i][4] = buf[m++];
+		surface_stress[i][5] = buf[m++];
 		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
@@ -504,9 +543,12 @@ void AtomVecMesoMultiPhase::unpack_comm_vel(int n, int first, double *buf) {
 		v[i][1] = buf[m++];
 		v[i][2] = buf[m++];
 		rho[i] = buf[m++];
-		colorgradient[i][0] = buf[m++];
-		colorgradient[i][1] = buf[m++];
-		colorgradient[i][2] = buf[m++];
+		surface_stress[i][0] = buf[m++];
+		surface_stress[i][1] = buf[m++];
+		surface_stress[i][2] = buf[m++];
+		surface_stress[i][3] = buf[m++];
+		surface_stress[i][4] = buf[m++];
+		surface_stress[i][5] = buf[m++];
 		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		vest[i][0] = buf[m++];
@@ -569,9 +611,12 @@ int AtomVecMesoMultiPhase::pack_border(int n, int *list, double *buf, int pbc_fl
 			buf[m++] = type[j];
 			buf[m++] = mask[j];
 			buf[m++] = rho[j];
-			buf[m++] = colorgradient[j][0];
-			buf[m++] = colorgradient[j][1];
-			buf[m++] = colorgradient[j][2];
+			buf[m++] = surface_stress[j][0];
+			buf[m++] = surface_stress[j][1];
+			buf[m++] = surface_stress[j][2];
+			buf[m++] = surface_stress[j][3];
+			buf[m++] = surface_stress[j][4];
+			buf[m++] = surface_stress[j][5];
 			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = cv[j];
@@ -598,9 +643,12 @@ int AtomVecMesoMultiPhase::pack_border(int n, int *list, double *buf, int pbc_fl
 			buf[m++] = type[j];
 			buf[m++] = mask[j];
 			buf[m++] = rho[j];
-			buf[m++] = colorgradient[j][0];
-			buf[m++] = colorgradient[j][1];
-			buf[m++] = colorgradient[j][2];
+			buf[m++] = surface_stress[j][0];
+			buf[m++] = surface_stress[j][1];
+			buf[m++] = surface_stress[j][2];
+			buf[m++] = surface_stress[j][3];
+			buf[m++] = surface_stress[j][4];
+			buf[m++] = surface_stress[j][5];
 			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = cv[j];
@@ -634,9 +682,12 @@ int AtomVecMesoMultiPhase::pack_border_vel(int n, int *list, double *buf, int pb
 			buf[m++] = v[j][1];
 			buf[m++] = v[j][2];
 			buf[m++] = rho[j];
-			buf[m++] = colorgradient[j][0];
-			buf[m++] = colorgradient[j][1];
-			buf[m++] = colorgradient[j][2];
+			buf[m++] = surface_stress[j][0];
+			buf[m++] = surface_stress[j][1];
+			buf[m++] = surface_stress[j][2];
+			buf[m++] = surface_stress[j][3];
+			buf[m++] = surface_stress[j][4];
+			buf[m++] = surface_stress[j][5];
 			buf[m++] = rmass[j];
 			buf[m++] = e[j];
 			buf[m++] = cv[j];
@@ -667,9 +718,12 @@ int AtomVecMesoMultiPhase::pack_border_vel(int n, int *list, double *buf, int pb
 		    buf[m++] = v[j][1];
 		    buf[m++] = v[j][2];
 		    buf[m++] = rho[j];
-		    buf[m++] = colorgradient[j][0];
-		    buf[m++] = colorgradient[j][1];
-		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = surface_stress[j][0];
+		    buf[m++] = surface_stress[j][1];
+		    buf[m++] = surface_stress[j][2];
+		    buf[m++] = surface_stress[j][3];
+		    buf[m++] = surface_stress[j][4];
+		    buf[m++] = surface_stress[j][5];
 		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    buf[m++] = cv[j];
@@ -699,9 +753,12 @@ int AtomVecMesoMultiPhase::pack_border_vel(int n, int *list, double *buf, int pb
 		      buf[m++] = v[j][2];
 		    }
 		    buf[m++] = rho[j];
-		    buf[m++] = colorgradient[j][0];
-		    buf[m++] = colorgradient[j][1];
-		    buf[m++] = colorgradient[j][2];
+		    buf[m++] = surface_stress[j][0];
+		    buf[m++] = surface_stress[j][1];
+		    buf[m++] = surface_stress[j][2];
+		    buf[m++] = surface_stress[j][3];
+		    buf[m++] = surface_stress[j][4];
+		    buf[m++] = surface_stress[j][5];
 		    buf[m++] = rmass[j];
 		    buf[m++] = e[j];
 		    buf[m++] = cv[j];
@@ -738,9 +795,12 @@ void AtomVecMesoMultiPhase::unpack_border(int n, int first, double *buf) {
 		type[i] = static_cast<int> (buf[m++]);
 		mask[i] = static_cast<int> (buf[m++]);
 		rho[i] = buf[m++];
-		colorgradient[i][0] = buf[m++];
-		colorgradient[i][1] = buf[m++];
-		colorgradient[i][2] = buf[m++];
+		surface_stress[i][0] = buf[m++];
+		surface_stress[i][1] = buf[m++];
+		surface_stress[i][2] = buf[m++];
+		surface_stress[i][3] = buf[m++];
+		surface_stress[i][4] = buf[m++];
+		surface_stress[i][5] = buf[m++];
 		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		cv[i] = buf[m++];
@@ -771,9 +831,12 @@ void AtomVecMesoMultiPhase::unpack_border_vel(int n, int first, double *buf) {
 		v[i][1] = buf[m++];
 		v[i][2] = buf[m++];
 		rho[i] = buf[m++];
-		colorgradient[i][0] = buf[m++];
-		colorgradient[i][1] = buf[m++];
-		colorgradient[i][2] = buf[m++];
+		surface_stress[i][0] = buf[m++];
+		surface_stress[i][1] = buf[m++];
+		surface_stress[i][2] = buf[m++];
+		surface_stress[i][3] = buf[m++];
+		surface_stress[i][4] = buf[m++];
+		surface_stress[i][5] = buf[m++];
 		rmass[i] = buf[m++];
 		e[i] = buf[m++];
 		cv[i] = buf[m++];
@@ -802,9 +865,12 @@ int AtomVecMesoMultiPhase::pack_exchange(int i, double *buf) {
 	buf[m++] = mask[i];
 	buf[m++] = image[i];
 	buf[m++] = rho[i];
-	buf[m++] = colorgradient[i][0];
-	buf[m++] = colorgradient[i][1];
-	buf[m++] = colorgradient[i][2];
+	buf[m++] = surface_stress[i][0];
+	buf[m++] = surface_stress[i][1];
+	buf[m++] = surface_stress[i][2];
+	buf[m++] = surface_stress[i][3];
+	buf[m++] = surface_stress[i][4];
+	buf[m++] = surface_stress[i][5];
 	buf[m++] = rmass[i];
 	buf[m++] = e[i];
 	buf[m++] = cv[i];
@@ -840,9 +906,12 @@ int AtomVecMesoMultiPhase::unpack_exchange(double *buf) {
 	mask[nlocal] = static_cast<int> (buf[m++]);
 	image[nlocal] = static_cast<int> (buf[m++]);
 	rho[nlocal] = buf[m++];
-	colorgradient[nlocal][0] = buf[m++];
-	colorgradient[nlocal][1] = buf[m++];
-	colorgradient[nlocal][2] = buf[m++];
+	surface_stress[nlocal][0] = buf[m++];
+	surface_stress[nlocal][1] = buf[m++];
+	surface_stress[nlocal][2] = buf[m++];
+	surface_stress[nlocal][3] = buf[m++];
+	surface_stress[nlocal][4] = buf[m++];
+	surface_stress[nlocal][5] = buf[m++];
 	rmass[nlocal] = buf[m++];
 	e[nlocal] = buf[m++];
 	cv[nlocal] = buf[m++];
@@ -868,7 +937,7 @@ int AtomVecMesoMultiPhase::size_restart() {
         int i;
 
 	int nlocal = atom->nlocal;
-	int n = 21 * nlocal; // 11 + rmass + rho + colorgradient[3] + e + cv + vest[3]
+	int n = 24 * nlocal; // 11 + rmass + rho + surface_stress + e + cv + vest[3]
 
         if (atom->nextra_restart)
                 for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
@@ -897,9 +966,12 @@ int AtomVecMesoMultiPhase::pack_restart(int i, double *buf) {
 	buf[m++] = v[i][1];
 	buf[m++] = v[i][2];
 	buf[m++] = rho[i];
-	buf[m++] = colorgradient[i][0];
-	buf[m++] = colorgradient[i][1];
-	buf[m++] = colorgradient[i][2];
+	buf[m++] = surface_stress[i][0];
+	buf[m++] = surface_stress[i][1];
+	buf[m++] = surface_stress[i][2];
+	buf[m++] = surface_stress[i][3];
+	buf[m++] = surface_stress[i][4];
+	buf[m++] = surface_stress[i][5];
 	buf[m++] = rmass[i];
 	buf[m++] = e[i];
 	buf[m++] = cv[i];
@@ -939,9 +1011,12 @@ int AtomVecMesoMultiPhase::unpack_restart(double *buf) {
 	v[nlocal][1] = buf[m++];
 	v[nlocal][2] = buf[m++];
 	rho[nlocal] = buf[m++];
-	colorgradient[nlocal][0] = buf[m++];
-	colorgradient[nlocal][1] = buf[m++];
-	colorgradient[nlocal][2] = buf[m++];
+	surface_stress[nlocal][0] = buf[m++];
+	surface_stress[nlocal][1] = buf[m++];
+	surface_stress[nlocal][2] = buf[m++];
+	surface_stress[nlocal][3] = buf[m++];
+	surface_stress[nlocal][4] = buf[m++];
+	surface_stress[nlocal][5] = buf[m++];
 	rmass[nlocal] = buf[m++];
 	e[nlocal] = buf[m++];
 	cv[nlocal] = buf[m++];
@@ -981,9 +1056,12 @@ void AtomVecMesoMultiPhase::create_atom(int itype, double *coord) {
 	v[nlocal][1] = 0.0;
 	v[nlocal][2] = 0.0;
 	rho[nlocal] = 0.0;
-	colorgradient[nlocal][0] = 0.0;
-	colorgradient[nlocal][1] = 0.0;
-	colorgradient[nlocal][2] = 0.0;
+	surface_stress[nlocal][0] = 0.0;
+	surface_stress[nlocal][1] = 0.0;
+	surface_stress[nlocal][2] = 0.0;
+	surface_stress[nlocal][3] = 0.0;
+	surface_stress[nlocal][4] = 0.0;
+	surface_stress[nlocal][5] = 0.0;
 	rmass[nlocal] = 0.0;
 	e[nlocal] = 0.0;
 	cv[nlocal] = 1.0;
@@ -1032,10 +1110,13 @@ void AtomVecMesoMultiPhase::data_atom(double *coord, tagint imagetmp, char **val
         v[nlocal][1] = 0.0;
         v[nlocal][2] = 0.0;
 
-	colorgradient[nlocal][0] = 0.0;
-	colorgradient[nlocal][1] = 0.0;
-	colorgradient[nlocal][2] = 0.0;
-
+	surface_stress[nlocal][0] = 0.0;
+	surface_stress[nlocal][1] = 0.0;
+	surface_stress[nlocal][2] = 0.0;
+	surface_stress[nlocal][3] = 0.0;
+	surface_stress[nlocal][4] = 0.0;
+	surface_stress[nlocal][5] = 0.0;
+	
 	vest[nlocal][0] = 0.0;
 	vest[nlocal][1] = 0.0;
 	vest[nlocal][2] = 0.0;
@@ -1207,8 +1288,8 @@ bigint AtomVecMesoMultiPhase::memory_usage() {
 		bytes += memory->usage(rmass, nmax);
 	if (atom->memcheck("rho"))
 		bytes += memory->usage(rho, nmax);
-	if (atom->memcheck("colorgradient"))
-	        bytes += memory->usage(colorgradient, nmax, 3);
+	if (atom->memcheck("surface_stress"))
+	        bytes += memory->usage(surface_stress, nmax, 6);
 	if (atom->memcheck("drho"))
 		bytes += memory->usage(drho, nmax*comm->nthreads);
 	if (atom->memcheck("e"))

@@ -72,7 +72,7 @@ class AtomVecMesoMultiPhase : public AtomVec {
   imageint *image;
   double **x,**v,**f;
   double *rmass, *rho, *drho, *e, *de, *cv;
-  double **colorgradient;
+  double **surface_stress;
   double **vest; // estimated velocity during force computation
 };
 
