@@ -1,10 +1,10 @@
 #! /bin/bash
 
-nx=62
+nx=69
 dname=data-wall-nx${nx}
 
 # number of a case
-icase=3
+icase=1
 mkdir -p ${dname}
 lmp=../../../../src/lmp_linux
 ${lmp} -in initial.lmp -var icase ${icase} -var dname ${dname} -var nx ${nx}

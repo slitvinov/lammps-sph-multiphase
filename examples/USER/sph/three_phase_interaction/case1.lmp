@@ -3,7 +3,7 @@ variable          ny   equal ${nx}
 
 # size of the domain
 variable          Lx   equal  1.0
-variable          Ly   equal  0.5
+variable          Ly   equal  1.5
 variable          dx   equal  ${Lx}/${nx}
 
 # density of droplet

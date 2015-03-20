@@ -3,11 +3,10 @@ include            in.vars
 read_data          ${dname}/initial.dat
 
 compute            rho_peratom all meso_rho/atom
-compute            colorgradient_peratom all meso_colorgradient/atom
 
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_colorgradient_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes sort id pad 8
 
 include            ${ndim}-image.lmp
@@ -19,15 +18,15 @@ neigh_modify       delay 0 every 1
 comm_modify        vel yes
 set                group all meso_rho ${sph_rho_g}
 
-pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 &
                    sph/taitwater/multiphase sph/surfacetension
 pair_coeff         * * sph/rhosum/multiphase   ${h}
-pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
-pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha_gd}
-pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
-pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} ${alpha_dw}
-pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} ${alpha_gw}
-pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${d_type} ${d_type} sph/surface_stress ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/surface_stress ${h} ${alpha_gd}
+pair_coeff         ${g_type} ${g_type} sph/surface_stress ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/surface_stress ${h} ${alpha_dw}
+pair_coeff         ${g_type} ${w_type} sph/surface_stress ${h} ${alpha_gw}
+pair_coeff         ${w_type} ${w_type} sph/surface_stress ${h} 0
 
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
 variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
