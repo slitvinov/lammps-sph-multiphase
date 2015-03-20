@@ -17,4 +17,5 @@ r0 = 0.05
 Simulations for
 900, 3600, 14400
 
-
+Visualization
+vmd -e post.tcl -xyz data-wall-nx56/droplet.xyz
