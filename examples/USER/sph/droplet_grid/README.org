@@ -6,3 +6,5 @@ and execute:
 
 Hu, X. Y. & Adams, N. A. A Multi-phase SPH Method for Macroscopic and
 Mesoscopic Flows. J. Comput. Phys. 213, 844–861 (2006).
+
+plot "data-wall-nx68/cm.dat" u 1:2 w lp, "ref/hu2006_cap_wave_X3600.txt"
