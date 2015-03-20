@@ -54,12 +54,12 @@ neighbor           0 bin
 neigh_modify       delay 0 every 1
 comm_modify        vel yes
 
-pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 &
                    sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
 pair_coeff         * * sph/rhosum/multiphase   ${h}
-pair_coeff         ${v_type} ${v_type} sph/colorgradient ${h} 0
-pair_coeff         ${l_type} ${v_type} sph/colorgradient ${h} ${alpha}
-pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0
+pair_coeff         ${v_type} ${v_type} sph/surface_stress ${h} 0
+pair_coeff         ${l_type} ${v_type} sph/surface_stress ${h} ${alpha}
+pair_coeff         ${l_type} ${l_type} sph/surface_stress ${h} 0
 
 variable           sph_eta_ld equal 2*${sph_eta_l}*${sph_eta_v}/(${sph_eta_v}+${sph_eta_l})
 pair_coeff         ${l_type} ${v_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} 1.0 ${h} ${rbackground}

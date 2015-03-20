@@ -3,7 +3,7 @@
 set -e
 set -u
 
-ndim=3
+ndim=2
 nx=20
 lmp=../../../../src/lmp_linux
 
