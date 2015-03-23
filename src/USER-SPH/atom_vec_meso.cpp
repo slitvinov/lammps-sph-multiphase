@@ -1,15 +1,22 @@
-/* ----------------------------------------------------------------------
- LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
- http://lammps.sandia.gov, Sandia National Laboratories
- Steve Plimpton, sjplimp@sandia.gov
-
- Copyright (2003) Sandia Corporation.  Under the terms of Contract
- DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
- certain rights in this software.  This software is distributed under
- the GNU General Public License.
-
- See the README file in the top-level LAMMPS directory.
- ------------------------------------------------------------------------- */
+/**
+ * lammps-multiphase
+ *
+ *  Copyright (2015) by Sergey Litvinov, Daniel Gaudlitz, Xiangyu Hu,
+ *  Nikolaus Adams (Institute of Aerodynamics and Fluid Mechanics, TU
+ *  Munich)
+ *
+ *  Copyright (2011) by Martin O. Ganzenmueller (Fraunhofer-Institut
+ *  fuer Kurzzeitdynamik, Ernst-Mach-Institut) , Paul Van Liedekerke
+ *  (Faculty of Bio-Engineering, MEBIOS Division Katholieke
+ *  Universtiteit Leuven)
+ *
+ *  Copyright (2003) by Steve Plimpton (Sandia Corporation)
+ *
+ *  Licensed under GNU General Public License 3.0 or later. 
+ *  Some rights reserved. See COPYING, AUTHORS.
+ *
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ */
 
 #include "string.h"
 #include "stdlib.h"
