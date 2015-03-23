@@ -3,7 +3,7 @@
 # To run this test:
 #
 # maxima -b heatconduction_phase_change.mac
-# ../../../../src/lmp_linux -in sheatconduction_phase_change.lmp
+# ../../../../src/lmp_mpi -in sheatconduction_phase_change.lmp
 #
 # To see the output 
 # head output.dat

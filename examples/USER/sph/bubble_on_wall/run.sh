@@ -3,7 +3,7 @@
 set -e
 set -u
 
-lmp=../../../../src/lmp_linux
+lmp=../../../../src/lmp_mpi
 mpirun=mpirun
 dname=data
 ndim=2

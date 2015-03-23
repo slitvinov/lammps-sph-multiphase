@@ -37,7 +37,7 @@ temp(x):= if x>0 then lev(temp_r) else lev(temp_l);
 with_stdout("par.lmp",
     for eq in env do printf(true, "variable ~a equal ~a~%", lhs(eq), rhs(eq)))$
 
-/* create a file in reference data */
+/* create a file with reference data */
 n: 100;
 with_stdout("infslab.dat",
   for i: 0 thru n do block([x, y],

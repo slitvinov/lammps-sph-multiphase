@@ -7,7 +7,7 @@ dname=data-wall-nx${nx}
 icase=3
 
 mkdir -p ${dname}
-lmp=../../../../src/lmp_linux
+lmp=../../../../src/lmp_mpi
 ${lmp} -in initial.lmp -var icase ${icase} -var dname ${dname} -var nx ${nx}
 
 awk -f build_initial.awk ${dname}/initial.dat > ${dname}/initial.tmp
