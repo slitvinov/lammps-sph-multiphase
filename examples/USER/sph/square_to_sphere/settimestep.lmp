@@ -1,0 +1,21 @@
+variable dt_eta equal 1/8.0*${dx}*${dx}/(${sph_mu})
+
+if "${alpha}>0" then &
+"variable dt_alpha equal 1/4.0*sqrt(${sph_rho_d}*${dx}^3/(6.0*${alpha}))" &
+else &
+"variable dt_alpha equal 1e19"
+
+if "${sph_c_d}>0.0" then &
+"variable dt_c equal 1/4.0*${dx}/${sph_c_d}" &
+else &
+"variable dt_c equal 1e19"
+
+if "${dt_c}>${dt_eta}" then &
+"variable dt equal ${dt_eta}" &
+else &
+"variable dt equal ${dt_c}"
+
+if "${dt}>${dt_alpha}" then &
+"variable dt equal ${dt_alpha}"
+
+print "(settimestep) dt_c dt_eta dt_alpha dt ${dt_c} ${dt_eta} ${dt_alpha} ${dt}"

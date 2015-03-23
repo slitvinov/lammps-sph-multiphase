@@ -1,0 +1,47 @@
+# number of particles in each of the directions
+variable          ny   equal ${nx}
+
+# size of the domain
+variable          Lx   equal  1.0
+variable          Ly   equal  1.5
+variable          Ly   equal  0.5
+variable          dx   equal  ${Lx}/${nx}
+
+# density of droplet
+variable          sph_rho_d equal 1.0
+# density of gas phase
+variable          sph_rho_g equal 1.0
+variable          sph_rho_w equal ${sph_rho_g}
+
+# sound speed 
+variable          sph_c_d equal 10
+variable          sph_c_g equal 10
+variable          sph_c_w equal ${sph_c_g}
+
+# viscosity of droplet 
+variable          sph_eta_d equal 5e-2
+# viscosity of gas
+variable          sph_eta_g equal 5e-2
+variable          sph_eta_w equal ${sph_eta_g}
+
+variable          h equal 3.0*${dx}
+variable          Nfreq equal 100
+variable          Nfreqimage equal 100
+
+# mass of droplet particle
+variable          sph_mass_d equal ${dx}*${dx}*${sph_rho_d}
+# mass of gas particle
+variable          sph_mass_g equal ${dx}*${dx}*${sph_rho_g}
+variable          sph_mass_w equal ${sph_mass_g}
+
+# surface tension
+variable          alpha_gd equal sqrt(2)/2   # 12
+variable          alpha_gw equal sqrt(2)/2   # 13
+
+variable          alpha_dw equal 1           # 23
+
+# type of the gas particle
+variable          g_type equal 1
+# type of the droplet particle
+variable          d_type equal 2
+variable          w_type equal 3

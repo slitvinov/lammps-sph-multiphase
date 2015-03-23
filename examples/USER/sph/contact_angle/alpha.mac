@@ -1,0 +1,6 @@
+eq: alpha1w = alpha12 * cos(omega) + alpha2w;
+
+eq_sb: subst( [alpha2w=1, alpha12 = 1, alpha1w=3/2], eq);
+solve(eq_sb, cos(omega));
+
+solve(eq, cos(omega));

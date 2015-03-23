@@ -1,0 +1,110 @@
+log                ${dname}/log.lammps
+echo               both
+variable           ndim equal 2
+dimension          ${ndim}
+units              si
+
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
+atom_style         meso/multiphase
+include            vars.lmp
+boundary          p p p
+# create simulation box
+if ${ndim}==2 then &
+"variable           pLz    equal  ${dx}" &
+"variable           nLz    equal  0" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+
+# create box with two types of particles (flow and wall)
+create_box         2 box
+
+# create flow particles
+if ${ndim}==3 then &
+"lattice            sc ${dx}" &
+else &
+"lattice            sq ${dx}"
+create_atoms       ${g_type} region box
+
+# set mass of the particles
+set                group all meso_rho ${sph_rho}
+set                group all mass ${sph_mass}
+
+compute            rho_peratom all meso_rho/atom
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+variable           sph_mu  equal ${sph_eta}/${sph_rho}
+include            settimestep.lmp
+
+comm_modify        vel yes
+set                group all meso_rho ${sph_rho}
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/taitwater/morris
+pair_coeff         * * sph/rhosum/multiphase   ${h}
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1  sph/taitwater/multiphase
+pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} ${sph_gamma} ${h} ${sph_rho_background}
+pair_coeff         * * sph/rhosum/multiphase   ${h}
+
+neighbor           0 bin
+neigh_modify       delay 0 every 1
+
+dump               dump_dcd all dcd ${Nfreq} ${dname}/flow.dcd
+dump_modify        dump_dcd sort id
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/flow.xyz
+dump_modify        dump_xyz element A B
+
+dump               dump_txt all custom ${Nfreq} ${dname}/dump.*.dat id type x y z vx vy vz c_rho_peratom
+dump_modify        dump_txt first yes sort id pad 8
+
+# create cylinder
+region             rcylinder cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
+set	           region rcylinder type ${d_type}
+group              gcylinder region rcylinder
+group	           flow subtract all gcylinder
+
+# fix wall particles
+fix                wallim gcylinder setforce 0 0 0
+write_data         ${dname}/flow.dat
+
+set                type ${d_type} meso_rho ${sph_rho}
+set                type ${g_type} meso_rho ${sph_rho}
+
+variable bodyfx    atom mass*${gx}
+fix      bodyfx_id flow addforce v_bodyfx 0.0 0.0 
+
+variable           time equal step*dt
+thermo_style       custom step v_time
+thermo             ${Nfreq}
+
+timestep           ${dt}
+if "${ndim}==2" then "fix e2d all enforce2d"
+run                $(round(1500/dt))
+
+variable           bin_step equal 2/${nx}
+
+# end line
+variable           xend equal 0.95*${Lx}
+region             rend block ${xend} ${Lx} 0 ${Ly} EDGE EDGE units box
+fix av_vend all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center ${bin_step} vx region rend file ${dname}/vend.av ave running units reduced
+
+# center line
+variable           x1 equal 0.45*${Lx}
+variable           x2 equal 0.55*${Lx}
+region             rcenter block ${x1} ${x2} 0 ${Ly} EDGE EDGE units box
+fix av_vcen all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center ${bin_step} vx region rcenter file ${dname}/vcen.av ave running units reduced
+
+run                $(round(6000/dt))

@@ -1,0 +1,11 @@
+# set parameters of the phases need to include this file after I
+# introduce new particles
+set               type ${v_type} meso_cv ${cv_v}
+set               type ${l_type} meso_cv ${cv_l}
+set               type ${v_type} meso_e ${e_v}
+set               type ${l_type} meso_e ${e_l}
+set               type ${v_type} mass ${mass_v}
+set               type ${l_type} mass ${mass_l}
+set               type ${v_type} meso_rho ${sph_rho_v}
+set               type ${l_type} meso_rho ${sph_rho_l}
+

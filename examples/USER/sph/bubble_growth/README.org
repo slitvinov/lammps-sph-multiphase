@@ -1,0 +1,6 @@
+Nucleate boiling simulation. To run
+
+bash run.sh
+
+To visualize with VMD (http://www.ks.uiuc.edu/Research/vmd):
+vmd -e deposit.tcl   -args data-ndim2-nx20/data.xyz

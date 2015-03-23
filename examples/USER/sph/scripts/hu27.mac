@@ -1,0 +1,22 @@
+/* (27) an equation form Hu2006 */
+load ("scifac");
+load("expr2c.mac");
+load ("eigen");
+
+ifnum_float(expr):= if numberp(expr) then float(expr) else expr;
+float_n(expr):= scanmap(ifnum_float, expr);
+
+ndim: 3;
+cg_v:  columnvector(makelist(cg[i][d-1], d, ndim));
+eij_v: makelist(eij[d-1],  d, ndim);
+
+/* \Pi in equation (27) */
+Pm: 1/ndim*ident(ndim) * cg_v.cg_v - cg_v.transpose(cg_v);
+ex: flatten(args(Pm . columnvector(eij_v)));
+ex: makelist(map(lambda([q], map(expand, q)), ex[d]), d, ndim);
+
+with_stdout("hu27i.txt",
+  for d thru ndim do printf(true, "SurfaceForce~a[~d] = ~a;~%", i, d-1, expr2c(float(ex[d]/abscgi))));
+
+with_stdout("hu27j.txt",
+  for d thru ndim do printf(true, "SurfaceForce~a[~d] = ~a;~%", j, d-1, expr2c(float(subst(i=j, ex[d]/abscgj)))));

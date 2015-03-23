@@ -1,0 +1,63 @@
+# Compare surface tenstion force from LAMMPS and from maxima
+# (surfacetension.mac) 
+# To run this test:
+#
+# maxima -b surfacetension.mac
+# ../../../../src/lmp_linux -in surfacetension.lmp
+#
+# To see the output 
+# head output.dat
+
+echo               both
+dimension          3
+units              si
+atom_modify        map array sort 0 0
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
+atom_style         meso/multiphase
+comm_modify    vel yes
+
+#2D box
+# domain size
+variable          Lx equal 10
+
+variable          alpha equal 1.0
+
+variable          nLx equal -${Lx}
+region            box block 0 ${Lx} 0 ${Lx} ${nLx} ${Lx} units box
+
+create_box         3 box
+
+# run 
+# maxima -b surfacetension.mac
+# to get this file
+include           in.atoms
+
+set               group all mass 1
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 sph/surfacetension
+pair_coeff         1 1     sph/surface_stress ${h} 0
+pair_coeff         2 2     sph/surface_stress ${h} 0
+pair_coeff         3 3     sph/surface_stress ${h} 0
+pair_coeff         1 2     sph/surface_stress ${h} ${alpha}
+pair_coeff         1 3     sph/surface_stress ${h} ${alpha}
+pair_coeff         2 3     sph/surface_stress ${h} ${alpha}
+
+pair_coeff         * *     sph/surfacetension ${h}
+pair_coeff         * *     sph/rhosum/multiphase ${h}
+
+
+# do full time integration
+fix                integrate_fix_full all  meso
+
+neighbor           0 bin
+timestep           0
+
+fix extra all print 1 "$(fx[1]) $(fy[1]) $(fz[1])" file output.dat screen no
+run                1
+

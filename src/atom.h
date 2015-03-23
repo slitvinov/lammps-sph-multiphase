@@ -74,6 +74,8 @@ class Atom : protected Pointers {
   // USER-SPH package
 
   double *rho,*drho,*e,*de,*cv;
+  double **surface_stress;
+  double **colorgradient;
   double **vest;
 
   int **nspecial;               // 0,1,2 = cummulative # of 1-2,1-3,1-4 neighs
@@ -122,6 +124,8 @@ class Atom : protected Pointers {
   int vfrac_flag,spin_flag,eradius_flag,ervel_flag,erforce_flag;
   int cs_flag,csforce_flag,vforce_flag,ervelforce_flag,etag_flag;
   int rho_flag,e_flag,cv_flag,vest_flag;
+  int surface_stress_flag;
+  int colorgradient_flag;
 
   // Peridynamics scale factor, used by dump cfg
 
@@ -302,9 +306,9 @@ E: Atom IDs must be used for molecular systems
 
 Atom IDs are used to identify and find partner atoms in bonds.
 
-E: Unknown atom style
+E: Invalid atom style
 
-UNDOCUMENTED
+The choice of atom style is unknown.
 
 E: Could not find atom_modify first group ID
 
@@ -466,9 +470,5 @@ E: Too many atom sorting bins
 
 This is likely due to an immense simulation box that has blown up
 to a large size.
-
-U: Invalid atom style
-
-The choice of atom style is unknown.
 
 */

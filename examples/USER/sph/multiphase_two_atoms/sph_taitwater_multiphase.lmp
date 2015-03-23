@@ -1,0 +1,52 @@
+echo               both
+dimension          3
+units              si
+atom_modify        map array sort 0 0
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
+atom_style         meso/multiphase
+comm_modify    vel yes
+
+#2D box
+# domain size
+variable          Lx equal 10
+# smothing length
+variable          h equal 1
+
+variable          alpha equal 1.0
+
+variable          nLx equal -${Lx}
+region             box block 0 ${Lx} 0 ${Lx} ${nLx} ${Lx} units box
+
+create_box         2 box
+
+# run 
+# maxima -b surfacetension.mac
+# to get this file
+include           in.atoms
+include           in.vars
+
+set               type 1         mass 2
+set               type 2         mass 1
+
+set               type 1         meso_rho 1
+set               type 2         meso_rho 1
+
+pair_style         sph/taitwater/multiphase
+pair_coeff         * * ${rho0} ${soundspeed} ${eta} ${gamma} ${h} ${rbackground}
+
+# do full time integration
+fix                integrate_fix_full all  meso
+compute            rho_peratom all meso_rho/atom
+
+neighbor           0 bin
+timestep           0
+
+fix extra all print 1 "$(fx[1]) $(fx[2]) $(fx[3])" file outpt.dat screen no
+run                1
+

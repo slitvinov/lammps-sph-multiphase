@@ -1,0 +1,70 @@
+# number of particles in each of the directions
+variable          ny   equal ${nx}
+if ${ndim}==3 then &
+"variable nz equal ${nx}"
+
+# size of the domain
+variable          Lx   equal  1.0
+variable          Ly   equal  ${Lx}
+if ${ndim}==3 then &
+"variable         Lz   equal ${Lx}"
+
+variable          dx   equal  1.0/${nx}
+
+# density of the liquid (water)
+variable          sph_rho_l equal 1.00
+# density of the bubble (vapor) 
+variable          sph_rho_v equal 0.10
+
+# sound speed
+variable          sph_c_v equal 200.0/sqrt(${sph_rho_v})
+variable          sph_c_l equal 200.0/sqrt(${sph_rho_l})
+
+# viscosity of liquid [units: L^/T] 
+variable          sph_eta_l equal 1.0
+# viscosity of vapor [units: L^/T]
+variable          sph_eta_v equal 0.69
+
+
+# extract that rbackground in the equation of state
+# pressure ~ ( rho/rho0 - rbackground)^gamma
+variable          rbackground equal 0.0
+
+# smoothing length
+variable          h equal 3.0*${dx}
+# frequency of output in timesteps
+variable          Nfreq equal 100
+
+# mass of vapor particle
+variable          mass_v equal ${dx}^${ndim}*${sph_rho_v}
+# mass of gas particle
+variable          mass_l equal ${dx}^${ndim}*${sph_rho_l}
+
+# surface tension
+variable           alpha    equal 500
+
+# thermal conductivity of liquid
+variable           D_heat_l equal 0.2
+# thermal conductivity of vapor
+variable           D_heat_v equal 0.6
+
+
+# specific heat capacity of liquid
+variable          cv_l      equal 0.04
+# specific heat capacity of vapor
+variable          cv_v      equal 0.06
+# latent heat of evaporation
+variable           Hwv equal 8.0
+
+variable           dT   equal 0.1
+variable           Tinf equal 1.0
+variable           Tc equal 0.0
+variable           Tt equal ${Tc}+${dT}
+# energy
+variable          e_v       equal ${cv_v}*${Tc}
+variable          e_l       equal ${cv_l}*${Tinf}
+
+# type of the gas particle (liquid)
+variable          l_type equal 1
+# type of the bubble particle (vapor)
+variable          v_type equal 2

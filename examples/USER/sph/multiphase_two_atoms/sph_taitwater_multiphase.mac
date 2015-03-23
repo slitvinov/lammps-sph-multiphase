@@ -1,0 +1,54 @@
+ndim   : 3;
+cutoff: 1;
+
+load("../scripts/sph-kernel.mac");
+define_kernel(ndim, cutoff, 'quintic, 'w_scalar, 'dw_scalar)$
+
+vabs(dr):= sqrt(dr.dr);
+w(dr):= block([r: vabs(dr)], ''(w_scalar(r)));
+dw(dr):= block([r: vabs(dr)], dr/r * ''(dw_scalar(r)));
+
+gamma: 1;
+soundspeed: 1;
+eta: 0;
+rbackground: 0.5;
+rho0: 1;
+with_stdout("in.vars",
+  for v in ['gamma, 'soundspeed, 'eta, 'rbackground, 'rho0] do
+  printf(true, "variable ~a equal ~a~%", v, ?meval(v)));
+
+Peq(rho):=block([B: soundspeed * soundspeed  * rho0 / gamma],
+  B*(rho/rho0)^gamma - rbackground);
+
+x: [[5, 5, 5], [5.5, 5, 5], [5, 5, 4.8]];
+type: [1, 2, 2];
+
+m:   [2, 1, 1];
+rho: [1, 1, 1];
+
+with_stdout("in.atoms",
+  for id thru length(x) do
+  printf(true, "create_atoms ~d single ~{~g ~} units box~%", type[id], x[id]));
+
+sph_one_loop(expr)::= buildq([expr, n: length(x)],
+  create_list(expr, i, 1, n));
+
+sph_rho_loop(expr)::= buildq([expr, n: length(x)], create_list(
+    sum(expr, j, 1, n),
+    i, 1, n));
+
+sph_force_loop(expr)::= buildq([expr, n: length(x)], create_list(
+    sum(if i#j then expr else 0, j, 1, n),
+  i, 1, n));
+
+/* rho: sph_rho_loop( m[i]*w(x[i] - x[j])); */
+P: sph_one_loop( Peq(rho[i]) );
+
+Fc: sph_force_loop( block([ pij: (rho[j]*P[i] + rho[i]*P[j])/(rho[i] + rho[j]),
+    Vi: m[i]/rho[i], Vj: m[j]/rho[j]],
+    -(Vi^2+Vj^2)*pij*dw(x[i] - x[j])));
+
+/* show density */
+rho, numer;
+
+makelist(ev(Fc[d][1], numer), d, length(x));

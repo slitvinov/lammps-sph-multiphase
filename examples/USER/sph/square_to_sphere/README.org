@@ -1,0 +1,4 @@
+Cube transforms to a sphere under effect of surface tension.
+
+bash run.sh
+vmd -e post.tcl -xyz data-nx20-ndim2/droplet.xyz

@@ -1,0 +1,201 @@
+shell              mkdir ${dname}
+log                ${dname}/log.lammps
+units              si
+
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
+atom_style         meso/multiphase
+echo               both
+
+dimension         ${ndim}
+boundary          p f p
+include           vars.lmp
+
+# create simulation box
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+if ${ndim}==3 then &
+"variable           zcenter equal 0.5*${Lz}" &
+else &
+"variable           zcenter equal 0.0" &
+
+if ${ndim}==2 then &
+"variable           pLz    equal  1.0e-3" &
+"variable           nLz    equal  -1.0e-3" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box"
+
+# create box with two types of particles (water, gas)
+create_box         3 box
+
+# create gas particles
+variable lshift    equal 0.5
+if ${ndim}==2 then &
+"lattice            sq ${dx} origin ${lshift} ${lshift} 0" &
+else &
+"lattice            sc ${dx} origin ${lshift} ${lshift} ${lshift}"
+
+create_atoms       ${g_type} region box
+
+# create walls on the top and on the bottom
+variable     y1 equal 3*${dx}
+variable     y2  equal ${Ly}-3.0*${dx}
+region	     rflow block EDGE EDGE ${y1} ${y2} EDGE EDGE units box
+
+group	     flow region rflow
+group	     boundary subtract all flow
+fix          wallim boundary setforce 0 0 0
+
+region       rbottom block EDGE EDGE 0 ${y1} EDGE EDGE units box
+group        gbottom region rbottom
+
+region       rupper block EDGE EDGE ${y2} EDGE EDGE EDGE units box
+group        gupper region rupper
+
+# keep constant temperature and density on the top and on the bottom
+fix fbo      gbottom setmeso meso_t 1.0
+fix fup      gupper  setmeso meso_t ${Tc}
+fix bm       boundary setmeso meso_rho ${sph_rho_g}
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+include            settimestep.lmp
+
+neighbor           0 bin
+neigh_modify       delay 0 every 1
+comm_modify        vel yes
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 &
+                   sph/colorgradient 1 sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
+
+pair_coeff                  *         * sph/rhosum/multiphase   ${h}
+
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} 1
+pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+		   
+pair_coeff         ${d_type} ${d_type} sph/surface_stress ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/surface_stress ${h} ${alpha_gd}
+pair_coeff         ${g_type} ${g_type} sph/surface_stress ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/surface_stress ${h} ${alpha_dw}
+pair_coeff         ${g_type} ${w_type} sph/surface_stress ${h} ${alpha_gw}
+pair_coeff         ${w_type} ${w_type} sph/surface_stress ${h} 0
+
+variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
+variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
+variable           sph_eta_dw equal 2*${sph_eta_d}*${sph_eta_w}/(${sph_eta_d}+${sph_eta_w})
+pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gd} ${gamma_g} ${h} ${rbackground}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${gamma_g} ${h} ${rbackground}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${gamma_d} ${h} ${rbackground}
+pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_gw} ${gamma_g} ${h} ${rbackground}
+pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_dw} ${gamma_d} ${h} ${rbackground}
+pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} ${gamma_w} ${h} ${rbackground}
+
+
+pair_coeff         * * sph/surfacetension ${h}
+
+pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange  ${D_heat_g} ${h}
+variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
+variable           D_heat_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
+variable           D_heat_gw equal 2*${D_heat_g}*${D_heat_w}/(${D_heat_w}+${D_heat_g})
+variable           D_heat_dw equal 2*${D_heat_d}*${D_heat_w}/(${D_heat_d}+${D_heat_w})
+pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_gd} ${h} NULL ${Tc}
+pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange  ${D_heat_d} ${h} 
+pair_coeff         ${g_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_gw} ${h}
+pair_coeff         ${d_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_dw} ${h} ${Tc} NULL
+pair_coeff         ${w_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_w} ${h}
+
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B C
+
+timestep           ${dt}
+variable           insert_every equal 1
+variable           dr equal 0.5*${dx}
+variable           prob equal ${dprob}
+variable            time equal step*${dt}
+variable            natoms equal count(all)
+
+# create a vapor atom in the center of the domain
+#variable          xcenter_per equal ${xcenter}+0.5*${dx}
+#variable          ycenter_per equal ${y1}-0.5*${dx}
+#create_atoms      ${d_type} single  ${xcenter_per} ${ycenter_per} ${zcenter} units box
+
+region            rsq sphere ${xcenter} ${y1} ${zcenter} 0.1 units box
+set               region rsq type ${d_type}
+set               group boundary type ${w_type}
+
+set               type ${d_type} meso_cv ${cv_d}
+set               type ${g_type} meso_cv ${cv_g}
+set               type ${d_type} meso_e ${e_d}
+
+set               type ${d_type} mass ${sph_mass_d}
+set               type ${g_type} mass ${sph_mass_g}
+set               type ${w_type} mass ${sph_mass_w}
+
+set               type ${d_type} meso_rho ${sph_rho_d}
+set               type ${g_type} meso_rho ${sph_rho_g}
+set               type ${w_type} meso_rho ${sph_rho_w}
+
+# set a linear temperature profile
+variable          dL   equal 1.0
+variable          tprofile atom ((${Tc}-1)*y/${dL}-((${Tc}-1)*${y1}-${dL})/${dL})*(y-${y1}<${dL})+${Tc}*(y-${y1}>${dL})
+fix               tpr         flow setmeso meso_t v_tprofile
+if "${ndim}==2" then "fix e2d all enforce2d"
+
+run               0
+unfix             tpr
+
+group              droplet type ${d_type}
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+compute         it_atom all meso_t/atom
+compute         ie_atom all meso_e/atom
+compute         ie all reduce sum c_ie_atom
+variable        vie equal c_ie
+variable        volume atom mass/c_rho_peratom
+compute         dvol droplet reduce sum v_volume
+variable        vvol equal c_dvol
+compute         ied droplet reduce sum c_ie_atom
+variable        vied equal c_ied
+variable        vdroplet equal count(droplet)
+variable        vnd equal count(droplet)*${dx}^${ndim}
+variable        xvcm equal xcm(droplet,x)
+variable        yvcm equal xcm(droplet,y)-${y1}
+variable        velcmx equal vcm(droplet,x)
+variable        velcmy equal vcm(droplet,y)
+variable        vmi equal (bound(droplet,ymin)-${y1})/${dx}
+fix extra all print 1 & 
+"${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${xvcm} ${yvcm} ${velcmx} ${velcmy} ${vmi}" &
+file ${dname}/rg.dat screen no
+
+dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
+                                                                  c_rho_peratom c_ie_atom mass c_it_atom
+dump_modify        dump_txt first yes sort id pad 8
+
+thermo_style        custom step v_time v_natoms v_vnd
+thermo              ${Nfreq}
+
+variable           pcutoff equal ${h}
+fix                fdep droplet phase_change &
+                   ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_d} &
+                   ${pcutoff} ${g_type} ${d_type} ${insert_every} 12345 ${prob} region rflow units box
+
+# gravity force
+variable bodyfy atom mass*${gy}
+fix gravity droplet addforce 0.0 v_bodyfy 0.0 
+
+# stop if the bubble is too big
+run               1 pre no  post no every 1000 &
+"if ${vmi}>2 then quit" &
+"if ${vnd}>1.0 then quit"

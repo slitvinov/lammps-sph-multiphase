@@ -1,0 +1,69 @@
+# create otuput directory
+shell              mkdir ${dname}
+log                ${dname}/log.lammps
+echo               both
+variable           ndim equal 2
+dimension          ${ndim}
+units              si
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
+atom_style         meso/multiphase
+boundary          p p p
+include           vars.lmp
+
+# create simulation box
+if ${ndim}==2 then &
+"variable           pLz    equal  ${dx}" &
+"variable           nLz    equal  0" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
+
+# crate one type of the particles
+create_box         1 box
+if ${ndim}==3 then &
+"lattice            sc ${dx} origin 0.5 0.5 0.5" &
+else &
+"lattice            sq ${dx} origin 0.5 0.5 0.0"
+create_atoms       1 region box
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz
+dump_modify        dump_id first yes sort id pad 8
+
+variable           sph_mu  equal ${sph_eta}/${sph_rho}
+include            settimestep.lmp
+
+neighbor           0     bin
+neigh_modify       delay 0 every 1
+comm_modify        vel yes
+
+set                group all meso_rho ${sph_rho}
+set                group all mass ${sph_mass}
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1  sph/taitwater/multiphase
+pair_coeff         * * sph/taitwater/multiphase ${sph_rho} ${sph_c} ${sph_eta} 1.0 ${h} 0.0
+pair_coeff         * * sph/rhosum/multiphase   ${h}
+
+timestep           ${dt}
+
+variable bodyfx atom mass*${gx}*((y<${Ly}/2.0)-(y>${Ly}/2.0))
+fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+
+variable         rtransient equal round(0.5/${dt})
+if "${ndim}==2" then "fix e2d all enforce2d"
+run              ${rtransient}
+
+# save velocity profile
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${rtransient} ${rtransient} &
+y center 0.05 v_vx_cm file ${dname}/vx.av ave one units reduced
+run               ${rtransient}
