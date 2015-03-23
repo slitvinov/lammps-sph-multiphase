@@ -1,0 +1,13 @@
+# create walls on the top and on the bottom
+variable     x1 equal 3*${dx}
+variable     x2  equal ${Lx}-3.0*${dx}
+region	     rflow block ${x1} ${x2} EDGE EDGE EDGE EDGE units box
+
+group	     flow region rflow
+group	     boundary subtract all flow
+fix          wallim boundary setforce 0 0 0
+set          group boundary type ${w_type}
+
+# keep constant temperature and density on the top and on the bottom
+fix fbm      boundary  setmeso meso_t ${Tc}
+fix bm       boundary setmeso meso_rho ${sph_rho_l}

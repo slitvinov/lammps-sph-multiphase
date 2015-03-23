@@ -1,0 +1,163 @@
+shell              mkdir ${dname}
+log                ${dname}/log.lammps
+units              si
+
+# requires a custom version of LAMMPS
+# https://github.com/slitvinov/lammps-sph-multiphase
+# Built with
+# make yes-USER-SPH
+# 
+# See also
+# http://lammps.sandia.gov/doc/Section_start.html#start_3
+atom_style         meso/multiphase
+echo               both
+
+dimension         ${ndim}
+boundary          f p p
+include           vars.lmp
+
+# create simulation box
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+if ${ndim}==3 then &
+"variable           zcenter equal 0.5*${Lz}" &
+else &
+"variable           zcenter equal 0.0" &
+
+if ${ndim}==2 then &
+"variable           pLz    equal  1.0e-3" &
+"variable           nLz    equal  -1.0e-3" &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box" &
+else &
+"region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box"
+
+# create box with two types of particles (water, liquid)
+create_box         3 box
+# create liquid    particles
+variable lshift    equal 0.5
+if ${ndim}==2 then &
+"lattice            sq ${dx} origin ${lshift} ${lshift} 0" &
+else &
+"lattice            sc ${dx} origin ${lshift} ${lshift} ${lshift}"
+create_atoms       ${l_type} region box
+
+include            in.wall
+include            in.heater
+
+# do full time integration for all particles
+fix                integrate_fix_full all meso
+include            settimestep.lmp
+
+neighbor           0 bin
+neigh_modify       delay 0 every 1
+comm_modify        vel yes
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 &
+                   sph/colorgradient 1 sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
+
+pair_coeff                  *         * sph/rhosum/multiphase   ${h}
+
+pair_coeff         ${b_type} ${b_type} sph/colorgradient ${h} 0
+pair_coeff         ${l_type} ${b_type} sph/colorgradient ${h} 1
+pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0
+pair_coeff         ${b_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${l_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+		   
+pair_coeff         ${b_type} ${b_type} sph/surface_stress ${h} 0
+pair_coeff         ${l_type} ${b_type} sph/surface_stress ${h} ${alpha_lb}
+pair_coeff         ${l_type} ${l_type} sph/surface_stress ${h} 0
+pair_coeff         ${b_type} ${w_type} sph/surface_stress ${h} ${alpha_bw}
+pair_coeff         ${l_type} ${w_type} sph/surface_stress ${h} ${alpha_lw}
+pair_coeff         ${w_type} ${w_type} sph/surface_stress ${h} 0
+
+variable           sph_eta_ld equal 2*${sph_eta_l}*${sph_eta_b}/(${sph_eta_b}+${sph_eta_l})
+variable           sph_eta_lw equal 2*${sph_eta_l}*${sph_eta_w}/(${sph_eta_l}+${sph_eta_w})
+variable           sph_eta_bw equal 2*${sph_eta_b}*${sph_eta_w}/(${sph_eta_b}+${sph_eta_w})
+pair_coeff         ${l_type} ${b_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} ${gamma_l} ${h} ${rbackground}
+pair_coeff         ${l_type} ${l_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_l} ${gamma_l} ${h} ${rbackground}
+pair_coeff         ${b_type} ${b_type} sph/taitwater/multiphase ${sph_rho_b} ${sph_c_b} ${sph_eta_b} ${gamma_b} ${h} ${rbackground}
+pair_coeff         ${l_type} ${w_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_lw} ${gamma_l} ${h} ${rbackground}
+pair_coeff         ${b_type} ${w_type} sph/taitwater/multiphase ${sph_rho_b} ${sph_c_b} ${sph_eta_bw} ${gamma_b} ${h} ${rbackground}
+pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} ${gamma_w} ${h} ${rbackground}
+
+
+pair_coeff         * * sph/surfacetension ${h}
+
+pair_coeff         ${l_type} ${l_type} sph/heatconduction/phasechange  ${D_heat_l} ${h}
+variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_b}/(${D_heat_b}+${D_heat_l})
+variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_b}/(${D_heat_b}+${D_heat_l})
+variable           D_heat_lw equal 2*${D_heat_l}*${D_heat_w}/(${D_heat_w}+${D_heat_l})
+variable           D_heat_bw equal 2*${D_heat_b}*${D_heat_w}/(${D_heat_b}+${D_heat_w})
+pair_coeff         ${l_type} ${b_type} sph/heatconduction/phasechange  ${D_heat_ld} ${h} NULL ${Tc}
+pair_coeff         ${b_type} ${b_type} sph/heatconduction/phasechange  ${D_heat_b} ${h} 
+pair_coeff         ${l_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_lw} ${h}
+pair_coeff         ${b_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_bw} ${h} ${Tc} NULL
+pair_coeff         ${w_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_w} ${h}
+
+
+dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
+dump_modify        dump_xyz element A B C
+
+timestep           ${dt}
+variable           insert_every equal 1
+variable           dr equal 0.5*${dx}
+variable           prob equal ${dprob}
+variable           time equal step*${dt}
+variable           natoms equal count(all)
+
+set               type ${b_type} meso_cv ${cv_b}
+set               type ${l_type} meso_cv ${cv_l}
+set               type ${b_type} meso_e ${e_b}
+
+set               type ${b_type} mass ${sph_mass_b}
+set               type ${l_type} mass ${sph_mass_l}
+set               type ${w_type} mass ${sph_mass_w}
+
+set               type ${b_type} meso_rho ${sph_rho_b}
+set               type ${l_type} meso_rho ${sph_rho_l}
+set               type ${w_type} meso_rho ${sph_rho_w}
+
+if "${ndim}==2" then "fix e2d all enforce2d"
+group              bubble type ${b_type}
+
+compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
+compute         it_atom all meso_t/atom
+compute         ie_atom all meso_e/atom
+compute         ie all reduce sum c_ie_atom
+variable        vie equal c_ie
+variable        volume atom mass/c_rho_peratom
+compute         dvol bubble reduce sum v_volume
+variable        vvol equal c_dvol
+compute         ied bubble reduce sum c_ie_atom
+variable        vied equal c_ied
+variable        vbubble equal count(bubble)
+variable        vnd equal count(bubble)*${dx}^${ndim}
+variable        xvcm equal xcm(bubble,x)
+variable        yvcm equal xcm(bubble,y)
+variable        velcmx equal vcm(bubble,x)
+variable        velcmy equal vcm(bubble,y)
+fix extra all print 1 & 
+"${time} ${vnd} ${vie} ${vied} ${vvol} ${vbubble} ${xvcm} ${yvcm} ${velcmx} ${velcmy}" &
+file ${dname}/rg.dat screen no
+
+dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz &
+                                                                  c_rho_peratom c_ie_atom mass c_it_atom
+dump_modify        dump_txt first yes sort id pad 8
+
+thermo_style        custom step v_time v_natoms v_vnd
+thermo              ${Nfreq}
+
+variable           pcutoff equal ${h}
+fix                fdep bubble phase_change &
+                   ${Tc} ${Tt} ${Hwv} ${dr} ${sph_mass_b} &
+                   ${pcutoff} ${l_type} ${b_type} ${insert_every} 12345 ${prob} region rflow units box
+
+# gravity force
+variable bodyfy atom mass*${gy}
+fix gravity bubble addforce 0.0 v_bodyfy 0.0 
+
+# stop if the bubble is too big
+run               100000 pre no  post no every 1000 &
+"if ${vnd}>1.0 then quit"

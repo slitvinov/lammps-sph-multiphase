@@ -1,0 +1,10 @@
+region            rheat   sphere ${xcenter} ${ycenter} ${zcenter} ${r_heat}   units box
+region            rseed   sphere ${xcenter} ${ycenter} ${zcenter} ${r_seed}   units box
+
+set               region  rseed type ${b_type}
+set               region  rheat type ${w_type}
+
+group             gheat  region rheat
+fix               fho    gheat  setmeso meso_t 1.0
+
+fix               heater_immob  gheat setforce 0 0 0

@@ -1,0 +1,21 @@
+# create a square or cube in the center of the box
+# need: ndim, a_sq, xcenter, ycenter, zcenter, b_type
+
+variable          x1 equal ${xcenter}-${a_sq}
+variable          x2 equal ${xcenter}+${a_sq}
+variable          y1 equal ${ycenter}-${a_sq}
+variable          y2 equal ${ycenter}+${a_sq}
+if ${ndim}==3 then &
+"variable          z1 equal ${zcenter}-${a_sq}" &
+"variable          z2 equal ${zcenter}+${a_sq}"
+
+if ${ndim}==3 then &
+"region          rsq block  ${x1} ${x2} ${y1} ${y2} ${z1} ${z2} units box" &
+else &
+"region           rsq block ${x1} ${x2} ${y1} ${y2} EDGE EDGE units box"
+set               region rsq type ${b_type}
+
+variable          x1 delete
+variable          x2 delete
+variable          y1 delete
+variable          y2 delete

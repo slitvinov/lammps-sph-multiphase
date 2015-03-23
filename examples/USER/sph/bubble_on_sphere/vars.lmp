@@ -1,0 +1,92 @@
+# number of particles in each of the directions
+variable          Lx   equal 2.0
+variable          nx   equal 20
+variable          ny   equal ${nx}
+if ${ndim}==3 then &
+"variable nz equal ${nx}"
+
+# size of the domain
+variable          Ly   equal  ${Lx}
+if ${ndim}==3 then &
+"variable         Lz   equal ${Lx}"
+
+variable          dx   equal  1.0/${nx}
+
+# radios of the heater
+variable          r_heat   equal 2*${dx}
+# radios of the seed layer
+variable          r_seed   equal 3*${dx}
+
+# density of liquid phase
+variable          sph_rho_l equal 1.0
+# density of bubble
+variable          sph_rho_b equal 0.01
+# density of the wall
+variable          sph_rho_w equal ${sph_rho_l}
+
+# sound speed of bubble, liquid of the wall atoms
+variable          sph_c_b equal 200/sqrt(${sph_rho_b})
+variable          sph_c_l equal 200/sqrt(${sph_rho_l})
+variable          sph_c_w equal ${sph_c_l}
+
+# viscosity
+variable          sph_eta_b equal 0.069395
+variable          sph_eta_l equal 1.0
+variable          sph_eta_w equal ${sph_eta_l}
+
+# parameter of the equation of steps
+variable          gamma_b equal 1.0
+variable          gamma_l equal 1.0
+variable          gamma_w equal ${gamma_l}
+
+# extract `rbackground' in the equation of state
+# pressure ~ ( rho/rho0 - rbackground)^gamma
+variable          rbackground equal 0.0
+
+# SPH cutoff
+variable          h equal 3.0*${dx}
+variable          Nfreq equal 100
+
+# mass of bubble particle
+variable          sph_mass_b equal ${dx}^${ndim}*${sph_rho_b}
+# mass of liquid particle
+variable          sph_mass_l equal ${dx}^${ndim}*${sph_rho_l}
+variable          sph_mass_w equal ${sph_mass_l}
+
+# surface tension
+variable           alpha    equal 150
+variable           alpha_lb equal ${alpha}
+variable           alpha_bw equal 1.5*${alpha}
+variable           alpha_lw equal ${alpha}
+
+# head diffusion
+variable           D_heat_b equal 0.6
+variable           D_heat_l equal 0.1
+variable           D_heat_w equal ${D_heat_l}
+
+# probobility of a phase change on a given timestep
+variable           dprob     equal 0.01
+# head of the phase change
+variable           Hwv       equal 32.0
+
+variable          cv_b       equal 1.0
+variable          cv_l       equal 0.04
+variable          cv_w      equal ${cv_l}
+
+variable           dT       equal 0.1
+variable           Tc equal 0.0
+variable           Tt equal ${Tc}+${dT}
+# energy
+variable          e_b       equal ${cv_b}*${Tc}
+variable          e_l       equal ${cv_l}*1.0
+variable          e_w       equal ${e_l}
+
+# uplift force to the bubble particles
+variable          gy    equal 3.60e+05
+
+# type of liquid particles
+variable          l_type equal 1
+# type of bubble particles
+variable          b_type equal 2
+# type of wall particles
+variable          w_type equal 3
