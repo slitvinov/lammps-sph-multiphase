@@ -127,9 +127,9 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
+	jmass = rmass[j];
         h = cut[itype][jtype];
         ih = 1.0 / h;
 	double wfd;
@@ -158,12 +158,10 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
 
         fvisc = (Vi2 + Vj2) * viscosity[itype][jtype] * wfd;
 
-        // total pair force & thermal energy increment
+        // total pair force increment
         double fpair =   - (Vi2 + Vj2) * pij_wave * wfd;
 
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
-
-       // printf("testvar= %f, %f \n", delx, dely);
 
         f[i][0] += delx * fpair + velx * fvisc;
         f[i][1] += dely * fpair + vely * fvisc;
