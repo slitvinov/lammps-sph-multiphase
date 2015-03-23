@@ -12,7 +12,6 @@ units              si
 atom_style         meso/multiphase
 echo               both
 
-variable          ndim equal 2
 dimension         ${ndim}
 boundary          p f p
 include           vars.lmp
@@ -72,15 +71,24 @@ neighbor           0 bin
 neigh_modify       delay 0 every 1
 comm_modify        vel yes
 
-pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
-                   sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
-pair_coeff         * * sph/rhosum/multiphase   ${h}
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/surface_stress 1 &
+                   sph/colorgradient 1 sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
+
+pair_coeff                  *         * sph/rhosum/multiphase   ${h}
+
 pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
-pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha_gd}
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} 1
 pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
-pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} ${alpha_dw}
-pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} ${alpha_gw}
+pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} 0
 pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+		   
+pair_coeff         ${d_type} ${d_type} sph/surface_stress ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/surface_stress ${h} ${alpha_gd}
+pair_coeff         ${g_type} ${g_type} sph/surface_stress ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/surface_stress ${h} ${alpha_dw}
+pair_coeff         ${g_type} ${w_type} sph/surface_stress ${h} ${alpha_gw}
+pair_coeff         ${w_type} ${w_type} sph/surface_stress ${h} 0
 
 variable           sph_eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
 variable           sph_eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
@@ -188,6 +196,6 @@ variable bodyfy atom mass*${gy}
 fix gravity droplet addforce 0.0 v_bodyfy 0.0 
 
 # stop if the bubble is too big
-run               10000000 pre no  post no every 1000 &
+run               1 pre no  post no every 1000 &
 "if ${vmi}>2 then quit" &
 "if ${vnd}>1.0 then quit"

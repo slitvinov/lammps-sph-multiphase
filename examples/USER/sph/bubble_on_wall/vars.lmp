@@ -74,8 +74,9 @@ variable          e_w       equal ${e_g}
 # add an uplift force to the gas particles
 variable          gy    equal 3.60e+05
 
-# type of the gas particle
+# type of gas particles
 variable          g_type equal 1
-# type of the droplet particle
+# type of droplet particles
 variable          d_type equal 2
+# type of wall particles
 variable          w_type equal 3
