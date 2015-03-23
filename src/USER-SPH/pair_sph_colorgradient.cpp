@@ -25,6 +25,7 @@
 #include "neighbor.h"
 #include "update.h"
 #include "domain.h"
+#include <limits>
 #include <iostream>
 #include <assert.h>
 
@@ -142,6 +143,8 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
           j &= NEIGHMASK;
 
           jtype = type[j];
+	  if (alpha[itype][jtype]<=10*std::numeric_limits<int>::epsilon()) continue;
+	  
           delx = xtmp - x[j][0];
           dely = ytmp - x[j][1];
           delz = ztmp - x[j][2];
