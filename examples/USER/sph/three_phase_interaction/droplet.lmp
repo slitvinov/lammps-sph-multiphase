@@ -3,7 +3,6 @@ include            in.vars
 read_data          ${dname}/initial.dat
 
 compute            rho_peratom all meso_rho/atom
-
 fix                integrate_fix_full all meso
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
