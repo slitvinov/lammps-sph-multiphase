@@ -6,16 +6,16 @@ if ${ndim}==3 then &
 "variable nz equal ${nx}"
 
 # size of the domain
-variable          Ly   equal  ${Lx}
+variable          Ly   equal  1.5*${Lx}
 if ${ndim}==3 then &
 "variable         Lz   equal ${Lx}"
 
 variable          dx   equal  1.0/${nx}
 
 # radios of the heater
-variable          r_heat   equal 2*${dx}
+variable          r_heat   equal 0.15*${Lx}
 # radios of the seed layer
-variable          r_seed   equal 3*${dx}
+variable          r_seed   equal 0.20*${Lx}
 
 # density of liquid phase
 variable          sph_rho_l equal 1.0

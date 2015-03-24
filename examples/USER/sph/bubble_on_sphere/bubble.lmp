@@ -95,7 +95,6 @@ pair_coeff         ${l_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_
 pair_coeff         ${b_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_bw} ${h} ${Tc} NULL
 pair_coeff         ${w_type} ${w_type} sph/heatconduction/phasechange  ${D_heat_w} ${h}
 
-
 dump               dump_xyz all xyz ${Nfreq} ${dname}/data.xyz
 dump_modify        dump_xyz element A B C
 

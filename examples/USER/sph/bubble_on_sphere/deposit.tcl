@@ -22,6 +22,5 @@ color Name A blue
 color Name B purple
 
 mol modstyle 0 0 VDW 1.000000 12.000000
-
-mol modselect 0 0 (all) and user > 0
+mol modselect 0 0 (all) and user > 0 and type B or type C
 
