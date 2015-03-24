@@ -5,10 +5,10 @@
  *  Nikolaus Adams (Institute of Aerodynamics and Fluid Mechanics, TU
  *  Munich)
  *
- *  Copyright (2011) by Martin O. Ganzenmueller (Fraunhofer-Institut
- *  fuer Kurzzeitdynamik, Ernst-Mach-Institut) , Paul Van Liedekerke
- *  (Faculty of Bio-Engineering, MEBIOS Division Katholieke
- *  Universtiteit Leuven)
+ *  Copyright (2011) by Georg C. Ganzenmueller, Martin O. Steinhauser
+ *  (Fraunhofer-Institut fuer Kurzzeitdynamik, Ernst-Mach-Institut) ,
+ *  Paul Van Liedekerke (Faculty of Bio-Engineering, MEBIOS Division
+ *  Katholieke Universtiteit Leuven)
  *
  *  Copyright (2003) by Steve Plimpton (Sandia Corporation)
  *
