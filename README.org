@@ -187,7 +187,6 @@ where algorithm checks for potential phase transition.
 
 * Examples
 See [[file:examples/USER/sph/]]
-
 ** examples/USER/sph/poiseuille
 
 Low Reynolds number Poiseuille flow simulation with parameters
@@ -208,12 +207,13 @@ Flow around cylinder simulation with parameters from [1].
 
 ** examples/USER/sph/slub
 
-Infinite slub simulation [3]
+Thermal conductivity in the slub [3]
 
 #+CAPTION: Infinite slub
 #+NAME:   fig:infslab
 [[file:examples/USER/sph/img/infslab.png]]
 ** examples/USER/sph/square_to_sphere
+
 A cube changes to a sphere under the effect of surface tension
 
 ** examples/USER/sph/droplet_grid
@@ -230,6 +230,7 @@ forces [4]
 [[file:examples/USER/sph/img/cap_waves100.png]]
 
 ** examples/USER/sph/bubble_random
+
 Bubble growth in super-heated liquid
 
 #+BEGIN_EXAMPLE
@@ -245,6 +246,70 @@ To plot the volume of the bubble vs time
 #+BEGIN_EXAMPLE
 plot "data-ndim2/rg.dat" w lp
 #+END_EXAMPLE
+
+** examples/USER/sph/bubble_on_wall
+
+Growth and departure of a bubble at a heated wall. The
+three-dimensional cubical computational domain is occupied by liquid
+particles. On the top and bottom faces a solid wall boundary condition
+are used and on the remaining faces periodic boundary conditions are
+applied. The bottom wall is kept at a constant temperature higher than
+the saturation temperature $T_{wall,bottom}>T_s$. The upper wall has a
+temperature $T_{wall,top}=T_s$. Initial conditions for temperature are
+the following: $T_{wall,bottom}$ at the bottom all, layer of width $3
+\Delta x $ has a linear changing profile from $T_{wall,bottom}$ to
+$T_s$, the rest of the domain is at $T_{s}$. At the lower wall several
+vapor particles are placed initially to serve as seeds for the bubble
+growth
+
+| surface tension coefficient      | \num{150.0}  | ${{M}\over{T^2}}$       |
+| laten heat                       | \num{32.0}   | ${L^2\over{T^2}}$       |
+| specific heat capacity of liquid | \num{ 0.04}  | ${{J}\over{M\,K}}$      |
+| specific heat capacity of vapor  | \num{ 1.0}   | ${{J}\over{M\,K}}$      |
+| viscosity of liquid              | \num{ 1.0}   | ${{L^2}\over{T}}$       |
+| viscosity of vapor               | \num{ 0.07}  | ${{L^2}\over{T}}$       |
+| thermal conductivity of vapor    | \num{ 0.6}   | ${{L\,M}\over{T^3\,K}}$ |
+| thermal conductivity of liquid   | \num{ 0.1}   | ${{L\,M}\over{T^3\,K}}$ |
+| density of liquid                | \num{ 1.0}   | ${{M}\over{L^3}}$       |
+| density of vapor                 | \num{ 0.01}  | ${{M}\over{L^3}}$       |
+| sound speed in liquid            | \num{200.0}  | ${{L}\over{T}}$         |
+| sound speed in vapor             | \num{2000.0} | ${{L}\over{T}}$         |
+| initial temperature              | \num{ 0.0}   | $K$                     |
+| temperature of the wall          | \num{ 1.0}   | $K$                     |
+| saturation temperature           | \num{ 0.0}   | $K$                     |
+| size of the domain               | \num{ 1.0}   | $L$                     |
+
+** examples/USER/sph/bubble_on_sphere
+
+Growth and departure of a bubble from a heated sphere. The
+three-dimensional cubical computational domain is occupied by liquid
+particles. On the right and left faces a solid wall boundary condition
+are used and on the remaining faces periodic boundary conditions are
+applied. The sphere in the center of the domain is kept at a constant
+temperature higher than the saturation temperature
+$T_{sphere}>T_s$. The walls have a temperature
+$T_{walls}=T_s$. Initial conditions for temperature are the following:
+$T_{sphere}$ at the sphere, the rest of the domain is at $T_{s}$. At
+the surface of the sphere several vapor particles are placed initially
+to serve as seeds for the bubble growth.
+
+| surface tension coefficient      | \num{150.0}  | ${{M}\over{T^2}}$       |
+| laten heat                       | \num{32.0}   | ${L^2\over{T^2}}$       |
+| specific heat capacity of liquid | \num{ 0.04}  | ${{J}\over{M\,K}}$      |
+| specific heat capacity of vapor  | \num{ 1.0}   | ${{J}\over{M\,K}}$      |
+| viscosity of liquid              | \num{ 1.0}   | ${{L^2}\over{T}}$       |
+| viscosity of vapor               | \num{ 0.07}  | ${{L^2}\over{T}}$       |
+| thermal conductivity of vapor    | \num{ 0.6}   | ${{L\,M}\over{T^3\,K}}$ |
+| thermal conductivity of liquid   | \num{ 0.1}   | ${{L\,M}\over{T^3\,K}}$ |
+| density of liquid                | \num{ 1.0}   | ${{M}\over{L^3}}$       |
+| density of vapor                 | \num{ 0.01}  | ${{M}\over{L^3}}$       |
+| sound speed in liquid            | \num{200.0}  | ${{L}\over{T}}$         |
+| sound speed in vapor             | \num{2000.0} | ${{L}\over{T}}$         |
+| initial temperature              | \num{ 0.0}   | $K$                     |
+| temperature of the wall          | \num{ 1.0}   | $K$                     |
+| saturation temperature           | \num{ 0.0}   | $K$                     |
+| size of the domain               | \num{ 1.0}   | $L$                     |
+
 
 * Footnotes
 
