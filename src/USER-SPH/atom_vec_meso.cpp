@@ -1,12 +1,12 @@
 /**
- * lammps-multiphase
+ * lammps-sph-multiphase
  *
  *  Copyright (2015) by Sergey Litvinov, Daniel Gaudlitz, Xiangyu Hu,
  *  Nikolaus Adams (Institute of Aerodynamics and Fluid Mechanics, TU
  *  Munich)
  *
  *  Copyright (2011) by Georg C. Ganzenmueller, Martin O. Steinhauser
- *  (Fraunhofer-Institut fuer Kurzzeitdynamik, Ernst-Mach-Institut) ,
+ *  (Fraunhofer-Institut fuer Kurzzeitdynamik, Ernst-Mach-Institut),
  *  Paul Van Liedekerke (Faculty of Bio-Engineering, MEBIOS Division
  *  Katholieke Universtiteit Leuven)
  *

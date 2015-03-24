@@ -1,0 +1,118 @@
+load("dimension")$
+
+/* use `di' instead of `dimension' */
+alias(di, dimension) $
+alias(de, description) $
+
+/* helpful operator */
+infix("<-", 180, 20) $
+"<-"(lst, el)::= buildq([lst, el], (if not listp(lst) then lst: [], if not member(el, lst) then lst: endcons(el, lst), el)) $
+safe_op(e) := block([inflag : true], if mapatom(e) then false else op(e)) $
+mdimension(e):= block([ans: errcatch(dimension(e))],
+  if ans=[] and (safe_op(e)="+" or safe_op(e)="*" or listp(e)) then map('mdimension, e)
+  else           first(ans)) $
+
+/**** set units for some variables ****/
+d : 3;
+qput(d,  1,                               di);
+qput(d,  "a spatial dimension",           de);
+
+put(Force,     mass*length/time^2,                 di);
+put(Pressure,  dimension(Force)/length^(d-1),      di);
+put(Energy,    dimension(Force)*length,            di);
+
+qput(r,  length,      di);
+qput(r,  "a distance from partice i to partice j", de);
+
+qput(e,  1,           di);
+qput(e,  "unit vector",                       de);
+
+qput(dv, length/time,  di);
+qput(dv, "a step of velocity",                de);
+
+qput(v ,  length/time, di);
+qput(v, "particle velocity",                de);
+
+qput(c,    length/time,      di);
+qput(c, "speed of sound",                de);
+
+qput(dt  , time,              di);
+qput(dt  , "time step",                  de);
+
+qput(rho , mass/length^3,    di);
+qput(rho, "density",       de);
+
+put(sigma   , 1/length^d   ,    di);
+qput(sigma   , "inverse particle's volume", de);
+
+qput(C       , 1,                di);
+qput(C       , "color index",    de);
+
+qput(I       , 1,                di);
+qput(I       , "unit tensor",    de);
+
+qput(T       , K,                di);
+qput(T       , "particle's temperature",    de);
+
+put(U       , di(Energy)/mass,                di);
+qput(U       , "energy per mass for one particle",    de);
+
+/* "unknown" units */
+qput(m, "particle mass", de);
+qput(w, "SPH kernel", de);
+qput(dw, "derivative of SPH kernel", de);
+qput(p, "pressure", de);
+qput(eta, "viscosity", de);
+qput(dC,     "color gradient", de);
+qput(alpha,  "surface-tension coefficient" , de);
+qput(k ,      "thermal conductivity"       , de);
+qput(cv,      "thermal capacity"           , de);
+qput(Lwv,     "latent heat"                , de);
+/*******************/
+
+/* pressure force (8) */
+eq <- 'dv/'dt = -1/'m * (p[i]/sigma[i]^2 + p[j]/sigma[j]^2) * 'dw * 'e ;
+/* viscose force (9) */
+eq <- 'dv/'dt = 'eta/'m * (1/sigma[i]^2 + 1/sigma[j]^2) * 'dw/r[i,j] * (v[i] - v[j]) ;
+/* equation of state (3) */
+eq <- p[i] = 'c^2*rho[i];
+/* SPH density  (7) */
+eq <- rho[i] = m[i]*w;
+/* derivative of the kernel */
+eq <- 'diff('w, 'r) = 'dw;
+
+/* color gradient (15) */
+eq <- 'dC = sigma[i]*(C[i]/sigma[i]^2 + C[j]/sigma[j]^2)*'dw*'e;
+
+/* surface stress tensor (16) */
+eq <- Pi[i] = alpha*1/dC*(1/d*I*dC^2 - dC*dC);
+
+/* surface tension (18) */
+eq <- 'dv/'dt = 1/'m*'dw*'e*(Pi[i]/sigma[i]^2 + Pi[j]/sigma[j]^2);
+
+/* heat conduction (20) */
+eq <- U/'dt = 4*m/(rho[i]*rho[j]) * k[j]*k[i]/(k[j]+k[i])*T[i,j] * dw;
+
+/* internal energy equation (21) */
+eq <- U[i] = cv*T[i];
+
+/* latent heat equation */
+eq <- U[i] = Lwv;
+
+/* a system of equations for units */
+eq_d: map(lambda([e], map(di, e)), eq);
+
+/* solve the system to get unknown units */
+load(to_poly_solve);
+so: args(to_poly_solve(eq_d,
+    [di(m), di(w), di(dw), di(p), di(eta),
+    di(dC), di(Pi), di(alpha), di(k),
+    di(cv), di(Lwv)]))[2];
+
+format_solution(e):= block([v: args(lhs(e))[1]],
+  printf(true, "| ~a | ~a | ~a |~%", v, get(v, de), rhs(e)));
+  
+with_stdout("dim.org",
+  printf(true, "|  | ~a | ~a | ~%", "description", "units"),
+  printf(true, "|-~%"),
+  maplist(format_solution, so_jn));
