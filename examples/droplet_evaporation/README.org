@@ -1,10 +1,10 @@
-Liquid droplet evaporating in hot vapour.
+Liquid droplet evaporating in hot vapour (3D, set ndim=2 in run.sh for 2D).
 
 LMP=lmp_mpi bash run.sh
 
-data-nx40/mass.dat: time, liquid mass, liquid particles, equivalent radius
+data-ndim3-nx30/mass.dat: time, liquid mass, liquid particles, equivalent radius
 
 Render with OVITO (pip install ovito):
 
 mkdir img
-python3 render.py data-nx40 img 1
+python3 render.py data-ndim3-nx30 img 1 30

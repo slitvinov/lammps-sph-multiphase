@@ -3,20 +3,27 @@ shell              mkdir  ${dname}
 log                ${dname}/log.lammps
 units              si
 atom_style         sph
-dimension          2
-variable           ndim equal 2
+dimension          ${ndim}
 include            vars.lmp
 variable           xcenter equal 0.5*${Lx}
 variable           ycenter equal 0.5*${Ly}
 variable           zlo2d equal -0.5*${dx}
 variable           zhi2d equal 0.5*${dx}
-region             box block 0.0 ${Lx} 0.0 ${Ly} ${zlo2d} ${zhi2d} units box
+if "${ndim}==2" then &
+"variable           zcenter equal 0.0" &
+"region             box block 0.0 ${Lx} 0.0 ${Ly} ${zlo2d} ${zhi2d} units box" &
+else &
+"variable           zcenter equal 0.5*${Lz}" &
+"region             box block 0.0 ${Lx} 0.0 ${Ly} 0.0 ${Lz} units box"
 create_box         2 box
 mass               * 1.0
 fix                mp all property/atom rmass d2_cg 3 ghost yes
-lattice            sq ${dx} origin 0.5 0.5 0
+if "${ndim}==2" then &
+"lattice            sq ${dx} origin 0.5 0.5 0" &
+else &
+"lattice            sc ${dx} origin 0.5 0.5 0.5"
 create_atoms       ${v_type} region box
-region             rdrop sphere ${xcenter} ${ycenter} 0.0 ${R0} units box
+region             rdrop sphere ${xcenter} ${ycenter} ${zcenter} ${R0} units box
 set                region rdrop type ${l_type}
 
 variable           e_hot equal ${cv_v}*${Tinf}
@@ -31,7 +38,7 @@ set                type ${v_type} sph/rho ${sph_rho_v}
 set                type ${l_type} sph/rho ${sph_rho_l}
 
 fix                integrate_fix_full all sph
-fix                e2d all enforce2d
+if "${ndim}==2" then "fix e2d all enforce2d"
 include            settimestep.lmp
 timestep           ${dt}
 neighbor           0 bin
@@ -54,7 +61,7 @@ pair_coeff         ${l_type} ${l_type} sph/heatconduction/phasechange ${D_heat_l
 pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange ${D_heat_ld} ${h}
 pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange ${D_heat_v} ${h}
 
-region             rbath sphere ${xcenter} ${ycenter} 0.0 ${Rbath} side out units box
+region             rbath sphere ${xcenter} ${ycenter} ${zcenter} ${Rbath} side out units box
 variable           e_bath atom ${e_hot}
 fix                bath all set 1 0 region rbath sph/e v_e_bath
 
@@ -69,7 +76,10 @@ variable           ml atom mass*(type==${l_type})
 variable           nl atom type==${l_type}
 compute            mliq all reduce sum v_ml v_nl
 variable           time equal step*dt
-variable           Req equal sqrt(c_mliq[1]/(PI*${sph_rho_l}))
+if "${ndim}==2" then &
+"variable           Req equal sqrt(c_mliq[1]/(PI*${sph_rho_l}))" &
+else &
+"variable           Req equal (3*c_mliq[1]/(4*PI*${sph_rho_l}))^(1.0/3)"
 fix                out all print 100 "${time} $(c_mliq[1]:%.10g) $(c_mliq[2]) $(v_Req:%.6g)" file ${dname}/mass.dat screen no
 dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_ie_atom c_it_atom
 dump_modify        dump_txt sort id pad 8
