@@ -1,9 +1,7 @@
-# Multiphase SPH for LAMMPS
+# SPH with phase change for LAMMPS
 
-Multiphase SPH (color gradient, surface tension, phase change) for
-current LAMMPS. Tested with LAMMPS 30 Sep 2026.
-
-<p align="center"><img src="img/evaporation.gif"/></p>
+Boiling and evaporation with multiphase SPH (color gradient, surface
+tension) for current LAMMPS.
 
 ## Build with make
 
@@ -41,10 +39,13 @@ fix         mp all property/atom rmass d2_cg 3 ghost yes
 
 ## Examples
 
-- `two_atoms`: two-particle tests against maxima (`maxima -b X.mac`, then `lmp_mpi -in X.lmp`)
+- `two_atoms`: two-particle cases
 - `square_to_sphere`: square droplet relaxing under surface tension
 - `droplet_grid`, `contact_angle`: droplet oscillation and wetting
 - `bubble_growth`, `bubble_random`, `bubble_on_wall`: boiling with phase change
 - `droplet_evaporation`: droplet evaporating in hot vapour
+- `bubble_rise`: vapour bubble growing and rising under gravity
 
 Run with `LMP=lmp_mpi bash run.sh` in the example directory.
+
+<p align="center"><img src="img/bubble_rise.gif"/> <img src="img/evaporation.gif"/></p>

@@ -1,0 +1,11 @@
+# set parameters of the phases need to include this file after I
+# introduce new particles
+set               type ${v_type} sph/cv ${cv_v}
+set               type ${l_type} sph/cv ${cv_l}
+set               type ${v_type} sph/e ${e_v}
+set               type ${l_type} sph/e ${e_l}
+set               type ${v_type} mass ${mass_v}
+set               type ${l_type} mass ${mass_l}
+set               type ${v_type} sph/rho ${sph_rho_v}
+set               type ${l_type} sph/rho ${sph_rho_l}
+

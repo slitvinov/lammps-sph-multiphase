@@ -1,0 +1,8 @@
+Vapour bubble growing and rising in superheated liquid (3D).
+
+LMP=lmp_mpi bash run.sh
+
+Render with OVITO (pip install ovito):
+
+mkdir img
+python3 render.py data-nx30 img 1 30
