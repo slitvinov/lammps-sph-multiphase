@@ -1,0 +1,46 @@
+/*
+
+VanSant, James H. Conduction heat transfer
+solutions. No. UCRL-52863. California Univ., Livermore (USA). Lawrence
+Livermore National Lab., 1980.
+
+Section 6.1. Infinite Solids—No Internal Heating.
+Case: 6.1.9
+Adjoined semi-infinite regions—no contact resistance.
+
+Runs this script with
+maxima -b infslab.mac
+
+*/
+
+
+/* parameters for the left (l) and right (r) parts of the slab */
+env: [xm=0.5, Lx=1.0,
+      cv_r=4.179, cv_l=1.0, rho_r=1000, rho_l=1.226,
+      k_l=0.0254, k_r=5,
+      tau=0.5, t_r=2, t_l=1]$
+      
+lev(expr)::=ev(expr, env, infeval)$
+
+A: k_l/k_r*sqrt(alpha_r/alpha_l);
+alpha_r: k_r/(rho_r*cv_r);
+alpha_l: k_l/(rho_l*cv_l);
+Fo(x, alpha):= alpha*tau/x^2;
+Fos(x, alpha):= 1/(2*sqrt(Fo(x, alpha)));
+eq_r: (t-t_l)/(t_r-t_l) = 1/(1+A)*(1+A*erf(Fos(x, alpha_r)));
+temp_r: rhs(solve(eq_r, t)[1]);
+eq_l: (t-t_l)/(t_r-t_l) = 1/(1+A)*erfc(abs(Fos(x, alpha_l)));
+temp_l: rhs(solve(eq_l, t)[1]);
+temp(x):= if x>0 then lev(temp_r) else lev(temp_l);
+
+/* create a file with input parameters */
+with_stdout("par.lmp",
+    for eq in env do printf(true, "variable ~a equal ~a~%", lhs(eq), rhs(eq)))$
+
+/* create a file in reference data */
+n: 100;
+with_stdout("infslab.dat",
+  for i: 0 thru n do block([x, y],
+    x: lev(Lx*i/n),
+    y: lev(temp(x-xm)),
+    printf(true, "~9,3e ~9,3e~%", float(x), float(y))))$

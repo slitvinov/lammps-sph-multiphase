@@ -1,0 +1,24 @@
+# number of particles in each of the directions
+variable          nx   equal 5
+variable          ny   equal 30
+if "${ndim}==3" then &
+"variable nz equal ${nx}"
+
+# size of the domain
+variable          Ly   equal  2e-3
+variable          Lx   equal  ${Ly}/${ny}*${nx}
+if "${ndim}==3" then &
+"variable Lz equal ${Lx}"
+variable          dx   equal  ${Ly}/${ny}
+
+# density
+variable          sph_rho equal 1e3
+variable          sph_c equal 1.25e-4
+variable          sph_eta equal 1e-3
+
+variable          h equal 3.0*${dx}
+variable          Nfreq equal 100
+variable          Nfreqimage equal 100
+
+variable          gx         equal 1e-4
+variable          sph_mass equal ${dx}^${ndim}*${sph_rho}

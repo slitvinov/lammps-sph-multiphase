@@ -44,8 +44,31 @@ fix         mp all property/atom rmass d2_cg 3 ghost yes
 - `droplet_grid`, `contact_angle`: droplet oscillation and wetting
 - `bubble_growth`, `bubble_random`, `bubble_on_wall`: boiling with phase change
 - `droplet_evaporation`: droplet evaporating in hot vapour
+- `poiseuille`, `flow_around_cylinder`, `slub`: validation
 - `bubble_rise`: vapour bubble growing and rising under gravity
 
 Run with `LMP=lmp_mpi bash run.sh` in the example directory.
+
+## Validation
+
+Reverse Poiseuille flow [1]
+
+<p align="center"><img src="img/poiseuille.svg"/></p>
+
+Flow around a cylinder, Re=0.03, compared with FEM [1]
+
+<p align="center"><img src="img/flow.svg"/></p>
+
+Heat conduction in an infinite slab [2]
+
+<p align="center"><img src="img/infslab.svg"/></p>
+
+Droplet oscillation under surface tension [3]
+
+<p align="center"><img src="img/cap_waves.svg"/> <img src="img/cap_waves1000.svg"/></p>
+
+1. Morris, Fox, Zhu, J. Comput. Phys. 136, 214 (1997)
+2. Cleary, Monaghan, J. Comput. Phys. 148, 227 (1999)
+3. Hu, Adams, J. Comput. Phys. 213, 844 (2006)
 
 <p align="center"><img src="img/bubble_rise.gif"/> <img src="img/evaporation.gif"/></p>
