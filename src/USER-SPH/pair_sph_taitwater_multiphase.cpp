@@ -145,7 +145,7 @@ void PairSPHTaitwaterMultiphase::compute(int eflag, int vflag) {
 	double Vj2 = Vj * Vj;
 
         // compute pressure
-	double pj = sph_pressure(B[jtype], rho0[jtype], gamma[itype], 
+	double pj = sph_pressure(B[jtype], rho0[jtype], gamma[jtype], 
 				 rbackground[jtype], rho[j]);
 	double pij_wave = (rho[j]*pi + rho[i]*pj)/(rho[i] + rho[j]);
 

@@ -277,7 +277,7 @@ double PairSPHColorGradient::single(int i, int j, int itype, int jtype, double r
 
 /* ---------------------------------------------------------------------- */
 
-int PairSPHColorGradient::pack_comm(int n, int *list, double *buf, int pbc_flag,
+int PairSPHColorGradient::pack_forward_comm(int n, int *list, double *buf, int pbc_flag,
     int *pbc) {
   int i, j, m;
   double **colorgradient = atom->colorgradient;
@@ -289,20 +289,21 @@ int PairSPHColorGradient::pack_comm(int n, int *list, double *buf, int pbc_flag,
     buf[m++] = colorgradient[j][1];
     buf[m++] = colorgradient[j][2];
   }
-  return 3;
+  return m;
 }
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHColorGradient::unpack_comm(int n, int first, double *buf) {
+void PairSPHColorGradient::unpack_forward_comm(int n, int first, double *buf) {
   int i, m, last;
   double **colorgradient = atom->colorgradient;
 
   m = 0;
   last = first + n;
-  for (i = first; i < last; i++)
+  for (i = first; i < last; i++) {
     colorgradient[i][0] = buf[m++];
     colorgradient[i][1] = buf[m++];
     colorgradient[i][2] = buf[m++];
+  }
 }
 

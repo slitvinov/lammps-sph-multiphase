@@ -93,6 +93,7 @@ Atom::Atom(LAMMPS *lmp) : Pointers(lmp)
 
   rho = drho = e = de = cv = NULL;
   vest = NULL;
+  colorgradient = NULL;
 
   bond_per_atom =  extra_bond_per_atom = 0;
   num_bond = NULL;
@@ -147,6 +148,7 @@ Atom::Atom(LAMMPS *lmp) : Pointers(lmp)
   cs_flag = csforce_flag = vforce_flag = etag_flag = 0;
 
   rho_flag = e_flag = cv_flag = vest_flag = 0;
+  colorgradient_flag = 0;
 
   // Peridynamic scale factor
 
@@ -244,6 +246,7 @@ Atom::~Atom()
   memory->destroy(de);
   memory->destroy(cv);
   memory->destroy(vest);
+  memory->destroy(colorgradient);
 
   memory->destroy(nspecial);
   memory->destroy(special);
@@ -356,6 +359,7 @@ void Atom::create_avec(const char *style, int narg, char **arg, int trysuffix)
   cs_flag = csforce_flag = vforce_flag = etag_flag = 0;
 
   rho_flag = e_flag = cv_flag = vest_flag = 0;
+  colorgradient_flag = 0;
 
   // create instance of AtomVec
   // use grow() to initialize atom-based arrays to length 1
@@ -1956,6 +1960,7 @@ void *Atom::extract(char *name)
   if (strcmp(name,"de") == 0) return (void *) de;
   if (strcmp(name,"cv") == 0) return (void *) cv;
   if (strcmp(name,"vest") == 0) return (void *) vest;
+  if (strcmp(name,"colorgradient") == 0) return (void *) colorgradient;
 
   return NULL;
 }
