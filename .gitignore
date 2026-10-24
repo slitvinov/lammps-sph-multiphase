@@ -1,0 +1,9 @@
+*.out
+log.lammps
+in.atoms
+in.vars
+in.dt
+outpt.dat
+output.dat
+dump.*.dat
+data-*/
