@@ -54,7 +54,7 @@ variable          cv_l      equal 0.04
 # specific heat capacity of vapor
 variable          cv_v      equal 0.06
 # latent heat of evaporation
-variable           Hwv equal 8.0
+variable           Hwv equal 0.5
 
 variable           dT   equal 0.1
 variable           Tinf equal 1.0
