@@ -1,7 +1,8 @@
-Bubble departure from the wall.
+Bubble growth and departure from a heated wall.
 
-bash run.sh
+LMP=lmp_mpi bash run.sh
 
-To visualize
-vmd -e deposit.tcl  -args data/data.xyz
+Render with OVITO (pip install ovito):
 
+mkdir img
+python3 render.py data img 40 0 1

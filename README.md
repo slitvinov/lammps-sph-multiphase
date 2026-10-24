@@ -71,4 +71,4 @@ Droplet oscillation under surface tension [3]
 2. Cleary, Monaghan, J. Comput. Phys. 148, 227 (1999)
 3. Hu, Adams, J. Comput. Phys. 213, 844 (2006)
 
-<p align="center"><img src="img/bubble_rise.gif"/> <img src="img/evaporation.gif"/></p>
+<p align="center"><img src="img/bubble_on_wall.gif"/> <img src="img/bubble_rise.gif"/> <img src="img/evaporation.gif"/></p>

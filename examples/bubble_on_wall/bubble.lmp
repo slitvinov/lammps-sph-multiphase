@@ -62,7 +62,7 @@ region       rupper block EDGE EDGE ${y2} EDGE EDGE EDGE units box
 group        gupper region rupper
 
 # keep constant temperature and density on the top and on the bottom
-variable     cvt atom ${cv_d}*(type==${d_type})+${cv_g}*(type==${g_type})+${cv_w}*(type==${w_type})
+variable     cvt atom ${cv_d}*(type==${d_type})+${cv_g}*(type==${g_type})+1.0*(type==${w_type})
 variable     ebo atom v_cvt*1.0
 variable     eup atom v_cvt*${Tc}
 variable     rbm atom ${sph_rho_g}
