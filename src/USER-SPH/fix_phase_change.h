@@ -66,12 +66,15 @@ class FixPhaseChange : public Fix {
   double* dmass;
   void unpack_reverse_comm(int n, int *list, double *buf);
   int pack_reverse_comm(int n, int first, double *buf);
+  int pack_forward_comm(int, int *, double *, int, int *);
+  void unpack_forward_comm(int, int, double *);
 
   class RanPark *random;
 
   void options(int, char **);
   // insert one atom, return true if sucsesfull
   bool insert_one_atom(double* coord, double* sublo, double* subhi);
+  bool owns(double* coord, double* sublo, double* subhi);
   void create_newpos(double* xone, double* cgone, double delta, double* coord);
   void create_newpos_simple(double* xone, double delta, double* coord);
   bool isfromphasearound(int i);

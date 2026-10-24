@@ -215,6 +215,9 @@ void PairSPHHeatConductionPhaseChange::coeff(int narg, char **arg) {
       } else if (fixflag_one==2) {
 	fixflag[i][j] = j;
 	tc[i][j] = tc_one;
+      } else {
+	fixflag[i][j] = 0;
+	tc[i][j] = 0;
       }
       count++;
     }
