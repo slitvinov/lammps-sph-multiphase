@@ -1,0 +1,25 @@
+load("eigen");
+ndim   : 3;
+cutoff: 1;
+
+load("../scripts/sph-kernel.mac");
+define_kernel(ndim, cutoff, 'quintic, 'w_scalar, 'dw_scalar)$
+
+vabs(dr):= sqrt(dr.dr);
+w(dr):= block([r: vabs(dr)], ''(w_scalar(r)));
+dw(dr):= block([r: vabs(dr)], dr/r * ''(dw_scalar(r)));
+dws(dr):=block([r: vabs(dr)], if r>0 then dw_scalar(r)/r else 0);
+
+x: [[5, 5, 5], [5.6, 5, 5]];
+type: [1, 2];
+
+m: [10, 2];
+rho: [1, 1];
+E:  [10, 2];
+cv: [3, 1];
+kk  : [1, 1];
+
+with_stdout("in.atoms",
+  for id thru length(x) do
+  printf(true, "create_atoms ~d single ~{~g ~} units box~%", type[id], x[id]));
+

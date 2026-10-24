@@ -1,0 +1,28 @@
+ndim   : 3;
+cutoff: 1;
+
+load("../scripts/sph-kernel.mac");
+define_kernel(ndim, cutoff, 'quintic, 'w_scalar, 'dw_scalar)$
+
+vabs(dr):= sqrt(dr.dr);
+w(dr):= block([r: vabs(dr)], ''(w_scalar(r)));
+dw(dr):= block([r: vabs(dr)], dr/r * ''(dw_scalar(r)));
+
+x: [[5, 5, 5], [5.5, 5, 5], [5, 5, 4.8]];
+type: [1, 2, 2];
+
+m: [2, 1, 1];
+rho: [1, 1, 1];
+
+with_stdout("in.atoms",
+  for id thru length(x) do
+  printf(true, "create_atoms ~d single ~{~g ~} units box~%", type[id], x[id]));
+
+sph_rho_loop(expr)::= buildq([expr, n: length(x)], create_list(
+    sum(expr, j, 1, n),
+    i, 1, n));
+
+rho: sph_rho_loop( m[i]*w(x[i] - x[j]));
+
+/* show density */
+rho, numer;

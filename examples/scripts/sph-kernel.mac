@@ -1,0 +1,206 @@
+define_kernel(ndim, cutoff, ktype, w, dw):= block([R, eps, n, fsim, dfsim,
+  wexpr, dwexpr, b, ww, bs, sc, par: [], s],
+  local(R, norm, fsim, dfsim),
+  if ndim#1 and ndim#2 and ndim#3 then error("ndim must be 1, 2, or 3"),
+  if not numberp(cutoff) then error("cutoff must be a number"),
+  if listp(ktype) then (par: rest(ktype), ktype: first(ktype)),
+  if ktype='quintic then (
+    norm[1]: 1/40,
+    norm[2]: 63/(478*%pi),
+    norm[3]: 9/(40*%pi),
+    n:       3,
+    fsim: [
+    (3 - 's)^5 - 6*(2 - 's)^5 + 15*(1 - 's)^5,
+    (3 - 's)^5 - 6*(2 - 's)^5,
+    (3 - 's)^5
+    ],
+    dfsim: factor(diff(fsim, 's)),
+    wexpr: buildq([f1: fsim[1], f2: fsim[2], f3: fsim[3]],
+      if s<1 then f1 elseif s<2 then f2 elseif s<3 then f3 else 0),
+    dwexpr: buildq([f1: dfsim[1], f2: dfsim[2], f3: dfsim[3]],
+      if s<1 then f1 elseif s<2 then f2 elseif s<3 then f3 else 0))
+  elseif ktype='bspline then (
+    b(x)::=1/12*(
+      +  abs(x+2)^3
+      -4*abs(x+1)^3
+      +6*abs(x)^3
+      -4*abs(x-1)^3
+      +  abs(x-2)^3
+      ),
+    norm[2]: 60/(7*%pi),
+    norm[3]: 12/%pi,
+    n      : 2,
+    wexpr: b(s),
+    load("pw.mac"),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='m4prime then (
+    norm[2]: 1,
+    norm[3]: 1,
+    n      : 2,
+    fsim: [
+    1 - 5*s^2/2 + 3*s^3/2,
+    1/2*(2-s)^2*(1-s)
+    ],
+    dfsim: diff(fsim, s),
+    wexpr: buildq([fsim], if s<1 then fsim[1] elseif s<2 then fsim[2] else 0),
+    dwexpr: buildq([dfsim], if s<1 then dfsim[1] elseif s<2 then dfsim[2] else 0))
+  elseif ktype='lucy then (
+    norm[2]: 15/(7*%pi),
+    norm[3]: 105/(16*%pi),
+    n      : 1,
+    wexpr: (1+3*s)*(1-s)^3,
+    dwexpr: diff(wexpr, s))
+  elseif ktype='cubic then (
+    norm[2]: 80/(7*%pi),
+    norm[3]: 16/%pi,
+    n      : 1,
+    wexpr: (1-s)^3 - (if (s<1/2) then 4*(1/2-s)^3 else 0),
+    dwexpr: -3*(1-s)^2 + (if (s<1/2) then 12*(1/2-s)^2 else 0))
+  elseif ktype='wendland4 then (
+    norm[2]: 9/%pi,
+    norm[3]: 495/(32*%pi),
+    n      : 1,
+    wexpr: (1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerrewendland4 then (
+    norm[1]: 3861/1424,
+    norm[2]: 1287/(47*%pi),
+    norm[3]: 9009/(64*%pi),
+    n      : 1,
+    wexpr: (1 - 3^2*s^2 + 3^4*s^4/6)*(1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerrewendland4eps then (
+    if emptyp(par) then (
+      if ndim=2 then eps: sqrt(2)*sqrt(180-sqrt(2370))/sqrt(33) else eps: sqrt(2)*sqrt(170-sqrt(3910))/sqrt(35)
+      ) else (
+      eps: par[1]
+      ),
+    norm[2]: 7722/(%pi*(3*eps^4-91*eps^2+858)),
+    norm[3]: 405405/(160*%pi*eps^4-4032*%pi*eps^2+26208*%pi),
+    n      : 1,
+    wexpr: (1 - eps^2*s^2 + eps^4*s^4/6)*(1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerre1wendland4eps then (
+    if ndim=2 then eps: 455/192 else eps: 32/15,
+    norm[2]: -495/(16*%pi*eps-55*%pi),
+    norm[3]: -1485/(35*%pi*eps-96*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s)*(1-s)^6*(1+6*s+35/3*s^2),
+    load("pw.mac"),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='blincomb then (
+    if ndim=2 then eps: 841/62 else eps: 22,
+    b(x)::=1/12*(
+      +  abs(x+2)^3
+      -4*abs(x+1)^3
+      +6*abs(x)^3
+      -4*abs(x-1)^3
+      +  abs(x-2)^3
+      ),
+    norm[2]: 465/(37*%pi),
+    norm[3]: 243/(14*%pi),
+    n      : 3,
+    wexpr: 1/6*(eps*b(s)-b(s-1)-b(s+1)),
+    load("pw.mac"),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='blincombshift then (
+    bs: par[1],
+    sc: (3 - bs)/2,
+    /* TODO: currently works only for bs=2 */
+    if ndim=2 then eps: 28.79032258064691 else eps: 60.0624999999994,
+    b(x)::=1/12*(
+      +  abs(x+2)^3
+      -4*abs(x+1)^3
+      +6*abs(x)^3
+      -4*abs(x-1)^3
+      +  abs(x-2)^3
+      ),
+    norm[2]: 1.503105076083593,
+    norm[3]: 1.617763186251752,
+    n      : 3,
+    wexpr: 1/6*(eps*b(s)-b((s-bs)/sc)-b((s+bs)/sc)),
+    load("pw.mac"),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='wcomb then (
+    if ndim=2 then eps: 4096/35 else eps: 955/3,
+    load("pw.mac"),
+    plusfun(x)::= (signum(x) + 1)/2 * x,
+    ww(s)::= plusfun(1-abs(s))^6*(1+6*abs(s)+35/3*(s)^2),
+    norm[2]: 648/(3*%pi*eps-32*%pi),
+    norm[3]: 4455/(6*%pi*eps-232*%pi),
+    n      : 1,
+    wexpr: 1/6*(eps*ww(2*s)-ww(2*s-1)-ww(2*s+1)),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerre2wendland4eps then (
+    if ndim=2 then eps: 91/18 else eps: 21/5,
+    norm[2]: -594/(7*%pi*eps-66*%pi),
+    norm[3]: -6435/(64*%pi*eps-416*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s^2)*(1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerre2wendland2eps then (
+    if ndim=2 then eps: 231/58 else eps: 10/3,
+    norm[2]: -420/(7*%pi*eps-52*%pi),
+    norm[3]: -630/(10*%pi*eps-51*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s^2)*(1-s)^4*(1+3*s),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerre2wendland6eps then (
+    if ndim=2 then eps: 68/11 else eps: 51/10,
+    norm[2]: -390/(3*%pi*eps-35*%pi),
+    norm[3]: -1365/(8*%pi*eps-64*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s^2)*(1-s)^8*(1+8*s+25*s^2+32*s^3),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerre4wendland6eps then (
+    if ndim=2 then eps: sqrt(171/13-3*sqrt(23617)/143) else eps: sqrt(570-9*sqrt(494))/7,
+    norm[2]: 53040/(11*%pi*eps^4-408*%pi*eps^2+4760*%pi),
+    norm[3]: 208845/(40*%pi*eps^4-1224*%pi*eps^2+9792*%pi),
+    n      : 1,
+    wexpr: (1 - eps^2*s^2 + eps^4*s^4/6)*(1-s)^8*(1+8*s+25*s^2+32*s^3),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='laguerregaussian then (
+    norm[2]: 8.619364207093854,
+    norm[3]: 39.90874017042539,
+    n      : 1,
+    wexpr: (1 - 3^2*s^2 + 3^4*s^4/6)*exp(-3^2*s^2),
+    dwexpr: diff(wexpr, s))
+  elseif ktype='wendland6 then (
+    norm[2]: 78/(7*%pi),
+    norm[3]: 1365/(64*%pi),
+    n      : 1,
+    wexpr: (1-s)^8*(1+8*s+25*s^2+32*s^3),
+    dwexpr: diff(wexpr, s))
+  else (
+    error(printf(false, "unknown kernel type: ~a~%", ktype))
+    ),
+  if ktype='laguerregaussian then (
+    wvect(g):=subst(s=abs(g), wexpr),
+    dwvect(g):=subst(s=abs(g), dwexpr))
+  else (
+    wvect(g):= subst(s=abs(g), if s<n then wexpr else 0),
+    dwvect(g):= subst(s=abs(g), if s<n then dwexpr else 0)
+    ),
+  define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
+  define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim),
+  'done);
+
+/*
+ndim: 2;
+cutoff: 0.1;
+define_kernel(ndim, cutoff, 'wendland4, 'w4, 'dw4)$
+define_kernel(ndim, cutoff, 'wendland6, 'w6, 'dw6)$
+define_kernel(ndim, cutoff, 'lucy, 'wl, 'dwl)$
+define_kernel(ndim, cutoff, 'quintic, 'wq, 'dwq)$
+plot2d([wl, wq, w4, w6], [x, 0, cutoff]);
+
+infunq(x):= 2^(ndim-1)*%pi*x^(ndim-1)*wq(x);
+infunl(x):= 2^(ndim-1)*%pi*x^(ndim-1)*wl(x);
+infunw4(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w4(x);
+infunw6(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w6(x);
+quad_qags(infunw6, x, 0, cutoff);
+
+A(r) := sin(r[1]);
+integrate(   A(r)
+
+*/
