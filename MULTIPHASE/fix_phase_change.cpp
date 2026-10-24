@@ -56,6 +56,8 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   }
 
   maxattempt = 10;
+  convert_flag = 0;
+  convert_cv = 0.0;
   while (m < narg) {
     if (strcmp(arg[m], "region") == 0) {
       if (m + 2 > narg) error->all(FLERR, "Illegal fix phase_change command");
@@ -65,6 +67,11 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
     } else if (strcmp(arg[m], "attempt") == 0) {
       if (m + 2 > narg) error->all(FLERR, "Illegal fix phase_change command");
       maxattempt = utils::inumeric(FLERR, arg[m + 1], false, lmp);
+      m += 2;
+    } else if (strcmp(arg[m], "convert") == 0) {
+      if (m + 2 > narg) error->all(FLERR, "Illegal fix phase_change command");
+      convert_flag = 1;
+      convert_cv = utils::numeric(FLERR, arg[m + 1], false, lmp);
       m += 2;
     } else if (strcmp(arg[m], "units") == 0) {
       if (m + 2 > narg || strcmp(arg[m + 1], "box") != 0)
@@ -209,6 +216,12 @@ void FixPhaseChange::pre_exchange()
     rmass[i] -= dmass[i];
     if (rmass[i] <= 0) error->one(FLERR, "Fix phase_change made a negative mass");
     dmass[i] = 0.0;
+    if (convert_flag && type[i] == from_type && rmass[i] < 2.0 * to_mass) {
+      type[i] = to_type;
+      atom->mask[i] |= groupbit;
+      e[i] -= Hwv;
+      cv[i] = convert_cv;
+    }
   }
 
   int nins = 0;

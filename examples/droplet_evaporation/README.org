@@ -1,0 +1,10 @@
+Liquid droplet evaporating in hot vapour.
+
+LMP=lmp_mpi bash run.sh
+
+data-nx40/mass.dat: time, liquid mass, liquid particles, equivalent radius
+
+Render with OVITO (pip install ovito):
+
+mkdir img
+python3 render.py data-nx40 img 1

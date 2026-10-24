@@ -1,0 +1,80 @@
+echo               both
+shell              mkdir  ${dname}
+log                ${dname}/log.lammps
+units              si
+atom_style         sph
+dimension          2
+variable           ndim equal 2
+include            vars.lmp
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+variable           zlo2d equal -0.5*${dx}
+variable           zhi2d equal 0.5*${dx}
+region             box block 0.0 ${Lx} 0.0 ${Ly} ${zlo2d} ${zhi2d} units box
+create_box         2 box
+mass               * 1.0
+fix                mp all property/atom rmass d2_cg 3 ghost yes
+lattice            sq ${dx} origin 0.5 0.5 0
+create_atoms       ${v_type} region box
+region             rdrop sphere ${xcenter} ${ycenter} 0.0 ${R0} units box
+set                region rdrop type ${l_type}
+
+variable           e_hot equal ${cv_v}*${Tinf}
+variable           e_sat equal ${cv_l}*${Tc}
+set                type ${v_type} sph/cv ${cv_v}
+set                type ${l_type} sph/cv ${cv_l}
+set                type ${v_type} sph/e ${e_hot}
+set                type ${l_type} sph/e ${e_sat}
+set                type ${v_type} mass ${mass_v}
+set                type ${l_type} mass ${mass_l}
+set                type ${v_type} sph/rho ${sph_rho_v}
+set                type ${l_type} sph/rho ${sph_rho_l}
+
+fix                integrate_fix_full all sph
+fix                e2d all enforce2d
+include            settimestep.lmp
+timestep           ${dt}
+neighbor           0 bin
+neigh_modify       delay 0 every 1
+comm_modify        vel yes
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
+                   sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
+pair_coeff         * * sph/rhosum/multiphase ${h}
+pair_coeff         ${v_type} ${v_type} sph/colorgradient ${h} 0
+pair_coeff         ${l_type} ${v_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${l_type} ${l_type} sph/colorgradient ${h} 0
+variable           sph_eta_ld equal 2*${sph_eta_l}*${sph_eta_v}/(${sph_eta_v}+${sph_eta_l})
+pair_coeff         ${l_type} ${v_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_ld} 1.0 ${h} ${rbackground}
+pair_coeff         ${l_type} ${l_type} sph/taitwater/multiphase ${sph_rho_l} ${sph_c_l} ${sph_eta_l} 1.0 ${h} ${rbackground}
+pair_coeff         ${v_type} ${v_type} sph/taitwater/multiphase ${sph_rho_v} ${sph_c_v} ${sph_eta_v} 1.0 ${h} ${rbackground}
+pair_coeff         * * sph/surfacetension ${h}
+variable           D_heat_ld equal 2*${D_heat_l}*${D_heat_v}/(${D_heat_v}+${D_heat_l})
+pair_coeff         ${l_type} ${l_type} sph/heatconduction/phasechange ${D_heat_l} ${h}
+pair_coeff         ${l_type} ${v_type} sph/heatconduction/phasechange ${D_heat_ld} ${h}
+pair_coeff         ${v_type} ${v_type} sph/heatconduction/phasechange ${D_heat_v} ${h}
+
+region             rbath sphere ${xcenter} ${ycenter} 0.0 ${Rbath} side out units box
+variable           e_bath atom ${e_hot}
+fix                bath all set 1 0 region rbath sph/e v_e_bath
+
+group              vapour type ${v_type}
+fix                evap vapour phase_change ${Tc} ${Tt} ${Hwv} ${dx} ${mass_v} &
+                   ${h} ${l_type} ${v_type} 1 123456 0.01 region box units box convert ${cv_v}
+
+compute            rho_peratom all sph/rho/atom
+compute            it_atom all sph/t/atom
+compute            ie_atom all sph/e/atom
+variable           ml atom mass*(type==${l_type})
+variable           nl atom type==${l_type}
+compute            mliq all reduce sum v_ml v_nl
+variable           time equal step*dt
+variable           Req equal sqrt(c_mliq[1]/(PI*${sph_rho_l}))
+fix                out all print 100 "${time} $(c_mliq[1]:%.10g) $(c_mliq[2]) $(v_Req:%.6g)" file ${dname}/mass.dat screen no
+dump               dump_txt all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom c_ie_atom c_it_atom
+dump_modify        dump_txt sort id pad 8
+
+thermo             ${Nfreq}
+thermo_style       custom step v_time c_mliq[2] v_Req
+variable           nstep equal round(${tend}/${dt})
+run                ${nstep}
