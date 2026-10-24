@@ -39,11 +39,9 @@ fix         mp all property/atom rmass d2_cg 3 ghost yes
 
 ## Examples
 
-```
-cd examples/two_atoms
-maxima -b colorgradient.mac
-lmp_mpi -in colorgradient.lmp
+- `two_atoms`: two-particle tests against maxima (`maxima -b X.mac`, then `lmp_mpi -in X.lmp`)
+- `square_to_sphere`: square droplet relaxing under surface tension
+- `droplet_grid`, `contact_angle`: droplet oscillation and wetting
+- `bubble_growth`, `bubble_random`, `bubble_on_wall`: boiling with phase change
 
-cd examples/bubble_growth
-LMP=lmp_mpi bash run.sh
-```
+Run with `LMP=lmp_mpi bash run.sh` in the example directory.

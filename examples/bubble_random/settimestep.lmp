@@ -1,0 +1,39 @@
+variable BIG equal 1e20
+
+variable beta equal 0.1
+if "${D_heat_v}>0" then &
+"variable dt_temp_v equal ${beta}*1.44*${sph_rho_v}*${cv_v}*${dx}^2/${D_heat_v}" &
+else &
+"variable dt_temp_v equal ${BIG}"
+
+if "${D_heat_l}>0" then &
+"variable dt_temp_l equal ${beta}*1.44*${sph_rho_l}*${cv_l}*${dx}^2/${D_heat_l}" &
+else &
+"variable dt_temp_l equal ${BIG}"
+
+variable dt_eta_v equal 1/8.0*${dx}*${dx}/${sph_eta_v}*${sph_rho_v}
+variable dt_eta_l equal 1/8.0*${dx}*${dx}/${sph_eta_l}*${sph_rho_l}
+
+if "${alpha}>0" then  &
+"variable dt_alpha_v equal 1/4.0*sqrt(${sph_rho_v}*${dx}^3/(6.0*${alpha}))" &
+else &
+"variable dt_alpha_v equal ${BIG}"
+
+if "${alpha}>0" then  &
+"variable dt_alpha_l equal 1/4.0*sqrt(${sph_rho_l}*${dx}^3/(6.0*${alpha}))" &
+else &
+"variable dt_alpha_l equal ${BIG}"
+
+if "${sph_rho_v}>0" then &
+"variable dt_c_v equal 1/4.0*${dx}/${sph_c_v}" &
+else &
+"variable dt_c_v equal ${BIG}"
+
+if "${sph_rho_l}>0" then &
+"variable dt_c_l equal 1/4.0*${dx}/${sph_c_l}" &
+else &
+"variable dt_c_l equal ${BIG}"
+
+shell ./min.sh dt ${dt_eta_v} ${dt_eta_l} ${dt_alpha_v} ${dt_alpha_l} ${dt_c_v} ${dt_c_l} ${dt_temp_l} ${dt_temp_v}
+include in.dt
+variable dt equal ${dt}

@@ -1,0 +1,7 @@
+Bubble departure from the wall.
+
+bash run.sh
+
+To visualize
+vmd -e deposit.tcl  -args data/data.xyz
+

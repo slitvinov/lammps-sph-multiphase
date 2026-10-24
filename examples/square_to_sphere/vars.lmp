@@ -1,0 +1,50 @@
+# number of particles in each of the directions
+#variable          nx   equal 20
+variable          ny   equal ${nx}
+if ${ndim}==3 then &
+"variable nz equal ${nx}"
+
+# size of the domain
+variable          Lx   equal  1.0
+variable          Ly   equal  1.0
+if ${ndim}==3 then &
+"variable         Lz   equal ${Lx}"
+
+variable          dx   equal  ${Lx}/${nx}
+
+# density of gas phase
+variable          sph_rho_g equal 1.0
+# density of droplet
+variable          sph_rho_d equal 1.0
+
+# sound speed 
+variable          sph_c_g equal 10.0
+variable          sph_c_d equal 10.0
+
+# viscosity of droplet 
+variable          sph_eta_d equal 5e-2
+# viscosity of gas
+variable          sph_eta_g equal 5e-2
+
+# extract that rbackground in the equation of state
+# pressu ~ ( rho/rho0 - rbackground)^gamma
+variable          rbackground equal 0.0
+
+variable          h equal 3.0*${dx}
+variable          Nfreq equal 100
+
+# mass of droplet particle
+variable          sph_mass_d equal ${dx}^${ndim}*${sph_rho_d}
+# mass of gas particle
+variable          sph_mass_g equal ${dx}^${ndim}*${sph_rho_g}
+
+# surface tension
+variable          alpha equal 0.2
+
+# size of the square
+variable          a_sq equal 0.2
+
+# type of the gas particle
+variable          g_type equal 1
+# type of the droplet particle
+variable          d_type equal 2
