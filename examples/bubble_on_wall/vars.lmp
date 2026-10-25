@@ -1,6 +1,6 @@
 # number of particles in each of the directions
 variable          Lx   equal 2.0
-variable          nx   equal 40
+variable          nx   index 40
 variable          ny   equal ${nx}
 if ${ndim}==3 then &
 "variable nz equal ${nx}"

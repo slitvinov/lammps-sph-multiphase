@@ -2,7 +2,12 @@ Bubble growth and departure from a heated wall.
 
 LMP=lmp_mpi bash run.sh
 
+3D:
+
+lmp_mpi -in bubble.lmp -var ndim 3 -var nx 30 -var dname data
+
 Render with OVITO (pip install ovito):
 
 mkdir img
 python3 render.py data img 40 0 1
+python3 render3d.py data img 30 0 1

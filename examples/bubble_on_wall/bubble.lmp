@@ -12,7 +12,7 @@ units              si
 atom_style         sph
 echo               both
 
-variable          ndim equal 2
+variable          ndim index 2
 dimension         ${ndim}
 boundary          p f p
 include           vars.lmp
@@ -176,7 +176,7 @@ variable        yvcm equal xcm(droplet,y)-${y1}
 variable        velcmx equal vcm(droplet,x)
 variable        velcmy equal vcm(droplet,y)
 variable        vmi equal (bound(droplet,ymin)-${y1})/${dx}
-fix extra all print 1 & 
+fix extra all print 10 & 
 "${time} ${vnd} ${vie} ${vied} ${vvol} ${vdroplet} ${xvcm} ${yvcm} ${velcmx} ${velcmy} ${vmi}" &
 file ${dname}/rg.dat screen no
 
