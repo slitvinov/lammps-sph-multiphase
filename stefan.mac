@@ -1,0 +1,32 @@
+/* One-phase Stefan problem for the phase-change model. A wall at
+y = 0 is held at Tw, vapour fills 0 < y < s(t), the liquid above is at
+the saturation temperature Ts. The vapour is at rest, so
+  rho c T_t = kappa T_yy,  T(0) = Tw,  T(s) = Ts,
+  rho H s' = -kappa T_y(s)   (Stefan condition, vapour created at s). */
+
+assume(t > 0, a > 0, l > 0)$
+T: Tw - (Tw - Ts)*erf(y/(2*sqrt(a*t)))/erf(l)$
+s: 2*l*sqrt(a*t)$
+heat: ratsimp(diff(T, t) - a*diff(T, y, 2));
+interface: ratsimp(subst(y = s, T) - Ts);
+/* with a = kappa/(rho c) the Stefan condition becomes an equation for l */
+stefan: ratsimp(subst(y = s, -a*c*diff(T, y)/H) - diff(s, t));
+lambda: solve(stefan = 0, Tw)[1];
+/* Stefan number St = c (Tw - Ts)/H gives l exp(l^2) erf(l) = St/sqrt(pi) */
+ratsimp(c*(rhs(lambda) - Ts)/H - sqrt(%pi)*l*exp(l^2)*erf(l));
+
+/* parameters of the vapour in vars.lmp: rho 0.01, c 1, kappa 0.6, H 32 */
+St: 1.0*(1 - 0)/32$
+lv: find_root(l*exp(l^2)*erf(l) - St/sqrt(%pi), l, 1e-6, 2);
+av: 0.6/(0.01*1)$
+print("s(t) =", 2*lv*sqrt(av), "sqrt(t)")$
+
+/* energy bookkeeping of one liquid-vapour pair with the reservoir R on
+   the vapour particle: both sides conduct toward Ts, the heat goes to R */
+dEl: -k*(Tl - Ts)$
+dEv: -k*(Tv - Ts)$
+dR: k*(Tl - Ts) + k*(Tv - Ts)$
+pair: ratsimp(dEl + dEv + dR);
+/* an evaporation event: liquid mass dm with energy Ed becomes vapour at Ts,
+   R pays H dm and the sensible difference */
+event: ratsimp((-Ed) + dm*cv*Ts + (-(H*dm + dm*cv*Ts - Ed)) + H*dm);

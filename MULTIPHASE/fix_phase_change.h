@@ -27,7 +27,7 @@ class FixPhaseChange : public Fix {
  private:
   int from_type, to_type, nfreq, seed, maxattempt, nfirst;
   bool energy_chance_flag;
-  int convert_flag;
+  int convert_flag, latent_flag;
   double convert_cv;
   double Tc, Tt, Hwv, dr, to_mass, cutoff, change_chance, phase_change_rate;
   char *idregion;

@@ -18,10 +18,13 @@ class PairSPHHeatConductionPhaseChange : public Pair {
   void coeff(int, char **) override;
   double init_one(int, int) override;
   void init_style() override;
+  int pack_reverse_comm(int, int, double *) override;
+  void unpack_reverse_comm(int, int *, double *) override;
 
  protected:
   double **cut, **alpha, **tc;
-  int **fixflag;
+  int **fixflag, **latent, anylatent = 0, nmax;
+  double *dlat;
   void allocate();
 };
 

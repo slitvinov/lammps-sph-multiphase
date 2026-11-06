@@ -1,0 +1,156 @@
+# One-phase Stefan problem: a wall at T = 1 boils liquid at the
+# saturation temperature Tc = 0 through a vapour layer. The layer
+# thickness, vapour mass over rho_v Lx, follows s = 2 l sqrt(a t),
+# see stefan.mac. The box is closed by a second wall at Tc on top.
+
+variable           dname index data
+variable           latent index latent
+variable           latentfix index latent
+variable           prob index 0.01
+variable           nsteps index 14000
+shell              mkdir ${dname}
+log                ${dname}/log.lammps
+units              si
+atom_style         sph
+dimension          2
+boundary           p f p
+
+variable           nx equal 40
+variable           dx equal 1.0/${nx}
+variable           Lx equal 10*${dx}
+variable           Ly equal 1.5
+variable           h equal 3.0*${dx}
+variable           g_type equal 1
+variable           d_type equal 2
+variable           w_type equal 3
+variable           sph_rho_g equal 1.0
+variable           sph_rho_d equal 0.01
+variable           sph_rho_w equal ${sph_rho_g}
+variable           sph_c_g equal 200/sqrt(${sph_rho_g})
+variable           sph_c_d equal 200/sqrt(${sph_rho_d})
+variable           sph_c_w equal ${sph_c_g}
+variable           sph_eta_g equal 1.0
+variable           sph_eta_d equal 0.069395
+variable           sph_eta_w equal ${sph_eta_g}
+variable           gamma_g equal 1.0
+variable           gamma_d equal 1.0
+variable           gamma_w equal 1.0
+variable           rbackground equal 0.0
+variable           alpha equal 150
+variable           alpha_gd equal ${alpha}
+variable           alpha_gw equal ${alpha}
+variable           alpha_dw equal 1.5*${alpha}
+variable           D_heat_d equal 0.6
+variable           D_heat_g equal 0.1
+variable           D_heat_w equal ${D_heat_g}
+variable           Hwv equal 32.0
+variable           cv_d equal 1.0
+variable           cv_g equal 0.04
+variable           Tc equal 0.0
+variable           Tw equal 1.0
+variable           sph_mass_d equal ${dx}^2*${sph_rho_d}
+variable           sph_mass_g equal ${dx}^2*${sph_rho_g}
+variable           sph_mass_w equal ${sph_mass_g}
+variable           Nfreq equal 400
+
+region             box block 0.0 ${Lx} 0.0 ${Ly} -1.0e-3 1.0e-3 units box
+create_box         3 box
+mass               * 1.0
+fix                mp all property/atom rmass d2_cg 3 ghost yes
+fix                lat all property/atom d_latent
+
+variable           y1 equal 3*${dx}
+variable           s0 equal 4*${dx}
+region             rfill block EDGE EDGE 0.0 ${Ly} EDGE EDGE units box
+lattice            sq ${dx} origin 0.5 0.5 0
+create_atoms       ${g_type} region rfill
+
+region             rwall block EDGE EDGE 0.0 ${y1} EDGE EDGE units box
+variable           y2 equal ${Ly}-3*${dx}
+region             rtop block EDGE EDGE ${y2} ${Ly} EDGE EDGE units box
+region             rvap block EDGE EDGE ${y1} $(v_y1+v_s0) EDGE EDGE units box
+region             rflow block EDGE EDGE ${y1} ${y2} EDGE EDGE units box
+group              bottom region rwall
+group              upper region rtop
+group              boundary union bottom upper
+group              flow subtract all boundary
+set                group boundary type ${w_type}
+set                region rvap type ${d_type}
+group              vapour type ${d_type}
+fix                wallim boundary setforce 0 0 0
+
+set                type ${d_type} sph/cv ${cv_d}
+set                type ${g_type} sph/cv ${cv_g}
+set                type ${w_type} sph/cv 1.0
+set                type ${d_type} mass ${sph_mass_d}
+set                type ${g_type} mass ${sph_mass_g}
+set                type ${w_type} mass ${sph_mass_w}
+set                type ${d_type} sph/rho ${sph_rho_d}
+set                type ${g_type} sph/rho ${sph_rho_g}
+set                type ${w_type} sph/rho ${sph_rho_w}
+variable           tlin atom ${Tw}-(${Tw}-${Tc})*(y-${y1})/${s0}
+variable           elin atom ${cv_d}*v_tlin
+set                type ${g_type} sph/e $(v_cv_g*v_Tc)
+set                type ${d_type} sph/e v_elin
+set                group bottom sph/e ${Tw}
+set                group upper sph/e ${Tc}
+variable           ew atom ${Tw}
+variable           eu atom ${Tc}
+variable           rw atom ${sph_rho_w}
+fix                fbo boundary set 1 0 group bottom sph/e v_ew
+fix                fup boundary set 1 0 group upper sph/e v_eu
+fix                bm boundary set 1 0 group boundary sph/rho v_rw
+
+fix                integrate_fix_full all sph
+include            settimestep.lmp
+neighbor           0 bin
+neigh_modify       delay 0 every 1
+comm_modify        vel yes
+
+pair_style         hybrid/overlay sph/rhosum/multiphase 1 sph/colorgradient 1 &
+                   sph/taitwater/multiphase sph/surfacetension sph/heatconduction/phasechange
+pair_coeff         * * sph/rhosum/multiphase ${h}
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
+pair_coeff         ${g_type} ${d_type} sph/colorgradient ${h} ${alpha_gd}
+pair_coeff         ${g_type} ${g_type} sph/colorgradient ${h} 0
+pair_coeff         ${d_type} ${w_type} sph/colorgradient ${h} ${alpha_dw}
+pair_coeff         ${g_type} ${w_type} sph/colorgradient ${h} ${alpha_gw}
+pair_coeff         ${w_type} ${w_type} sph/colorgradient ${h} 0
+variable           eta_gd equal 2*${sph_eta_g}*${sph_eta_d}/(${sph_eta_d}+${sph_eta_g})
+variable           eta_gw equal 2*${sph_eta_g}*${sph_eta_w}/(${sph_eta_g}+${sph_eta_w})
+variable           eta_dw equal 2*${sph_eta_d}*${sph_eta_w}/(${sph_eta_d}+${sph_eta_w})
+pair_coeff         ${g_type} ${d_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${eta_gd} ${gamma_g} ${h} ${rbackground}
+pair_coeff         ${g_type} ${g_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${sph_eta_g} ${gamma_g} ${h} ${rbackground}
+pair_coeff         ${d_type} ${d_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${sph_eta_d} ${gamma_d} ${h} ${rbackground}
+pair_coeff         ${g_type} ${w_type} sph/taitwater/multiphase ${sph_rho_g} ${sph_c_g} ${eta_gw} ${gamma_g} ${h} ${rbackground}
+pair_coeff         ${d_type} ${w_type} sph/taitwater/multiphase ${sph_rho_d} ${sph_c_d} ${eta_dw} ${gamma_d} ${h} ${rbackground}
+pair_coeff         ${w_type} ${w_type} sph/taitwater/multiphase ${sph_rho_w} ${sph_c_w} ${sph_eta_w} ${gamma_w} ${h} ${rbackground}
+pair_coeff         * * sph/surfacetension ${h}
+variable           D_gd equal 2*${D_heat_g}*${D_heat_d}/(${D_heat_d}+${D_heat_g})
+variable           D_gw equal 2*${D_heat_g}*${D_heat_w}/(${D_heat_w}+${D_heat_g})
+variable           D_dw equal 2*${D_heat_d}*${D_heat_w}/(${D_heat_d}+${D_heat_w})
+pair_coeff         ${g_type} ${g_type} sph/heatconduction/phasechange ${D_heat_g} ${h}
+pair_coeff         ${d_type} ${d_type} sph/heatconduction/phasechange ${D_heat_d} ${h}
+pair_coeff         ${w_type} ${w_type} sph/heatconduction/phasechange ${D_heat_w} ${h}
+pair_coeff         ${g_type} ${d_type} sph/heatconduction/phasechange ${D_gd} ${h} NULL ${Tc} ${latent}
+pair_coeff         ${g_type} ${w_type} sph/heatconduction/phasechange ${D_gw} ${h}
+pair_coeff         ${d_type} ${w_type} sph/heatconduction/phasechange ${D_dw} ${h}
+fix                e2d all enforce2d
+
+timestep           ${dt}
+compute            rho all sph/rho/atom
+compute            t all sph/t/atom
+variable           vol atom mass/c_rho
+compute            vvol vapour reduce sum v_vol
+compute            tmin vapour reduce min c_t
+variable           time equal step*${dt}
+variable           m atom mass
+compute            mvap vapour reduce sum v_m
+variable           s equal c_mvap/(${sph_rho_d}*${Lx})
+variable           nv equal count(vapour)
+variable           tmin equal c_tmin
+fix                out all print 100 "${time} ${s} ${nv} ${tmin}" file ${dname}/s.dat screen no
+fix                pc vapour phase_change ${Tc} ${Tc} ${Hwv} $(0.5*v_dx) ${sph_mass_d} ${h} &
+                   ${g_type} ${d_type} 1 12345 ${prob} region rflow units box ${latentfix}
+thermo             ${Nfreq}
+run                ${nsteps}

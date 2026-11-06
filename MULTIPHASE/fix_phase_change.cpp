@@ -56,6 +56,7 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
   }
 
   maxattempt = 10;
+  latent_flag = 0;
   convert_flag = 0;
   convert_cv = 0.0;
   while (m < narg) {
@@ -68,6 +69,9 @@ FixPhaseChange::FixPhaseChange(LAMMPS *lmp, int narg, char **arg) :
       if (m + 2 > narg) error->all(FLERR, "Illegal fix phase_change command");
       maxattempt = utils::inumeric(FLERR, arg[m + 1], false, lmp);
       m += 2;
+    } else if (strcmp(arg[m], "latent") == 0) {
+      latent_flag = 1;
+      m += 1;
     } else if (strcmp(arg[m], "convert") == 0) {
       if (m + 2 > narg) error->all(FLERR, "Illegal fix phase_change command");
       convert_flag = 1;
@@ -146,11 +150,22 @@ void FixPhaseChange::pre_exchange()
   dmass = atom->drho;
   for (int i = 0; i < nall; i++) dmass[i] = 0.0;
 
+  double *R = nullptr;
+  if (latent_flag) {
+    int flag, cols;
+    int index = atom->find_custom("latent", flag, cols);
+    if (index < 0 || flag != 1 || cols != 0)
+      error->all(FLERR, "Fix phase_change latent requires fix property/atom d_latent");
+    R = atom->dvector[index];
+  }
+
   std::vector<double> pending;
   for (int i = 0; i < nlocal; i++) {
     double Ti = energy2t(e[i], cv[i]);
     bool isphasechange;
-    if (Ti < Tc || type[i] != to_type)
+    if (latent_flag)
+      isphasechange = type[i] == to_type && R[i] >= to_mass * Hwv && isfromphasearound(i);
+    else if (Ti < Tc || type[i] != to_type)
       isphasechange = false;
     else if (energy_chance_flag) {
       double threshold = (e[i] - t2energy(Tc, cv[i])) / Hwv * update->dt * phase_change_rate;
@@ -203,8 +218,14 @@ void FixPhaseChange::pre_exchange()
       }
     }
 
-    double enew = (rmass[i] * e[i] + denergy - to_mass * Hwv) / (rmass[i] + to_mass);
-    e[i] = enew;
+    double enew;
+    if (latent_flag) {
+      enew = t2energy(Tc, cv[i]);
+      R[i] -= to_mass * Hwv + to_mass * enew - denergy;
+    } else {
+      enew = (rmass[i] * e[i] + denergy - to_mass * Hwv) / (rmass[i] + to_mass);
+      e[i] = enew;
+    }
     double one[12] = {coord[0],          coord[1],          coord[2],          dmom[0] / to_mass,
                       dmom[1] / to_mass, dmom[2] / to_mass, dmomest[0] / to_mass, dmomest[1] / to_mass,
                       dmomest[2] / to_mass, rho[i],         cv[i],             enew};
