@@ -71,4 +71,25 @@ Droplet oscillation under surface tension [3]
 2. Cleary, Monaghan, J. Comput. Phys. 148, 227 (1999)
 3. Hu, Adams, J. Comput. Phys. 213, 844 (2006)
 
-<p align="center"><img src="img/bubble_on_wall.gif"/> <img src="img/bubble_rise.gif"/> <img src="img/evaporation.gif"/></p>
+## Phase change in 3D
+
+Liquid and vapour particles have their own density, viscosity, heat
+capacity and conductivity. Surface tension uses the color gradient.
+Liquid at the interface above the saturation temperature evaporates
+into new vapour particles.
+
+Bubble in superheated liquid ([movie](img/3d/bubble_growth_3d.mp4))
+
+<p align="center"><img src="img/3d/bubble_growth_3d.png"/></p>
+
+Bubble growing and rising under gravity ([movie](img/3d/bubble_rise_3d.mp4))
+
+<p align="center"><img src="img/3d/bubble_rise_3d.png"/></p>
+
+Bubble on a heated wall
+
+<p align="center"><img src="img/3d/bubble_on_wall_3d.png"/></p>
+
+Droplet evaporating in hot vapour ([movie](img/3d/droplet_evaporation_3d.mp4))
+
+<p align="center"><img src="img/3d/droplet_evaporation_3d.png"/></p>
