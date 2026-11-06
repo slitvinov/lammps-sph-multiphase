@@ -86,7 +86,7 @@ Bubble growing and rising under gravity ([movie](img/3d/bubble_rise_3d.mp4))
 
 <p align="center"><img src="img/3d/bubble_rise_3d.png"/></p>
 
-Bubble on a heated wall
+Bubble on a heated wall ([movie](img/3d/bubble_on_wall_3d.mp4))
 
 <p align="center"><img src="img/3d/bubble_on_wall_3d.png"/></p>
 
