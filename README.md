@@ -3,6 +3,8 @@
 Boiling and evaporation with multiphase SPH (color gradient, surface
 tension) for current LAMMPS.
 
+<p align="center"><img src="img/cover.png"/></p>
+
 ## Build with make
 
 ```
@@ -78,18 +80,8 @@ capacity and conductivity. Surface tension uses the color gradient.
 Liquid at the interface above the saturation temperature evaporates
 into new vapour particles.
 
-Bubble in superheated liquid ([movie](img/3d/bubble_growth_3d.mp4))
-
-<p align="center"><img src="img/3d/bubble_growth_3d.png"/></p>
-
-Bubble growing and rising under gravity ([movie](img/3d/bubble_rise_3d.mp4))
-
-<p align="center"><img src="img/3d/bubble_rise_3d.png"/></p>
-
-Bubble on a heated wall ([movie](img/3d/bubble_on_wall_3d.mp4))
-
-<p align="center"><img src="img/3d/bubble_on_wall_3d.png"/></p>
-
-Droplet evaporating in hot vapour ([movie](img/3d/droplet_evaporation_3d.mp4))
-
-<p align="center"><img src="img/3d/droplet_evaporation_3d.png"/></p>
+Movies of the top figure, left to right:
+[bubble in superheated liquid](img/3d/bubble_growth_3d.mp4),
+[bubble growing and rising under gravity](img/3d/bubble_rise_3d.mp4),
+[bubble on a heated wall](img/3d/bubble_on_wall_3d.mp4),
+[droplet evaporating in hot vapour](img/3d/droplet_evaporation_3d.mp4).
